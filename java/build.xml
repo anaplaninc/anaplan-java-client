@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+<!-- anaplan-connect build.xml file -->
+<!-- Requires Ant 1.7 or later, Java 1.5+ -->
+<project name="anaplan-connect" default="main" basedir=".">
+  <!-- project specific properties -->
+  <property name="name" value="anaplan-connect" />
+  <property name="readable-name" value="Anaplan Connect" />
+  <property name="major.version" value="1" />
+  <property name="minor.version" value="4" />
+  <property name="revision.number" value="0" />
+  <condition property="label" value="@label@p">
+    <not>
+      <isset property="label" />
+    </not>
+  </condition>
+  <condition property="release.version" value="${label}" else="-dev">
+    <matches string="${label}" pattern="\d+$" />
+  </condition>
+  <property name="rel"
+      value="${major.version}-${minor.version}-${revision.number}${release.version}" />
+
+  <!-- set up path properties -->
+  <property name="lib.dir" value="lib" />
+  <property name="java.dir" value="src" />   
+  <property name="doc.dir" value="doc" />   
+  <property name="examples.dir" value="examples" />   
+  <property name="build.dir" value="build" />
+  <property name="class.dir" value="${build.dir}/class" />
+  <property name="jar.file" value="${name}-${rel}.jar" />
+  <property name="javadoc.dir" value="${build.dir}/javadoc" />
+  <property name="rel.dir" value="release" />
+  <property name="java.toplevel.packagename" value="com.anaplan.client" />
+  <property name="version.java" value="${java.dir}/com/anaplan/client/Version.java" />
+  <condition property="version.java.exists">
+    <available file="${version.java}" />
+  </condition>
+
+  <!-- Exclude Subversion information on Windows platforms -->
+  <defaultexcludes add="**/_svn"/>
+  <defaultexcludes add="**/_svn/**"/>
+  <!--<defaultexcludes echo="true"/>-->
+
+  <echo message="=====================================================" />
+  <echo message="=== Build File for ${readable-name} Release ${rel}" />
+  <echo message="=====================================================" />
+
+  <!-- main target prints out options -->
+  <target name="main">
+    <echo message="Targets are:" />
+    <echo message="" />
+    <echo message="  clean    - Cleans project for fresh build" />
+    <echo message="  compile  - Compiles all source code" />
+    <echo message="  jar      - Creates the jar file for the library" />
+    <echo message="  javadoc  - Builds the javadoc for the library" />
+    <echo message="  release  - Builds a distribution release" />
+  </target>
+
+  <!-- prints out environment -->
+  <target name="init">
+    <echo message="   Ant  : ${ant.version}" />
+    <echo message="   Java : ${java.vm.name} (${java.vendor})/${java.vm.version} (${java.version})" />
+    <echo message="   OS   : ${os.name} (${os.arch})/${os.version}" />
+    <tstamp />
+  </target>
+
+  <!-- cleans up all the tmp and generated source dirs -->
+  <target name="clean">
+    <delete file="${version.java}" />
+    <delete dir="${rel.dir}" />
+    <delete dir="${class.dir}" />
+    <delete file="${jar.file}" />
+    <delete dir="${javadoc.dir}" />
+  </target>
+
+  <target name="versionstamp" depends="init">
+    <delete file="${version.java}" />
+    <echo file="${version.java}">// This file is mechanically generated; Changes should be made in build.xml
+package com.anaplan.client;
+interface Version {
+    static int MAJOR = ${major.version}, MINOR = ${minor.version};
+    static int REVISION = ${revision.number};
+    static String RELEASE = "${release.version}";
+}
+</echo>
+  </target>
+    
+  <!-- Normalizes source text content -->
+  <target name="normalize" depends="init,versionstamp">
+    <!-- Back up source files before modifying them -->
+    <zip zipfile="${build.dir}/pre-normalized.zip" level="1"
+        encoding="US-ASCII">
+      <zipfileset dir=".">
+        <include name="LICENSE.txt" />
+        <include name="NOTICE.txt" />
+        <include name="build.xml" />
+        <include name="AnaplanClient.bat" />
+      </zipfileset>
+      <zipfileset file="AnaplanClient.sh" filemode="755" />
+      <zipfileset dir="${java.dir}" prefix="${java.dir}">
+        <include name="**/*.java" />
+        <include name="**/*.html" />
+        <include name="**/*.properties" />
+      </zipfileset>
+      <zipfileset dir="${doc.dir}" prefix="${doc.dir}">
+        <include name="*.html" />
+      </zipfileset>
+    </zip>
+    <fixcrlf srcDir="${java.dir}" includes="**/*.java" encoding="US-ASCII"
+      eol="crlf" tab="remove" tablength="4" javafiles="yes" eof="remove" />
+    <fixcrlf srcDir="${java.dir}" includes="**/*.html **/*.properties"
+      encoding="US-ASCII" eol="crlf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="." encoding="US-ASCII"
+      includes="LICENSE.txt NOTICE.txt build.xml AnaplanClient.bat"
+      eol="crlf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="." includes="*.sh" encoding="US-ASCII"
+      eol="lf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="${doc.dir}" includes="*.html"
+      encoding="US-ASCII" eol="crlf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="." includes="AnaplanClient.sh"
+      encoding="US-ASCII" eol="lf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="." includes="AnaplanClient.bat"
+      encoding="US-ASCII" eol="crlf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="${examples.dir}" includes="*.sh"
+      encoding="US-ASCII" eol="lf" tab="remove" tablength="2" eof="remove" />
+    <fixcrlf srcDir="${examples.dir}" includes="*.bat"
+      encoding="US-ASCII" eol="crlf" tab="remove" tablength="2" eof="remove" />
+  </target>
+
+  <!-- compiles all the .jar files in the source tree -->
+  <target name="compile" depends="init,versionstamp">
+    <mkdir dir="${class.dir}" />
+
+    <path id="compile.classpath">
+      <fileset dir="${lib.dir}">
+        <include name="*.jar" />        
+      </fileset>
+    </path>
+
+    <javac destdir="${class.dir}" classpathref="compile.classpath" includeAntRuntime="false"
+      debug="true" debuglevel="lines,source">
+      <src path="${java.dir}" />
+      <include name="**/*.java" />
+    </javac>
+
+    <copy todir="${class.dir}">
+      <fileset dir="${java.dir}">
+        <include name="**/*.properties" />
+      </fileset>
+    </copy>
+  </target>
+  
+  <!--  build the .jar file -->
+  <target name="jar" depends="compile">
+    
+    <jar jarfile="${jar.file}" basedir="${class.dir}">
+      <manifest>
+        <attribute name="Comment" value="Built by ${user.name} with ${ant.version}, ${java.vm.name} (${java.vendor})/${java.vm.version} (${java.version}), ${os.name} (${os.arch})/${os.version}" />
+        <attribute name="Implementation-Title" value="${name}" />
+        <attribute name="Implementation-Version" value="${rel}" />
+        <attribute name="Implementation-Vendor" value="Anaplan" />
+        <attribute name="Created-By" value="$user.name}" />
+        <attribute name="Class-Path" value="lib/commons-codec-1.4.jar lib/commons-logging-1.1.1.jar lib/gson-1.7.1.jar lib/httpclient-4.1.1.jar lib/httpclient-cache-4.1.1.jar lib/httpcore-4.1.1.jar lib/httpmime-4.1.1.jar lib/proxy-vole.jar lib/jcifs.jar"/>
+        <attribute name="Main-Class" value="com/anaplan/client/Program"/>
+        <attribute name="Sealed" value="true"/>
+      </manifest>
+    </jar>
+    
+  </target>
+
+  <!-- creates javadoc for the files in the source tree. only does packages listed in ${java.toplevel.packagename} -->
+  <target name="javadoc" depends="compile">
+    <delete dir="${javadoc.dir}" />
+    <mkdir dir="${javadoc.dir}" />
+
+    <path id="javadoc.classpath">
+      <fileset dir="${lib.dir}">
+        <include name="*.jar" />        
+      </fileset>      
+    </path>
+
+    <javadoc packagenames="${java.toplevel.packagename}"
+        classpathref="javadoc.classpath" destdir="${javadoc.dir}"
+        author="true" version="true" access="protected"
+                overview="${java.dir}/com/anaplan/client/overview.html"
+        doctitle="${readable-name} JavaDoc (release ${rel})"
+        windowtitle="${readable-name} JavaDoc (release ${rel})"
+        stylesheetfile="${doc.dir}/stylesheet.css">
+      <header>${readable-name} ${rel}</header>
+      <footer>${readable-name} ${rel}</footer>
+      <fileset dir="${java.dir}">
+        <include name="**/*.java" />
+      </fileset>
+    </javadoc>
+  </target>
+
+  <!-- Create release archives containing all distribution content -->
+  <target name="release" depends="clean,normalize,jar,javadoc">
+    <delete dir="${rel.dir}/${name}-${rel}" />
+    <mkdir dir="${rel.dir}/${name}-${rel}" />
+
+    <copy todir="${rel.dir}/${name}-${rel}">
+      <filterset>
+        <filter token="rel" value="${rel}" />
+        <filter token="label" value="${release.version}" />
+      </filterset>
+      <fileset dir=".">
+        <!-- Copyright/license information -->
+        <include name="LICENSE.txt" />
+        <include name="NOTICE.txt" />
+        <!-- This Ant script -->
+        <include name="build.xml" />
+        <!-- Windows batch wrapper -->
+        <include name="AnaplanClient.bat" />
+        <!-- POSIX shell wrapper -->
+        <include name="AnaplanClient.sh" />
+      </fileset>
+    </copy>
+    <copy todir="${rel.dir}/${name}-${rel}/${java.dir}">
+      <!-- Source files -->
+      <fileset dir="${java.dir}">
+        <include name="**/*.java" />
+        <include name="**/*.html" />
+        <include name="**/*.properties" />
+      </fileset>
+    </copy>
+    <copy todir="${rel.dir}/${name}-${rel}/${doc.dir}">
+      <!-- Documentation -->
+      <fileset dir="${doc.dir}" />
+    </copy>
+    <copy todir="${rel.dir}/${name}-${rel}/${javadoc.dir}">
+      <!-- API documentation -->
+      <fileset dir="${javadoc.dir}" />
+    </copy>
+    <copy todir="${rel.dir}/${name}-${rel}/${examples.dir}">
+      <!-- Examples -->
+      <fileset dir="${examples.dir}" />
+    </copy>
+    <copy todir="${rel.dir}/${name}-${rel}">
+      <!-- Our library -->
+      <fileset dir=".">
+        <include name="${jar.file}" />
+      </fileset>
+    </copy>
+    <copy todir="${rel.dir}/${name}-${rel}/${lib.dir}">
+      <!-- 3rd party libraries -->
+      <fileset dir="${lib.dir}">
+        <include name="*.jar" />
+        <include name="*.zip" />
+      </fileset>
+    </copy>
+
+    <zip zipfile="${rel.dir}/${name}-${rel}.zip" level="9"
+        encoding="US-ASCII">
+      <zipfileset dir="${rel.dir}/${name}-${rel}" prefix="${name}-${rel}">
+        <exclude name="**/*.sh" />
+      </zipfileset>
+      <!-- POSIX shell scripts have executable permission -->
+      <zipfileset dir="${rel.dir}/${name}-${rel}" prefix="${name}-${rel}"
+          filemode="755">
+        <include name="**/*.sh" />
+      </zipfileset>
+    </zip>
+
+    <!-- Remove our temp file set -->
+    <delete dir="${rel.dir}/${name}-${rel}" />
+
+    <!-- Repackage ZIP file as a GZIPed tar arcive. This will require a -->
+    <!-- GNU-compatible tar to extract due to >100 char paths.          -->
+    <tar destfile="${rel.dir}/${name}-${rel}.tar.gz" longfile="gnu" compression="gzip">
+      <zipfileset src="${rel.dir}/${name}-${rel}.zip" />
+    </tar>
+
+    <echo message="Release build complete; distribution packages are in ${rel.dir} directory" />
+  </target>
+
+
+</project>
