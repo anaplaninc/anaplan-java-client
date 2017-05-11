@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.logging.Logger;
 
+import com.anaplan.client.Credentials.Scheme;
 import com.anaplan.client.serialization.SerializationHandler;
 import com.anaplan.client.serialization.SerializationHandlerFactory;
 import com.anaplan.client.transport.TransportProvider;
@@ -33,6 +35,9 @@ import com.anaplan.client.transport.TransportProviderFactory;
  * An authenticated connection to the Anaplan API service.
  */
 public class Service extends AnaplanApiClientObject implements Closeable {
+
+    private static final Logger logger = Logger
+            .getLogger("anaplan-connect.service");
 
     /**
      * The Major version of the API.
@@ -92,7 +97,8 @@ public class Service extends AnaplanApiClientObject implements Closeable {
     // The URI for proxy override
     private URI proxyLocation;
 
-    // Has a proxy been specified (true) or are we using system default proxy (false)
+    // Has a proxy been specified (true) or are we using system default proxy
+    // (false)
     private boolean proxyLocationProvided;
 
     // The proxy credentials
@@ -236,6 +242,7 @@ public class Service extends AnaplanApiClientObject implements Closeable {
                     .createDefaultProvider();
         }
         if (!transportProviderInitialized) {
+            transportProvider.setDebugLevel(debugLevel);
             transportProvider.setServiceLocation(serviceLocation);
             transportProvider.setServiceCredentials(serviceCredentials);
             if (proxyLocationProvided) {
@@ -244,11 +251,14 @@ public class Service extends AnaplanApiClientObject implements Closeable {
             if (proxyCredentials != null) {
                 transportProvider.setProxyCredentials(proxyCredentials);
             }
-            transportProvider.setDebugLevel(debugLevel);
             // Set transportProviderInitialized to true before calling
             // buildUserAgentIdentifier to avoid unbounded recursion.
             transportProviderInitialized = true;
-            transportProvider.setUserAgent(buildUserAgentIdentifier());
+            String userAgentIdentifier = buildUserAgentIdentifier();
+            if (debugLevel > 0) {
+                logger.info("UA: " + userAgentIdentifier);
+            }
+            transportProvider.setUserAgent(userAgentIdentifier);
         }
         return transportProvider;
     }

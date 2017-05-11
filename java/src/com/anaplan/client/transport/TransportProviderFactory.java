@@ -16,6 +16,7 @@ package com.anaplan.client.transport;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 
 /**
@@ -24,6 +25,7 @@ import java.util.Map;
 
 public class TransportProviderFactory {
     private static TransportProviderFactory instance;
+    private static final Logger logger = Logger.getLogger("anaplan-connect.transport");
     private Map<String, Class<? extends TransportProvider>> providers = new HashMap<String, Class<? extends TransportProvider>>();
     private Class<? extends TransportProvider> defaultProvider;
     private int debugLevel;
@@ -44,8 +46,9 @@ public class TransportProviderFactory {
             providers.put("ApacheHTTP", apacheHTTPProvider);
             defaultProvider = apacheHTTPProvider;
         } catch (Throwable thrown) {
-            if (debugLevel > 0)
-                System.err.println(thrown.toString());
+            if (debugLevel > 0) {
+                logger.warning(thrown.toString());
+            }
         }
     
         // Add others (ie those included in anaplan-connect-x-x-x.jar) here

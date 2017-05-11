@@ -16,8 +16,9 @@ package com.anaplan.client.transport;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -25,8 +26,10 @@ import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.cert.Certificate;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -37,6 +40,8 @@ import com.anaplan.client.Credentials;
  * TransportProvider interface
  */
 public abstract class TransportProviderBase implements TransportProvider {
+
+    private static final Logger logger = Logger.getLogger("anaplan-connect.transport");
 
     private static ProxySelector defaultProxySelector;
 
@@ -88,19 +93,10 @@ public abstract class TransportProviderBase implements TransportProvider {
 
     /** {@inheritDoc} */
     @Override
-    public void setServiceCredentials(Credentials serviceCredentials)
-            throws AnaplanAPITransportException {
-        if (null == serviceCredentials.getUserName()
-                || serviceCredentials.getUserName().isEmpty()) {
-            throw new AnaplanAPITransportException("User name not specified");
-        }
-        if (null == serviceCredentials.getPassphrase()
-                || serviceCredentials.getPassphrase().isEmpty()) {
-            throw new AnaplanAPITransportException("Passphrase not specified");
-        }
+    public void setServiceCredentials(Credentials serviceCredentials) throws AnaplanAPITransportException {
         this.serviceCredentials = serviceCredentials;
     }
-
+    
     protected Credentials getServiceCredentials() {
         return serviceCredentials;
     }
@@ -219,7 +215,7 @@ public abstract class TransportProviderBase implements TransportProvider {
         try {
             encodedPath = new URI(null, null, path, null).getRawPath();
         } catch (URISyntaxException uriSyntaxException) {
-            System.err.println("Warning: failed to encode URI path \"" + path
+            logger.warning("Warning: failed to encode URI path \"" + path
 					+ "\": " + uriSyntaxException);
         }
         if (!encodedPath.isEmpty() && encodedPath.charAt(0) != '/')

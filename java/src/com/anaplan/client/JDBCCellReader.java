@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
   * An implementation of CellReader that connects to a JDBC data source.
@@ -28,6 +29,7 @@ import java.util.Properties;
   * @since 1.2
   */
 public class JDBCCellReader implements CellReader {
+    private static final Logger logger = Logger.getLogger("anaplan-connect.jdbc");
     private Connection connection;
     private boolean autoCommit;
     private Statement statement;
@@ -53,7 +55,7 @@ public class JDBCCellReader implements CellReader {
      * @param jdbcProperties The properties to use for the connection
      * @param query The query to perform
      * @param fetchSize Hint to JDBC driver to fetch results 
-     * @param debug Report to System.err any non-fatal errors produced by JDBC driver
+     * @param debug Report to Java logging any non-fatal errors produced by JDBC driver
      */
     public JDBCCellReader(String jdbcUrl, Properties jdbcProperties, String query, Integer fetchSize, boolean debug) throws SQLException {
         connection = DriverManager.getConnection(jdbcUrl, jdbcProperties);
@@ -63,7 +65,7 @@ public class JDBCCellReader implements CellReader {
         } catch (SQLException sqle) {
             autoCommit = true;
             if (debug) {
-                System.err.println("Warning: setAutoCommit failed(" + sqle + ")");
+                logger.warning("Warning: setAutoCommit failed(" + sqle + ")");
             }
         }
         statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY,
@@ -73,7 +75,7 @@ public class JDBCCellReader implements CellReader {
                 statement.setFetchSize(fetchSize);
             } catch (SQLException sqle) {
                 if (debug) {
-                    System.err.println("Warning: setFetchSize failed(" + sqle + ")");
+                    logger.warning("Warning: setFetchSize failed(" + sqle + ")");
                 }
             }
         }
@@ -115,7 +117,7 @@ public class JDBCCellReader implements CellReader {
                 resultSet.close();
             } catch (SQLException sqle) {
                 if (debug) {
-                    System.err.println("Warning: failed to close result set: " + sqle);
+                    logger.warning("Warning: failed to close result set: " + sqle);
                 }
             }
             resultSet = null;
@@ -125,7 +127,7 @@ public class JDBCCellReader implements CellReader {
                 statement.close();
             } catch (SQLException sqle) {
                 if (debug) {
-                    System.err.println("Warning: failed to close prepared statement: " + sqle);
+                    logger.warning("Warning: failed to close prepared statement: " + sqle);
                 }
             }
             statement = null;
@@ -134,7 +136,7 @@ public class JDBCCellReader implements CellReader {
         try {
             closed = connection.isClosed();
         } catch (SQLException sqle) {
-            System.err.println("Warning: failed to determine if JDBC connection closed: " + sqle);
+            logger.warning("Warning: failed to determine if JDBC connection closed: " + sqle);
         }
         if (connection != null && !closed) {
             if (!autoCommit) {
@@ -142,7 +144,7 @@ public class JDBCCellReader implements CellReader {
                     connection.commit();
                 } catch (SQLException sqle) {
                     if (debug) {
-                        System.err.println("Warning: failed to commit JDBC connection: " + sqle);
+                        logger.warning("Warning: failed to commit JDBC connection: " + sqle);
                     }
                 }
             }
@@ -150,7 +152,7 @@ public class JDBCCellReader implements CellReader {
                 connection.close();
             } catch (SQLException sqle) {
                 if (debug) {
-                    System.err.println("Warning: failed to close JDBC connection: " + sqle);
+                    logger.warning("Warning: failed to close JDBC connection: " + sqle);
                 }
             }
         }
