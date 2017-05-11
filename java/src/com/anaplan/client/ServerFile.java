@@ -29,6 +29,7 @@ import java.io.SequenceInputStream;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.anaplan.client.serialization.TypeWrapper;
 
@@ -41,6 +42,8 @@ import com.anaplan.client.serialization.TypeWrapper;
  * file is downloaded
  */
 public class ServerFile extends NamedObject {
+
+    private static final Logger logger = Logger.getLogger("anaplan-connect.file");
 
     /**
      * File formats recognised by Ananplan import.
@@ -138,7 +141,7 @@ public class ServerFile extends NamedObject {
                 try {
                     partialFile.close();
                 } catch (IOException ioException) {
-                    System.err.println("Warning: failed to close file "
+                    logger.warning("Warning: failed to close file "
                             + partial + ": " + ioException.getMessage());
                 }
             }
@@ -282,7 +285,7 @@ public class ServerFile extends NamedObject {
                 try {
                     sourceFile.close();
                 } catch (IOException ioException) {
-                    System.err.println("Warning: failed to close file "
+                    logger.warning("Warning: failed to close file "
                             + source + ": " + ioException.getMessage());
                 }
             }

@@ -6,9 +6,9 @@
   <property name="name" value="anaplan-connect" />
   <property name="readable-name" value="Anaplan Connect" />
   <property name="major.version" value="1" />
-  <property name="minor.version" value="4" />
-  <property name="revision.number" value="0" />
-  <condition property="label" value="@label@p">
+  <property name="minor.version" value="3" />
+  <property name="revision.number" value="3" />
+  <condition property="label" value="-@label@p">
     <not>
       <isset property="label" />
     </not>
@@ -68,6 +68,7 @@
     <delete file="${version.java}" />
     <delete dir="${rel.dir}" />
     <delete dir="${class.dir}" />
+    <delete dir="${build.dir}" />
     <delete file="${jar.file}" />
     <delete dir="${javadoc.dir}" />
   </target>
@@ -87,6 +88,7 @@ interface Version {
   <!-- Normalizes source text content -->
   <target name="normalize" depends="init,versionstamp">
     <!-- Back up source files before modifying them -->
+    <mkdir dir="${build.dir}" />
     <zip zipfile="${build.dir}/pre-normalized.zip" level="1"
         encoding="US-ASCII">
       <zipfileset dir=".">
@@ -100,9 +102,7 @@ interface Version {
         <include name="**/*.java" />
         <include name="**/*.html" />
         <include name="**/*.properties" />
-      </zipfileset>
-      <zipfileset dir="${doc.dir}" prefix="${doc.dir}">
-        <include name="*.html" />
+        <include name="**/*.jks" />
       </zipfileset>
     </zip>
     <fixcrlf srcDir="${java.dir}" includes="**/*.java" encoding="US-ASCII"
@@ -114,8 +114,6 @@ interface Version {
       eol="crlf" tab="remove" tablength="2" eof="remove" />
     <fixcrlf srcDir="." includes="*.sh" encoding="US-ASCII"
       eol="lf" tab="remove" tablength="2" eof="remove" />
-    <fixcrlf srcDir="${doc.dir}" includes="*.html"
-      encoding="US-ASCII" eol="crlf" tab="remove" tablength="2" eof="remove" />
     <fixcrlf srcDir="." includes="AnaplanClient.sh"
       encoding="US-ASCII" eol="lf" tab="remove" tablength="2" eof="remove" />
     <fixcrlf srcDir="." includes="AnaplanClient.bat"
@@ -145,6 +143,7 @@ interface Version {
     <copy todir="${class.dir}">
       <fileset dir="${java.dir}">
         <include name="**/*.properties" />
+        <include name="**/*.jks" />        
       </fileset>
     </copy>
   </target>
@@ -158,8 +157,8 @@ interface Version {
         <attribute name="Implementation-Title" value="${name}" />
         <attribute name="Implementation-Version" value="${rel}" />
         <attribute name="Implementation-Vendor" value="Anaplan" />
-        <attribute name="Created-By" value="$user.name}" />
-        <attribute name="Class-Path" value="lib/commons-codec-1.4.jar lib/commons-logging-1.1.1.jar lib/gson-1.7.1.jar lib/httpclient-4.1.1.jar lib/httpclient-cache-4.1.1.jar lib/httpcore-4.1.1.jar lib/httpmime-4.1.1.jar lib/proxy-vole.jar lib/jcifs.jar"/>
+        <attribute name="Created-By" value="${user.name}" />
+        <attribute name="Class-Path" value="lib/commons-codec-1.6.jar lib/commons-logging-1.1.1.jar lib/gson-1.7.1.jar lib/fluent-hc-4.2.5.jar lib/httpclient-cache-4.2.5.jar lib/httpmime-4.2.5.jar lib/httpclient-4.2.5.jar lib/httpcore-4.2.4.jar"/>
         <attribute name="Main-Class" value="com/anaplan/client/Program"/>
         <attribute name="Sealed" value="true"/>
       </manifest>
@@ -174,7 +173,7 @@ interface Version {
 
     <path id="javadoc.classpath">
       <fileset dir="${lib.dir}">
-        <include name="*.jar" />        
+        <include name="*.jar" />
       </fileset>      
     </path>
 
@@ -183,7 +182,7 @@ interface Version {
         author="true" version="true" access="protected"
                 overview="${java.dir}/com/anaplan/client/overview.html"
         doctitle="${readable-name} JavaDoc (release ${rel})"
-        windowtitle="${readable-name} JavaDoc (release ${rel})"
+    windowtitle="${readable-name} JavaDoc (release ${rel})"
         stylesheetfile="${doc.dir}/stylesheet.css">
       <header>${readable-name} ${rel}</header>
       <footer>${readable-name} ${rel}</footer>
@@ -213,6 +212,9 @@ interface Version {
         <include name="AnaplanClient.bat" />
         <!-- POSIX shell wrapper -->
         <include name="AnaplanClient.sh" />
+        <!-- Documentation -->
+        <include name="*.pdf" />
+        <include name="*.html" />
       </fileset>
     </copy>
     <copy todir="${rel.dir}/${name}-${rel}/${java.dir}">
@@ -221,10 +223,11 @@ interface Version {
         <include name="**/*.java" />
         <include name="**/*.html" />
         <include name="**/*.properties" />
+        <include name="**/*.jks" />
       </fileset>
     </copy>
     <copy todir="${rel.dir}/${name}-${rel}/${doc.dir}">
-      <!-- Documentation -->
+      <!-- API documentation stylesheet -->
       <fileset dir="${doc.dir}" />
     </copy>
     <copy todir="${rel.dir}/${name}-${rel}/${javadoc.dir}">

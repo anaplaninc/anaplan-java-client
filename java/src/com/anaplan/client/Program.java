@@ -1,4 +1,4 @@
-//   Copyright 2011, 2012 Anaplan Inc.
+//   Copyright 2011, 2013 Anaplan Inc.
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -16,18 +16,31 @@ package com.anaplan.client;
 
 import java.io.Console;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
-import java.util.Properties;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Properties;
+import java.util.Scanner;
 
 /**
  * A command-line interface to the Anaplan Connect API library. Running the
  * program with no arguments will display the available options. This class also
- * contains serveral static convenience methods that may be useful by other
+ * contains several static convenience methods that may be useful by other
  * alternative main-method implementations - these should extend this class to
  * gain access to them as they have protected access.
  */
@@ -44,6 +57,11 @@ public abstract class Program {
     private static String proxyUsername = null;
     private static boolean proxyUsernameSet = false;
     private static String proxyPassphrase = null;
+    private static String keyStorePath = null;
+    private static String keyStoreAlias = null;
+    private static String keyStorePassword = null;
+    private static String certificatePath = null;
+    private static boolean userCertificateAuthentication = false;
     private static String workspaceId = null;
     private static String modelId = null;
     private static String moduleId = null;
@@ -84,8 +102,12 @@ public abstract class Program {
                 if (arg == "-h" || arg == "-help") {
                     displayHelp();
                     somethingDone = true;
+                } else if (arg == "-version") {
+                    displayVersion();
+                    somethingDone = true;
                 } else if (arg == "-d" || arg == "-debug") {
-                    ++debugLevel;
+                    if (debugLevel++ == 0)
+                        displayVersion();
                 } else if (arg == "-q" || arg == "-quiet") {
                     quiet = true;
                 } else if (arg == "-W" || arg == "-workspaces") {
@@ -340,6 +362,18 @@ public abstract class Program {
                         setProxyUsername(auth);
                         setProxyPassphrase("?");
                     }
+                } else if (arg == "-c" || arg == "-certificate") {
+                    String certificatePath = args[argi++];
+                    setCertificatePath(certificatePath);
+                } else if (arg == "-k" || arg == "-keystore") {
+                    String keyStorePath = args[argi++];
+                    setKeyStorePath(keyStorePath);                    
+                } else if (arg == "-ka" || arg == "-keystorealias") {
+                    String keyStoreAlias = args[argi++];
+                    setKeyStoreAlias(keyStoreAlias);                   
+                } else if (arg == "-kp" || arg == "-keystorepass") {
+                    String keyStorePassword = args[argi++];
+                    setKeyStorePassword(keyStorePassword);
                 } else if (arg == "-w" || arg == "-workspace") {
                     workspaceId = args[argi++];
                 } else if (arg == "-m" || arg == "-model") {
@@ -498,6 +532,20 @@ public abstract class Program {
                 } else if (arg == "-jdbcquery") {
                     somethingDone = true;
                     String query = args[argi++];
+                    if (query.startsWith("@")) {
+                        LineNumberReader queryFileReader = new LineNumberReader(new FileReader(query.substring(1)));
+                        StringBuilder queryBuilder = new StringBuilder();
+                        String queryLine;
+                        while (null != (queryLine = queryFileReader.readLine())) {
+                            queryBuilder.append(queryLine).append('\n');
+                        }
+                        queryFileReader.close();
+                        query = queryBuilder.toString();
+                        if (debugLevel > 0) {
+                            System.err.println("JDBC query:");
+                            System.err.println(query);
+                        }
+                    }
                     ServerFile serverFile = getServerFile(workspaceId, modelId,
                             fileId, true);
                     if (serverFile != null) {
@@ -1171,7 +1219,7 @@ public abstract class Program {
 					: new Service();
 			service.setDebugLevel(debugLevel);
 			service.setServiceCredentials(getServiceCredentials());
-            if (proxyLocationSet) {
+			if (proxyLocationSet) {
                 service.setProxyLocation(proxyLocation);
                 Credentials proxyCredentials = getProxyCredentials();
                 if (proxyCredentials != null) {
@@ -1185,12 +1233,22 @@ public abstract class Program {
     /**
      * Gathers the Anaplan service credentials.
      *
-     * @return the credentials for the Anaplan service, obtained from
-     * getUsername() and getPassphrase()
+     * @return the credentials for the Anaplan service, either obtained from
+     * getUsername() and getPassphrase() or from getCertificate(), depending
+     * on the authentication method being used
+     * @throws AnaplanAPIException
      * @since 1.3.1
      */
-    protected static Credentials getServiceCredentials() {
-        return new Credentials(getUsername(), getPassphrase());
+    protected static Credentials getServiceCredentials() throws AnaplanAPIException {
+    	if (userCertificateAuthentication) {
+			try {
+				return new Credentials(getCertificate());
+			} catch (Exception e) {
+				throw new AnaplanAPIException("Could not initialise service credentials", e);
+			}
+		} else {
+			return new Credentials(getUsername(), getPassphrase());
+		}
     }
 
     /**
@@ -1381,6 +1439,154 @@ public abstract class Program {
 	}
 
 	/**
+     * Loads the X509 certificate to be used for authentication.
+     *
+     * @return the certificate
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws IOException 
+	 * @throws NoSuchAlgorithmException
+     * @since 1.3.2
+     */
+	protected static X509Certificate getCertificate() throws CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
+		String certificatePath = getCertificatePath();
+		String keyStorePath = getKeyStorePath();
+		if (certificatePath != null) {
+			File certificateFile = new File(certificatePath);
+			if (certificateFile.isFile()) {
+				// load certificate from file
+				return loadCertificateFromFile(certificateFile);
+			} else {
+				throw new RuntimeException("The specified certificate path '" + certificatePath + "' is invalid");
+			}
+		} else if (keyStorePath != null) {
+			// load the key store containing the client certificate
+			KeyStore keyStore = KeyStore.getInstance("JKS");
+			File clientKeyStoreLocation = new File(keyStorePath);
+			if (clientKeyStoreLocation.isFile()) {
+				InputStream keystoreInput = new FileInputStream(clientKeyStoreLocation);
+				
+				String keyStorePassword = getKeyStorePassword();
+				keyStore.load(keystoreInput, keyStorePassword.toCharArray());
+				
+				String alias = getKeyStoreAlias();
+				return (X509Certificate) keyStore.getCertificate(alias);			    
+			} else {
+				throw new IllegalArgumentException("The specified key store path '" + keyStorePath + "' is invalid");
+			}
+		} else {
+			// should not happen
+			throw new RuntimeException("Could not load a certificate for authentication");
+		}
+	}
+
+	/**
+	 * Returns the certificate path set using setCertificatePath()
+	 * 
+	 * @return the certificate path
+	 * @since 1.3.2
+	 */
+	protected static String getCertificatePath() {
+		return certificatePath;
+	}
+	
+	/**
+	 * Set the path to the certificate
+	 * 
+	 * @param certificatePath
+	 * @since 1.3.2 
+	 */
+	protected static void setCertificatePath(String certificatePath) {
+		Program.certificatePath = certificatePath;
+		Program.userCertificateAuthentication = true;
+	}
+	
+	/**
+	 * Returns the key store path set using setKeyStorePath()
+	 * 
+	 * @return the key store path
+	 * @since 1.3.2
+	 */
+	protected static String getKeyStorePath() {
+		return keyStorePath;
+	}
+	
+	/**
+	 * Set the path to the key store
+	 * 
+	 * @param keyStorePath
+	 * @since 1.3.2 
+	 */
+	protected static void setKeyStorePath(String keyStorePath) {
+		Program.keyStorePath = keyStorePath;
+		Program.userCertificateAuthentication = true;
+	}
+
+	/**
+	 * Returns the key store alias set using setKeyStoreAlias()
+	 * 
+	 * @return the key store alias
+	 * @since 1.3.2
+	 */
+	protected static String getKeyStoreAlias() {
+		return keyStoreAlias;
+	}
+	
+	/**
+	 * Set the alias of the key store entry referring to the public 
+	 * certificate and private key pair used by the client to authenticate
+	 * with the server
+	 * 
+	 * @param keyStoreAlias
+	 * @since 1.3.2 
+	 */
+	protected static void setKeyStoreAlias(String keyStoreAlias) {
+		Program.keyStoreAlias = keyStoreAlias;
+	}
+	
+	/**
+	 * Returns the key store password set using setKeyStorePassword().
+	 * If not provided, and the password file is not available, 
+	 * then the user will be securely prompted for a value (provided
+	 * a system console is available)
+	 * 
+	 * @return the key store password
+	 * @since 1.3.2
+	 */
+	protected static String getKeyStorePassword() {
+		if ("?".equals(keyStorePassword)) {
+			promptForKeystorePassword();
+		} else if (keyStorePassword == null || keyStorePassword.isEmpty()) {
+			// first try the password file
+			File userHomeDirectory = new File(System.getProperty("user.home"));
+	        File passwordFile = new File(userHomeDirectory, Constants.PASSWORD_FILE_PATH_SEGMENT);
+	        if (passwordFile.isFile()) {
+	            try {
+	                String rawPassword = readFileContents(passwordFile);
+	                return EncodingUtils.decodeAndXor(rawPassword);
+	            } catch (FileNotFoundException e) {
+	                throw new RuntimeException("Password file could not be read");
+	            } catch (UnsupportedEncodingException e) {
+	                throw new RuntimeException("Password file could not be read");
+	            }
+	        } else {
+	        	promptForKeystorePassword();
+	        }
+		}
+		return keyStorePassword;
+	}
+	
+	/**
+	 * Set the password of the key store
+	 * 
+	 * @param keyStorePassword
+	 * @since 1.3.2
+	 */
+	protected static void setKeyStorePassword(String keyStorePassword) {
+		Program.keyStorePassword = keyStorePassword;
+	}
+	
+	/**
 	 * Check and if necessary prompt for a value. If propertyValue is null,
 	 * empty or '?', and the program is associated with a terminal (ie
 	 * <tt>System.console() != null</tt>), then prompt the user using the value
@@ -1420,13 +1626,67 @@ public abstract class Program {
 		}
 		return propertyValue;
 	}
+    
+    /**
+     * Reads the contents of a text file
+     * 
+     * @param file
+     * @return the file contents
+     * @throws FileNotFoundException if the file could not be found
+     */
+    private static String readFileContents(File file) throws FileNotFoundException {
+        StringBuilder fileContents = new StringBuilder((int) file.length());
+        Scanner scanner = new Scanner(file);
+        try {
+            while (scanner.hasNext()) {
+                fileContents.append(scanner.next());
+            }
+            return fileContents.toString();
+        } finally {
+            scanner.close();
+        }
+    }
+    
+    /**
+     * Loads a {@link X509Certificate} from a file
+     * 
+     * @param certificateFile
+     * @return a X509Certificate
+     * @throws CertificateException
+     * @throws FileNotFoundException
+     */
+    private static X509Certificate loadCertificateFromFile(File certificateFile) throws CertificateException, FileNotFoundException {
+        // loading certificate chain
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        InputStream certificateStream = new FileInputStream(certificateFile);
 
+        Collection<? extends Certificate> c = certificateFactory.generateCertificates(certificateStream);
+        Certificate[] certs = new Certificate[c.toArray().length];
+        if (c.size() == 1) {
+            return (X509Certificate) c.iterator().next();
+        } else {
+        	throw new RuntimeException("Certificate file must contain only one certificate (chain length was " + certs.length + ")");
+        }
+    }
+
+	private static void promptForKeystorePassword() {
+		Console console = System.console();
+		if (console != null) {
+			keyStorePassword = new String(console.readPassword("Key store password:"));
+		} else {
+			throw new UnsupportedOperationException("Key store password must be specified");
+		}
+	}
+	
 	private static void displayHelp() {
+		File passwordFile = new File(System.getProperty("user.dir"), Constants.PASSWORD_FILE_PATH_SEGMENT);
+		
 		System.err.println("Options are:\n"
             + "\n"
             + "General:\n"
             + "--------\n"
             + "(-h|-help): display this help\n"
+            + "(-version): display version information\n"
             + "(-d|-debug): Show more detailed output\n"
             + "(-q|-quiet): Show less detailed output\n"
             + "\n"
@@ -1436,6 +1696,16 @@ public abstract class Program {
             + " (defaults to https://api.anaplan.com/)\n"
             + "(-u|-user) <username>[:<password>]"
             + ": Anaplan user name + (optional) password\n"
+            + "(-c|-certificate) <certificate path>"
+            + ": Path to user certificate used for authentication (an alternative to using a key store)\n"
+            + "(-k|-keystore) <keystore path>"
+            + ": Path to local key store containing user certificate(s) for authentication\n"
+            + "(-kp|-keystorepass) <keystore password>"
+            + ": Password for the key store (if not provided, password is read from obfuscated file '" 
+            + passwordFile.getAbsolutePath()
+            + "', or prompted for)\n"
+            + "(-ka|-keystorealias) <keystore alias>"
+            + ": Alias of the public certificate in the specified key store\n"
             + "(-v|-via) <proxy URI>: use specified proxy\n"
             + "(-vu|-viauser) [<domain>[\\<workstation>]\\]<username>[:<password>]: use proxy credentials\n"
             + "\n"
@@ -1489,7 +1759,18 @@ public abstract class Program {
             + "-jdbcurl: JDBC URL for -jdbcquery to connect to\n"
             + "-jdbcuser (<username>|?)[:(<password>|?)]: JDBC username and password\n"
             + "-jdbcproperty <propname>:(<propval>|?): set JDBC connection property\n"
-            + "-jdbcquery <query>: retrieve data from JDBC data source\n"
+            + "-jdbcquery (<query>|@<queryfile>): retrieve data from JDBC data source\n"
             + "-jdbcfetchsize <size>: hint to transfer <size> records at a time\n");
+    }
+    private static void displayVersion() {
+        System.out.println("Anaplan Connect " + Version.MAJOR + "."
+                + Version.MINOR + "." + Version.REVISION + Version.RELEASE);
+        System.out.println(System.getProperty("java.vm.name") + " ("
+                + System.getProperty("java.vendor") + ")/"
+                + System.getProperty("java.vm.version") + " ("
+                + System.getProperty("java.version") + ")");
+        System.out.println(System.getProperty("os.name") + " ("
+                + System.getProperty("os.arch") + ")/"
+                + System.getProperty("os.version"));
     }
 }
