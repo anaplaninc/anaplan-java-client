@@ -14,7 +14,7 @@
 
 package com.anaplan.client.transport;
 
-import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 import org.apache.http.impl.auth.NTLMEngine;
@@ -26,9 +26,11 @@ public class JCIFSEngine implements NTLMEngine {
 
     private static Class<?> NTLM_FLAGS, TYPE_1_MESSAGE, TYPE_2_MESSAGE, TYPE_3_MESSAGE, BASE64;
     private static int TYPE_1_FLAGS, NTLMSSP_TARGET_TYPE_DOMAIN, NTLMSSP_TARGET_TYPE_SERVER;
+    private static final Throwable initFailure;
     static {
-        int type1Flags = 0;
+        Throwable failure = null;
         try {
+            int type1Flags = 0;
             NTLM_FLAGS = Class.forName("jcifs.ntlmssp.NtlmFlags");
             TYPE_1_MESSAGE = Class.forName("jcifs.ntlmssp.Type1Message");
             TYPE_2_MESSAGE = Class.forName("jcifs.ntlmssp.Type2Message");
@@ -44,18 +46,21 @@ public class JCIFSEngine implements NTLMEngine {
                 "NTLMSSP_REQUEST_TARGET")) {
                 type1Flags |= NTLM_FLAGS.getField(flagName).getInt(null);
             }
-        } catch (ClassNotFoundException classNotFoundException) {
-            // Normal
+            TYPE_1_FLAGS = type1Flags;
         } catch (Throwable thrown) {
-            // Abnormal
-            thrown.printStackTrace();
+            failure = thrown;
+        } finally {
+            initFailure = failure;
         }
-        TYPE_1_FLAGS = type1Flags;
     }
 
-    JCIFSEngine() throws InstantiationException {
-        if (0 == TYPE_1_FLAGS) {
-            throw new InstantiationException();
+    JCIFSEngine() throws InvocationTargetException {
+        if (null != initFailure) {
+            if (initFailure instanceof InvocationTargetException) {
+                throw (InvocationTargetException) initFailure;
+            }
+            throw new InvocationTargetException(initFailure,
+                "Cannot load JCIFSEngine");
         }
     }
 

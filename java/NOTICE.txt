@@ -1,5 +1,5 @@
 Anaplan API Client library
-Copyright 2011 Anaplan Inc.
+Copyright 2013 Anaplan Inc.
 
 This product includes the following software developed at
 The Apache Software Foundation (http://www.apache.org/):

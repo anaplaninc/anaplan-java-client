@@ -138,7 +138,7 @@ public class TaskParameters {
       * @param parameterValue the parameter value.
       */
     public void addConnectorParameter(String sourceIdOrType, ConnectorParameter connectorParameter, String parameterValue) {
-        addConnectorParameter(sourceIdOrType, connectorParameter, parameterValue);
+        addConnectorParameter(sourceIdOrType, connectorParameter.name(), parameterValue);
     }
     /**
       * Add a connector parameter, specific to a either single data source or
