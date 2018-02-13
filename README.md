@@ -1,6 +1,6 @@
 # anaplan-java-client
 
-##DOCUMENTATION
+## DOCUMENTATION
 
 The Anaplan Java Client documentation consists of:
 
