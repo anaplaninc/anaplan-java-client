@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +37,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScheme;
 import org.apache.http.auth.AuthSchemeFactory;
 import org.apache.http.auth.AuthScope;
@@ -43,6 +45,7 @@ import org.apache.http.auth.NTCredentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -56,6 +59,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.NTLMEngine;
 import org.apache.http.impl.auth.NTLMScheme;
+import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
@@ -82,10 +86,24 @@ public class ApacheHttpProvider extends HttpProvider implements
 
     private static final String CHARACTER_ENCODING = "UTF-8";
 
+    private static final int[] NONFATAL_STATUS_CODES = {
+        HttpStatus.SC_REQUEST_TIMEOUT,
+        HttpStatus.SC_CONFLICT,
+        HttpStatus.SC_LOCKED,
+        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+        HttpStatus.SC_BAD_GATEWAY,
+        HttpStatus.SC_SERVICE_UNAVAILABLE,
+        HttpStatus.SC_GATEWAY_TIMEOUT
+    };
+    static {
+        Arrays.sort(NONFATAL_STATUS_CODES);
+    }
+
     private static final Logger logger = Logger
             .getLogger("anaplan-connect.transport");
 
     public class ApacheCredentialsProvider implements CredentialsProvider {
+
         @Override
         public void clear() {
         }
@@ -149,7 +167,7 @@ public class ApacheHttpProvider extends HttpProvider implements
         }
     }
 
-    private DefaultHttpClient httpClient;
+    private HttpClient httpClient;
 
     private HttpHost httpHost;
 
@@ -164,9 +182,35 @@ public class ApacheHttpProvider extends HttpProvider implements
      */
     private String certificateAuthorizationHeader;
 
+    private int idempotentRequestAttempts = 3;
+
+    private int retryDelay = 3000;
+
     // Use TransportProviderFactory to instantiate
     protected ApacheHttpProvider() {
         super();
+        idempotentRequestAttempts = getIntegerSystemProperty("anaplan.client.http.attempts", 3, 1, 10);
+        retryDelay = getIntegerSystemProperty("anaplan.client.http.retryDelay", 3000, 0, 3600000);
+    }
+    
+    private static int getIntegerSystemProperty(String name, int defaultValue, int min, int max) {
+        try {
+            String property = System.getProperty(name);
+            if (null != property) {
+                int parsed = Integer.parseInt(property);
+                if (!(min <= parsed && parsed <= max)) {
+                    throw new IllegalArgumentException("Value must be in range " + min + ".." + max);
+                }
+                return parsed;
+            }
+        } catch (Throwable thrown) {
+            logger.log(Level.WARNING, "Ignoring invalid " + name + " value" + thrown);
+        }
+        return defaultValue;
+    }
+
+    protected HttpClient createHttpClient() {
+        return new DefaultHttpClient();
     }
 
     /**
@@ -178,8 +222,7 @@ public class ApacheHttpProvider extends HttpProvider implements
      */
     private void initialise(Credentials serviceCredentials)
             throws AnaplanAPITransportException {
-        httpClient = new DefaultHttpClient();
-
+        httpClient = createHttpClient();
         if (serviceCredentials.getScheme() == Scheme.USER_CERTIFICATE) {
             try {
                 X509Certificate certificate = serviceCredentials
@@ -199,14 +242,15 @@ public class ApacheHttpProvider extends HttpProvider implements
                         "Could not initialise transport given provided certificate credentials",
                         thrown);
             }
-        } else {
-            httpClient.getParams().setParameter(
+        } else if (httpClient instanceof AbstractHttpClient) {
+            AbstractHttpClient httpClientImpl = (AbstractHttpClient) httpClient;
+            httpClientImpl.getParams().setParameter(
                     ClientPNames.HANDLE_AUTHENTICATION, Boolean.TRUE);
-            httpClient.setCredentialsProvider(new ApacheCredentialsProvider());
+            httpClientImpl.setCredentialsProvider(new ApacheCredentialsProvider());
             try {
                 final NTLMEngine ntlmEngine = new JCIFSEngine();
 
-                httpClient.getAuthSchemes().register("ntlm",
+                httpClientImpl.getAuthSchemes().register("ntlm",
                         new AuthSchemeFactory() {
                             public AuthScheme newInstance(
                                     final HttpParams params) {
@@ -233,34 +277,38 @@ public class ApacheHttpProvider extends HttpProvider implements
             }
         }
 
-        routePlanner = new ProxySelectorRoutePlanner(httpClient
-                .getConnectionManager().getSchemeRegistry(), getProxySelector()) {
-            private boolean suppressed;
+        if (httpClient instanceof AbstractHttpClient) {
+            routePlanner = new ProxySelectorRoutePlanner(httpClient
+                    .getConnectionManager().getSchemeRegistry(), getProxySelector()) {
+                private boolean suppressed;
 
-            @Override
-            public HttpRoute determineRoute(HttpHost target,
-                    HttpRequest request, HttpContext context)
-                    throws HttpException {
-                HttpRoute httpRoute = super.determineRoute(target, request,
-                        context);
-                if (getDebugLevel() >= 1 && !suppressed) {
-                    logger.info(httpRoute.toString() + " ("
-                            + getProxySelector().getClass().getSimpleName()
-                            + ")");
-                    if (getDebugLevel() == 1)
-                        suppressed = true;
+                @Override
+                public HttpRoute determineRoute(HttpHost target,
+                        HttpRequest request, HttpContext context)
+                        throws HttpException {
+                    HttpRoute httpRoute = super.determineRoute(target, request,
+                            context);
+                    if (getDebugLevel() >= 1 && !suppressed) {
+                        logger.info(httpRoute.toString() + " ("
+                                + getProxySelector().getClass().getSimpleName()
+                                + ")");
+                        if (getDebugLevel() == 1)
+                            suppressed = true;
+                    }
+                    return httpRoute;
                 }
-                return httpRoute;
-            }
-        };
-        httpClient.setRoutePlanner(routePlanner);
+            };
+            AbstractHttpClient httpClientImpl = (AbstractHttpClient) httpClient;
+            httpClientImpl.setRoutePlanner(routePlanner);
+        } else {
+            routePlanner = null;
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        String className = getClass().getName();
-        return className.substring(className.lastIndexOf('.') + 1);
+        return getClass().getSimpleName();
     }
 
     /** {@inheritDoc} */
@@ -303,8 +351,10 @@ public class ApacheHttpProvider extends HttpProvider implements
     public void setProxyLocation(URI proxyLocation)
             throws AnaplanAPITransportException {
         super.setProxyLocation(proxyLocation);
-        // Update the route planner
-        routePlanner.setProxySelector(getProxySelector());
+        if (routePlanner != null) {
+            // Update the route planner
+            routePlanner.setProxySelector(getProxySelector());
+        }
     }
 
     /** {@inheritDoc} */
@@ -318,7 +368,7 @@ public class ApacheHttpProvider extends HttpProvider implements
     @Override
     public byte[] get(String path, String acceptType)
             throws AnaplanAPITransportException {
-        try {
+        for (int attempt = 1;; ++attempt) try {
             HttpGet httpGet = new HttpGet(getRequestPath(path));
             if (acceptType != null) {
                 httpGet.setHeader(HttpHeaders.ACCEPT, acceptType);
@@ -331,7 +381,7 @@ public class ApacheHttpProvider extends HttpProvider implements
 
             HttpResponse httpResponse = httpClient.execute(httpHost, httpGet,
                     httpContext);
-            checkResponse(httpResponse);
+            if (checkResponse(httpResponse, attempt)) continue;
             HttpEntity httpEntity = httpResponse.getEntity();
 
             if (httpEntity != null) {
@@ -341,14 +391,14 @@ public class ApacheHttpProvider extends HttpProvider implements
                         getMessage(MSG_NO_CONTENT), null);
             }
         } catch (IOException ioException) {
-            throw createTransportException(ioException);
+            handleIOException(ioException, attempt);
         }
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean head(String path) throws AnaplanAPITransportException {
-        try {
+        for (int attempt = 1;; ++attempt) try {
             HttpHead httpHead = new HttpHead(getRequestPath(path));
             if (getDebugLevel() >= 1) {
                 logger.info(httpHead.getRequestLine().toString());
@@ -370,12 +420,12 @@ public class ApacheHttpProvider extends HttpProvider implements
                 }
                 return false;
             }
-            checkResponse(httpResponse);
-            // Dead code - checkResponse should have thrown an exception
+            if (checkResponse(httpResponse, attempt)) continue;
+            // Dead code - checkResponse should have thrown an exception or returned true
             return false;
 
         } catch (IOException ioException) {
-            throw createTransportException(ioException);
+            handleIOException(ioException, attempt);
         }
     }
 
@@ -415,7 +465,7 @@ public class ApacheHttpProvider extends HttpProvider implements
     @Override
     public byte[] put(String path, byte[] content, String contentType)
             throws AnaplanAPITransportException {
-        try {
+        for (int attempt = 1;; ++attempt) try {
             final String binaryContent = "application/octet-stream";
             HttpPut httpPut = new HttpPut(getRequestPath(path));
             if (contentType == null)
@@ -433,7 +483,7 @@ public class ApacheHttpProvider extends HttpProvider implements
 
             HttpResponse httpResponse = httpClient.execute(httpHost, httpPut,
                     httpContext);
-            checkResponse(httpResponse);
+            if (checkResponse(httpResponse, attempt)) continue;
             HttpEntity httpEntity = httpResponse.getEntity();
 
             if (httpEntity != null) {
@@ -441,7 +491,7 @@ public class ApacheHttpProvider extends HttpProvider implements
             }
             return null;
         } catch (IOException ioException) {
-            throw createTransportException(ioException);
+            handleIOException(ioException, attempt);
         }
     }
 
@@ -449,7 +499,7 @@ public class ApacheHttpProvider extends HttpProvider implements
     @Override
     public byte[] delete(String path, String acceptType)
             throws AnaplanAPITransportException {
-        try {
+        for (int attempt = 1;; ++attempt) try {
             HttpDelete httpDelete = new HttpDelete(getRequestPath(path));
             if (acceptType != null) {
                 httpDelete.setHeader(HttpHeaders.ACCEPT, acceptType);
@@ -461,7 +511,7 @@ public class ApacheHttpProvider extends HttpProvider implements
 
             HttpResponse httpResponse = httpClient.execute(httpHost,
                     httpDelete, httpContext);
-            checkResponse(httpResponse);
+            if (checkResponse(httpResponse, attempt)) continue;
             HttpEntity httpEntity = httpResponse.getEntity();
 
             if (httpEntity != null) {
@@ -471,7 +521,7 @@ public class ApacheHttpProvider extends HttpProvider implements
                         getMessage(MSG_NO_CONTENT), null);
             }
         } catch (IOException ioException) {
-            throw createTransportException(ioException);
+            handleIOException(ioException, attempt);
         }
     }
 
@@ -484,6 +534,11 @@ public class ApacheHttpProvider extends HttpProvider implements
     }
 
     protected void checkResponse(HttpResponse httpResponse)
+            throws AnaplanAPITransportException {
+        checkResponse(httpResponse, Integer.MAX_VALUE);
+    }
+
+    protected boolean checkResponse(HttpResponse httpResponse, int attempt)
             throws AnaplanAPITransportException {
         int statusCode = httpResponse.getStatusLine().getStatusCode();
         if (getDebugLevel() >= 1) {
@@ -513,8 +568,43 @@ public class ApacheHttpProvider extends HttpProvider implements
                     }
                 }
             }
+            if (0 <= Arrays.binarySearch(NONFATAL_STATUS_CODES, statusCode)
+                    && attempt < idempotentRequestAttempts) {
+                if (getDebugLevel() > 0) {
+                    logger.log(Level.WARNING,
+                            "Request failed (attempt " + attempt + " of "
+                            + idempotentRequestAttempts + "); retrying after "
+                            + attempt * retryDelay / 1000 + "s");
+                }
+                try {
+                    Thread.sleep(attempt * retryDelay);
+                } catch (InterruptedException interruptedException) {
+                }
+                return true;
+            }
             throw new AnaplanAPITransportException(getStatusMessage(statusCode,
                     httpResponse.getStatusLine().getReasonPhrase()));
+        }
+        return false;
+    }
+
+    protected void handleIOException(IOException ioException, int attempt)
+            throws AnaplanAPITransportException {
+        if (attempt < idempotentRequestAttempts) {
+            String message = "Request failed (attempt " + attempt + " of "
+                        + idempotentRequestAttempts + "); retrying after "
+                        + attempt * retryDelay / 1000 + "s";
+            if (getDebugLevel() > 1) {
+                logger.log(Level.WARNING, message, ioException);
+            } else if (getDebugLevel() > 0) {
+                logger.log(Level.WARNING, message);
+            }
+            try {
+                Thread.sleep(attempt * retryDelay);
+            } catch (InterruptedException interruptedException) {
+            }
+        } else {
+            throw createTransportException(ioException);
         }
     }
 
