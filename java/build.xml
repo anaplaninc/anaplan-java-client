@@ -13,7 +13,7 @@
       <isset property="label" />
     </not>
   </condition>
-  <condition property="release.version" value="${label}" else="-dev">
+  <condition property="release.version" value="${label}" else="-5">
     <matches string="${label}" pattern="\d+$" />
   </condition>
   <property name="rel"
@@ -21,9 +21,9 @@
 
   <!-- set up path properties -->
   <property name="lib.dir" value="lib" />
-  <property name="java.dir" value="src" />   
-  <property name="doc.dir" value="doc" />   
-  <property name="examples.dir" value="examples" />   
+  <property name="java.dir" value="src" />
+  <property name="doc.dir" value="doc" />
+  <property name="examples.dir" value="examples" />
   <property name="build.dir" value="build" />
   <property name="class.dir" value="${build.dir}/class" />
   <property name="jar.file" value="${name}-${rel}.jar" />
@@ -84,7 +84,7 @@ interface Version {
 }
 </echo>
   </target>
-    
+
   <!-- Normalizes source text content -->
   <target name="normalize" depends="init,versionstamp">
     <!-- Back up source files before modifying them -->
@@ -130,7 +130,7 @@ interface Version {
 
     <path id="compile.classpath">
       <fileset dir="${lib.dir}">
-        <include name="*.jar" />        
+        <include name="*.jar" />
       </fileset>
     </path>
 
@@ -143,14 +143,14 @@ interface Version {
     <copy todir="${class.dir}">
       <fileset dir="${java.dir}">
         <include name="**/*.properties" />
-        <include name="**/*.jks" />        
+        <include name="**/*.jks" />
       </fileset>
     </copy>
   </target>
-  
+
   <!--  build the .jar file -->
   <target name="jar" depends="compile">
-    
+
     <jar jarfile="${jar.file}" basedir="${class.dir}">
       <manifest>
         <attribute name="Comment" value="Built by ${user.name} with ${ant.version}, ${java.vm.name} (${java.vendor})/${java.vm.version} (${java.version}), ${os.name} (${os.arch})/${os.version}" />
@@ -158,12 +158,12 @@ interface Version {
         <attribute name="Implementation-Version" value="${rel}" />
         <attribute name="Implementation-Vendor" value="Anaplan" />
         <attribute name="Created-By" value="${user.name}" />
-        <attribute name="Class-Path" value="lib/commons-codec-1.6.jar lib/commons-logging-1.1.1.jar lib/gson-1.7.1.jar lib/fluent-hc-4.2.5.jar lib/httpclient-cache-4.2.5.jar lib/httpmime-4.2.5.jar lib/httpclient-4.2.5.jar lib/httpcore-4.2.4.jar"/>
+        <attribute name="Class-Path" value="lib/commons-codec-1.11.jar lib/commons-logging-1.1.1.jar lib/gson-1.7.1.jar lib/fluent-hc-4.5.4.jar lib/httpclient-cache-4.5.4.jar lib/httpmime-4.5.4.jar lib/httpclient-4.5.4.jar lib/httpcore-4.4.7.jar"/>
         <attribute name="Main-Class" value="com/anaplan/client/Program"/>
         <attribute name="Sealed" value="true"/>
       </manifest>
     </jar>
-    
+
   </target>
 
   <!-- creates javadoc for the files in the source tree. only does packages listed in ${java.toplevel.packagename} -->
@@ -174,7 +174,7 @@ interface Version {
     <path id="javadoc.classpath">
       <fileset dir="${lib.dir}">
         <include name="*.jar" />
-      </fileset>      
+      </fileset>
     </path>
 
     <javadoc packagenames="${java.toplevel.packagename}"
