@@ -1,2 +1,0 @@
-"Column 1"	"Column 2"	"Column 3"	"Column 4"	"_Line_"	"_Error_1_"
-"_Item_"	""	""	""	"12"	"Invalid name: _Item_"

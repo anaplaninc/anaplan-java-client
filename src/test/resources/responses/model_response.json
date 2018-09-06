@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "schema": "https://blah.anaplan.com/2/0/models/aabbccddeeffgggeeehhhaassas/objects/action"
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  },
+  "model": {
+    "id": "testModelGuid",
+    "name": "Model 0"
+  }
+}

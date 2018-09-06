@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "paging": {
+      "currentPageSize": 2,
+      "next": "https://blah.anaplan.com/2/0/models/<some-model-id>/modules?limit=20&offset=20",
+      "offset": 0,
+      "totalSize": 2
+    },
+    "schema": "https://blah.anaplan.com/2/0/models/<some-model-id>/objects/module"
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  },
+  "modules": [
+    {
+      "id": "102000000073",
+      "name": "Module 0"
+    },
+    {
+      "id": "102000000072",
+      "name": "Module 1"
+    }
+  ]
+}
