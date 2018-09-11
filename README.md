@@ -70,6 +70,18 @@ $ git subtree push --prefix doc origin gh-pages
 
 # Releases
 
+## v1.4
+
+Features:
+
+- Use of the new and improved Anaplan v2.0 integration API
+- Enabling customers to use certificates, obtained from public Certificate Authorities, for Anaplan authentication
+- Enabling users to configure retry timeout and number of retries
+- Configurable chunk sizes for imports, ranging from 1 to 50 MB
+- Improved screen logging, including timestamp, classpath for debug lines, Linux process ID, and more.
+- Better security and ease of querying using JDBCparameters moved to ”properties” file. 
+
+
 ## v1.3.6
 
 Features:
