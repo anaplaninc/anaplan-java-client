@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "schema": "https://api1-qa1.anaplan.com/2/0/models/F7177FD218234A66B0FBA94F3DC9D014/objects/task"
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  },
+  "task": {
+    "currentStep": "Complete.",
+    "progress": 1,
+    "result": {
+      "failureDumpAvailable": false,
+      "nestedResults": [
+        {
+          "failureDumpAvailable": false,
+          "objectId": "116000000009",
+          "successful": true
+        },
+        {
+          "failureDumpAvailable": false,
+          "objectId": "116000000010",
+          "successful": true
+        },
+        {
+          "failureDumpAvailable": false,
+          "objectId": "116000000019",
+          "successful": true
+        },
+        {
+          "failureDumpAvailable": false,
+          "objectId": "116000000020",
+          "successful": true
+        }
+      ],
+      "objectId": "118000000006",
+      "successful": true
+    },
+    "taskId": "DC899746C1F44772953FF5507CDD1E32",
+    "taskState": "COMPLETE"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "paging": {
+      "currentPageSize": 4,
+      "next": "https://blah.anaplan.com/2/0/models/aabbccddeeffgggeeehhhaassas/actions?limit=20&offset=20",
+      "offset": 0,
+      "totalSize": 4
+    },
+    "schema": "https://blah.anaplan.com/2/0/models/aabbccddeeffgggeeehhhaassas/objects/action"
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  },
+  "models": [
+    {
+      "activeState": "UNLOCKED",
+      "id": "testModelGuid",
+      "name": "Model 0"
+    },
+    {
+      "activeState": "UNLOCKED",
+      "id": "08B4AFAF5DEA463999B0A5CBCC18DF69",
+      "name": "Model 1"
+    },
+    {
+      "activeState": "UNLOCKED",
+      "id": "6D203BA7549241C7BEE26C93DE987F12",
+      "name": "Model 2"
+    },
+    {
+      "activeState": "UNLOCKED",
+      "id": "616FFCEA5CBE4A1C81EF0B72DF7DA2CA",
+      "name": "Model 3"
+    }
+  ]
+}
