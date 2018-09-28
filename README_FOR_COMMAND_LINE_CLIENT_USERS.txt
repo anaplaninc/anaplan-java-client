@@ -1,1 +1,0 @@
-If you are not a software-developer or an SDK user, then read the Anaplan-Connect Guide at: https://community.anaplan.com/anapedia/data-integration/anaplan-connect
