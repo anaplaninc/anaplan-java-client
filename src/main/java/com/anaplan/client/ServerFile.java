@@ -162,14 +162,14 @@ public class ServerFile extends NamedObject {
      */
     public InputStream getDownloadStream() {
         // Get list of chunks from server
-        final List<ChunkData> chunkList = getApi().getChunks(getModel().getWorkspace().getId(),
-                getModel().getId(), getId()).getItem();
+        final List<ChunkData> chunkList = getChunks();
         return new SequenceInputStream(new Enumeration<InputStream>() {
             int index = 0;
 
             @Override
             public boolean hasMoreElements() {
-                return index < chunkList.size();
+                int chunkListSize = chunkList == null ? 0 : chunkList.size();   // jbackes 9/12/2018 - null == 0
+                return index < chunkListSize;
             }
 
             @Override
@@ -276,10 +276,13 @@ public class ServerFile extends NamedObject {
             if (response == null || response.getItem() == null) {
                 throw new CreateImportDatasourceError(getName());
             }
-            data = response.getItem();
-            data.setSeparator(guessColumnSeparatorFromSource(new FileInputStream(source), data.getDelimiter()));
+            // data = response.getItem(); // jbackes - 9/12/2018 This line is the overwritting ChunkCount and our settings
+            data.setSeparator(data.getSeparator() == null
+                    ? guessColumnSeparatorFromSource(new FileInputStream(source), data.getDelimiter())
+                    : data.getSeparator());
             data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
             data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
+            data.setDelimiter(data.getDelimiter() == null ? "\"" : data.getDelimiter());
             // Get list of chunks from server
             ChunksResponse chunks = getApi().getChunks(getWorkspace().getId(), getModel().getId(), getId());
             if (chunks == null || chunks.getItem() == null) {
