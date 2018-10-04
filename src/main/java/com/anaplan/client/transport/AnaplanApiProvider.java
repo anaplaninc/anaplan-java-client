@@ -116,7 +116,11 @@ public class AnaplanApiProvider implements TransportApi {
             LOG.info("Setting up proxy...");
             setupProxy(okHttpBuilder);
         }
-        okHttpBuilder.connectTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS);
+        LOG.debug("Setting HTTP Timeout Properties");
+        okHttpBuilder
+                .connectTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS)
+                .readTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS)         // jbackes 9/21/18 - Set the read and write timeouts as well
+                .writeTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS);
         return new OkHttpClient(okHttpBuilder.build());
     }
 
