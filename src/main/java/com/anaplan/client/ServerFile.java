@@ -168,7 +168,7 @@ public class ServerFile extends NamedObject {
 
             @Override
             public boolean hasMoreElements() {
-                int chunkListSize = chunkList == null ? 0 : chunkList.size();
+                int chunkListSize = chunkList == null ? 0 : chunkList.size();   // jbackes 9/12/2018 - null == 0
                 return index < chunkListSize;
             }
 
