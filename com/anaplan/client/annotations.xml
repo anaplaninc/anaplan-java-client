@@ -1,0 +1,5 @@
+<root>
+    <item name='com.anaplan.client.Workspace'>
+        <annotation name='java.lang.Deprecated'/>
+    </item>
+</root>

@@ -16,7 +16,7 @@ public class Constants {
     public static final Integer AUTH_TTL_SECONDS = 30;
 
     public static final String X_ACONNECT_HEADER_KEY = "X-AConnect-Client";
-    public static final String X_ACONNECT_HEADER_VALUE = "Anaplan Connect 1.4";
+    public static final String X_ACONNECT_HEADER_VALUE = "SnapLogic2";
     public static final String X_ACONNECT_HEADER = X_ACONNECT_HEADER_KEY + ":" + X_ACONNECT_HEADER_VALUE;
 
     public static final String CORS_HEADER_KEY = "Origin";
