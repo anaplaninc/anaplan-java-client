@@ -9,7 +9,7 @@ public class Constants {
 
     public static final int AC_MAJOR = 1;
     public static final int AC_MINOR = 4;
-    public static final int AC_REVISION = 0 ;
+    public static final int AC_REVISION = 2 ;
 
     public static final boolean AUTH_CLIENT_CACHE_ENABLED = false;
 
