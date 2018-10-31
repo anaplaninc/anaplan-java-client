@@ -7,7 +7,7 @@
     <property name="DEBUG_STDOUT" scope="CONTEXT"
               value="%d{yyyy-MM-dd HH:mm:ss} %highlightex(%-5level) %yellow([%-20.20logger{20}:%cyan(%-5line)]) %magenta(%X{process_id}) |--   %m %ex{5}%n" />
     <property name="STDOUT" scope="CONTEXT"
-              value="%d{yyyy-MM-dd HH:mm:ss} %highlightex(%-5level) %magenta(%X{process_id}) |--   %m %ex{5}%n" />
+              value="%m %ex{5}%n" />
 
     <!-- custom coloring conversion -->
     <conversionRule conversionWord="highlightex" converterClass="com.anaplan.client.logging.LogLevelHighlighter" />
