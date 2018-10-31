@@ -43,6 +43,7 @@ public class Module extends NamedObject {
             public View[] getPage(int offset) {
                 ViewsResponse response = getApi().getViews(getModel().getWorkspace().getId(),
                         getModel().getId(), getId(), offset);
+                setPageInfo(response.getMeta().getPaging());
                 if (getPageInfo().getCurrentPageSize() > 0 && response.getItem() != null) {
                     return response.getItem()
                             .stream()

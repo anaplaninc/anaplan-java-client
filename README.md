@@ -70,7 +70,7 @@ $ git subtree push --prefix doc origin gh-pages
 
 # Releases
 
-## v1.4
+## v1.4.1
 
 Features:
 
