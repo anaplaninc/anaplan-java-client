@@ -63,7 +63,7 @@ public class TaskResultDetail {
         if (data.getOccurrences() != 0) {
             out.append(": ").append(Integer.toString(data.getOccurrences()));
         }
-        if (getValues().size() != 0) {
+        if (getValues() != null && getValues().size() != 0) {
             out.append("\n");
             getValues().forEach((k, v) -> {
                 try {
