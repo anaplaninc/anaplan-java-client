@@ -49,7 +49,7 @@ public class LogUtils {
     }
 
     public static void logSeparatorDownload() {
-        LOG.info(Strings.repeat("↓ ", 30));
+        LOG.info(Strings.repeat("* ", 30));
     }
 
     public static void logSeparatorOperationResponses() {
