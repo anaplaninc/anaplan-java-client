@@ -22,12 +22,12 @@ public class Constants {
     public static final String CORS_HEADER_KEY = "Origin";
     public static final String CORS_HEADER_VALUE = "https://www.anaplan.com";
 
-    public static final int MIN_RETRY_COUNT = 3;
+    public static final int MIN_RETRY_COUNT = 10;
     public static final int MAX_RETRY_COUNT = 15;
 
     public static final int MIN_RETRY_TIMEOUT_SECS = 3;
     public static final int MAX_RETRY_TIMEOUT_SECS = 60;
 
-    public static final int MIN_HTTP_CONNECTION_TIMEOUT_SECS = 30;
+    public static final int MIN_HTTP_CONNECTION_TIMEOUT_SECS = 3;
     public static final int MAX_HTTP_CONNECTION_TIMEOUT_SECS = 60;
 }
