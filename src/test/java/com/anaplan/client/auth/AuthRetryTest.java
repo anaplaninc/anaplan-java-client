@@ -47,7 +47,7 @@ public class AuthRetryTest extends BaseTest {
         ConnectionProperties properties = new ConnectionProperties();
         properties.setApiCredentials(new Credentials(mockUsername, mockPassword));
         properties.setAuthServiceUri(new URI(mockAuthServiceUrl));
-        properties.setMaxRetryCount(Constants.MIN_RETRY_COUNT);
+        properties.setMaxRetryCount(3);
         properties.setRetryTimeout(Constants.MIN_RETRY_TIMEOUT_SECS);
         properties.setHttpTimeout(Constants.MIN_HTTP_CONNECTION_TIMEOUT_SECS);
         basicAuth = Mockito.spy(new MockRetryBasicAuthenticator(properties));
