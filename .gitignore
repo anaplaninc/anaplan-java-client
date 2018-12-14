@@ -1,3 +1,6 @@
 target
 .idea/
 anaplan-connect.iml
+
+*.cer
+*.p12

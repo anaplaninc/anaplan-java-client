@@ -28,6 +28,6 @@ public class Constants {
     public static final int MIN_RETRY_TIMEOUT_SECS = 3;
     public static final int MAX_RETRY_TIMEOUT_SECS = 60;
 
-    public static final int MIN_HTTP_CONNECTION_TIMEOUT_SECS = 3;
+    public static final int MIN_HTTP_CONNECTION_TIMEOUT_SECS = 30;
     public static final int MAX_HTTP_CONNECTION_TIMEOUT_SECS = 60;
 }
