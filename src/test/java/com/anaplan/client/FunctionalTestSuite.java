@@ -24,7 +24,6 @@ import org.junit.runners.Suite;
         JDBCCellReaderTest.class,
         KeyStoreManagerTest.class,
         ModelTest.class,
-        PaginatorTest.class,
         ServerFileTest.class,
         WorkspaceTest.class
 })

@@ -4,6 +4,7 @@ package com.anaplan.client;
 import com.anaplan.client.api.AnaplanAPI;
 import com.anaplan.client.api.AnaplanAuthenticationAPI;
 import com.anaplan.client.auth.Credentials;
+import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.dto.responses.ModelResponse;
 import com.anaplan.client.dto.responses.UserResponse;
 import com.anaplan.client.dto.responses.WorkspaceResponse;
@@ -153,7 +154,6 @@ public abstract class BaseTest {
             archivedModel = properties.getString("archived.model");
             lockedModel = properties.getString("locked.model");
             testModel = properties.getString("test.model");
-            recordFetchUserId();
         } catch (Exception e) {
             throw new RuntimeException("setUp failed", e);
         } finally {
@@ -202,28 +202,10 @@ public abstract class BaseTest {
         return tempFolder;
     }
 
-    protected void recordFetchUserId() throws IOException {
-        Mockito.doReturn(createFeignResponse("responses/users_me.json", UserResponse.class))
-                .when(mockAnaplanApi)
-                .getUser();
-    }
-
-    protected void recordActionsFetchMockWorkspace() throws IOException {
-        Mockito.doReturn(createFeignResponse("responses/workspace_response.json", WorkspaceResponse.class))
-                .when(mockAnaplanApi)
-                .getWorkspace(testUserId, testWorkspaceNameOrId);
-    }
-
-    protected void recordActionsFetchMockModel() throws IOException {
-        Mockito.doReturn(createFeignResponse("responses/model_response.json", ModelResponse.class))
-                .when(mockAnaplanApi)
-                .getModel(testUserId, "testModelGuid");
-    }
-
     protected Model fetchMockModel() throws IOException, AnaplanAPIException {
-        recordActionsFetchMockWorkspace();
-        recordActionsFetchMockModel();
-        return getTestModel();
+        ModelData md = new ModelData("testModelGuid");
+        Model model = new Model(getTestWorkspace(), md);
+        return model;
     }
 
     protected Credentials getCorrectCredentials() {
@@ -252,18 +234,6 @@ public abstract class BaseTest {
 
     protected Workspace getTestWorkspace() throws AnaplanAPIException {
         return mockService.getWorkspace(testWorkspace);
-    }
-
-    protected Model getArchivedModel() throws AnaplanAPIException {
-        return getTestWorkspace().getModel(archivedModel);
-    }
-
-    protected Model getLockedModel() throws AnaplanAPIException {
-        return getTestWorkspace().getModel(lockedModel);
-    }
-
-    protected Model getTestModel() throws AnaplanAPIException {
-        return getTestWorkspace().getModel(testModel);
     }
 
     protected InputStream getTestDataStream(String name) throws IOException {

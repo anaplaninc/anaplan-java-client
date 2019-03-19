@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.anaplan.client</groupId>
     <artifactId>anaplan-connect</artifactId>
-    <version>1.4</version>
+    <version>1.4.1</version>
     <name>Anaplan Connect</name>
 
     <properties>
@@ -15,37 +15,37 @@
         <maven.build.timestamp.format>MMM dd, yyyy @ KK:mm:ss a (z)</maven.build.timestamp.format>
         <jdk.version>1.8</jdk.version>
         <compiler.plugin.version>3.7.0</compiler.plugin.version>
-        <jackson.core.version>2.9.5</jackson.core.version>
         <feign-jackson.version>9.6.0</feign-jackson.version>
         <github.global.server>github</github.global.server>
         <junit.version>4.11</junit.version>
         <logback.version>1.2.3</logback.version>
         <commons.codec.version>1.11</commons.codec.version>
         <commons.io.version>2.6</commons.io.version>
-        <org.apache.httpcomponents.httpclient.version>4.5.4</org.apache.httpcomponents.httpclient.version>
-        <org.apache.httpcomponents.httpcore.version>4.4.9</org.apache.httpcomponents.httpcore.version>
-        <org.apache.httpcomponents.httpmime.version>4.5.4</org.apache.httpcomponents.httpmime.version>
-        <org.apache.httpcomponents.fluent-hc.version>4.5.4</org.apache.httpcomponents.fluent-hc.version>
+        <org.apache.httpcomponents.httpcore.version>4.4.10</org.apache.httpcomponents.httpcore.version>
+        <org.apache.httpcomponents.httpclient.version>4.5.6</org.apache.httpcomponents.httpclient.version>
+        <org.apache.httpcomponents.httpmime.version>4.5.6</org.apache.httpcomponents.httpmime.version>
+        <org.apache.httpcomponents.fluent-hc.version>4.5.6</org.apache.httpcomponents.fluent-hc.version>
         <guava.version>23.6-jre</guava.version>
         <opencsv.version>4.1</opencsv.version>
         <h2.version>1.4.196</h2.version>
         <jcifs.version>1.3.17</jcifs.version>
         <feign.version>9.5.1</feign.version>
-        <jackson.version>2.9.3</jackson.version>
+        <jackson.version>2.9.8</jackson.version>
         <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
         <github.maven.plugin.version>0.12</github.maven.plugin.version>
         <maven.javadoc.plugin.version>3.0.0</maven.javadoc.plugin.version>
         <mockito.version>1.10.19</mockito.version>
         <mysql.connector.version>5.1.6</mysql.connector.version>
         <lombok.version>1.16.18</lombok.version>
-        <bouncycastle.version>1.58</bouncycastle.version>
+        <bouncycastle.version>1.60</bouncycastle.version>
+        <not.yet.commons.ssl.version>0.3.9</not.yet.commons.ssl.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>${jackson.core.version}</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.openfeign</groupId>
@@ -148,8 +148,19 @@
             <artifactId>bcprov-jdk15on</artifactId>
             <version>${bouncycastle.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${bouncycastle.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/ca.juliusdavies/not-yet-commons-ssl -->
+        <!-- Java SSL component library -->
+        <dependency>
+            <groupId>ca.juliusdavies</groupId>
+            <artifactId>not-yet-commons-ssl</artifactId>
+            <version>${not.yet.commons.ssl.version}</version>
+        </dependency>
     </dependencies>
-
     <distributionManagement>
         <repository>
             <id>internal.repo</id>

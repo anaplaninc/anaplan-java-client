@@ -148,6 +148,6 @@ public final class Credentials {
     }
 
     public boolean isNtlm() {
-        return domain == null && workstation == null;
+        return domain != null || workstation != null;
     }
 }

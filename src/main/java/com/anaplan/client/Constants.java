@@ -9,14 +9,14 @@ public class Constants {
 
     public static final int AC_MAJOR = 1;
     public static final int AC_MINOR = 4;
-    public static final int AC_REVISION = 0 ;
+    public static final int AC_REVISION = 1 ;
 
     public static final boolean AUTH_CLIENT_CACHE_ENABLED = false;
 
     public static final Integer AUTH_TTL_SECONDS = 30;
 
     public static final String X_ACONNECT_HEADER_KEY = "X-AConnect-Client";
-    public static final String X_ACONNECT_HEADER_VALUE = "Anaplan Connect 1.4";
+    public static final String X_ACONNECT_HEADER_VALUE = "Anaplan_Connect_1.4.1";
     public static final String X_ACONNECT_HEADER = X_ACONNECT_HEADER_KEY + ":" + X_ACONNECT_HEADER_VALUE;
 
     public static final String CORS_HEADER_KEY = "Origin";

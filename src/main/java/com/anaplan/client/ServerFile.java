@@ -22,16 +22,13 @@ import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.ex.CreateImportDatasourceError;
 import com.anaplan.client.ex.NoChunkError;
 import com.anaplan.client.logging.LogUtils;
-import com.opencsv.CSVParser;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -222,31 +219,6 @@ public class ServerFile extends NamedObject {
     }
 
     /**
-     * Tries to guess the column-separator from the input-stream, or else uses the default-delimiter
-     * if all attempts fail.
-     *
-     * @param inputStream
-     * @param defaultDelimiter
-     * @return
-     */
-    private String guessColumnSeparatorFromSource(InputStream inputStream, String defaultDelimiter) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        try {
-            String line = reader.readLine();
-            if (new CSVParser(',').parseLine(line).length > 1) {
-                return ",";
-            } else if (new CSVParser('\t').parseLine(line).length > 1) {
-                return "\t";
-            } else {
-                LOG.error("Separator is neither comma, nor tab-character!");
-            }
-        } catch (IOException e) {
-            LOG.error("Could not read line to guess delimiter!");
-        }
-        return defaultDelimiter;
-    }
-
-    /**
      * Upload a file to the server, writing it to the specified target file.
      *
      * @param source         The source file to upload
@@ -277,7 +249,6 @@ public class ServerFile extends NamedObject {
                 throw new CreateImportDatasourceError(getName());
             }
             data = response.getItem();
-            data.setSeparator(guessColumnSeparatorFromSource(new FileInputStream(source), data.getDelimiter()));
             data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
             data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
             // Get list of chunks from server
@@ -312,7 +283,6 @@ public class ServerFile extends NamedObject {
                     LOG.warn("Warning: failed to close file {}: {}", source, ioException.getMessage());
                 }
             }
-            finalizeUploadStream();
         }
     }
 

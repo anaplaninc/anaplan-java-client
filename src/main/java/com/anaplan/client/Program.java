@@ -17,43 +17,40 @@ package com.anaplan.client;
 import com.anaplan.client.auth.Credentials;
 import com.anaplan.client.auth.KeyStoreManager;
 import com.anaplan.client.dto.ExportMetadata;
+import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.ex.BadSystemPropertyError;
+import com.anaplan.client.ex.PrivateKeyException;
 import com.anaplan.client.jdbc.JDBCCellReader;
 import com.anaplan.client.jdbc.JDBCConfig;
 import com.anaplan.client.logging.LogUtils;
 import com.anaplan.client.transport.ConnectionProperties;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.opencsv.CSVParser;
-import feign.FeignException;
+import org.apache.commons.ssl.PKCS8Key;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.util.io.pem.PemObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.io.Console;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.Scanner;
@@ -83,6 +80,7 @@ public abstract class Program {
     private static String keyStorePath = null;
     private static String keyStoreAlias = null;
     private static String keyStorePassword = null;
+    private static String privateKeyPath = null;
     private static String certificatePath = null;
     private static boolean userCertificateAuthentication = false;
     private static String workspaceId = null;
@@ -145,23 +143,6 @@ public abstract class Program {
                     }
                 } else if (arg == "-q" || arg == "-quiet") {
                     quiet = true;
-                } else if (arg == "-W" || arg == "-workspaces") {
-                    somethingDone = true;
-                    for (Workspace workspace : getService().getWorkspaces()) {
-                        LOG.info(Utils.formatTSV(
-                                workspace.getId(),
-                                workspace.getName()));
-                    }
-                } else if (arg == "-M" || arg == "-models") {
-                    somethingDone = true;
-                    Workspace workspace = getWorkspace(workspaceId);
-                    if (workspace != null) {
-                        for (Model model : workspace.getModels()) {
-                            LOG.info(Utils.formatTSV(
-                                    model.getId(),
-                                    model.getName()));
-                        }
-                    }
                 } else if (arg == "-MO" || arg == "-modules") {
                     somethingDone = true;
                     Model model = getModel(workspaceId, modelId);
@@ -414,7 +395,23 @@ public abstract class Program {
                 } else if (arg == "-c" || arg == "-certificate") {
                     String certificatePath = args[argi++];
                     setCertificatePath(certificatePath);
+                } else if (arg == "-pkey" || arg == "-privatekey") {
+                    if (keyStorePath !=null){
+                        throw new IllegalArgumentException("expected either the privatekey or the keystore arguments");
+                    }
+                    String auth = args[argi++];
+                    int colonPosition = auth.lastIndexOf(':');
+                    if (colonPosition != -1) {
+                        setPrivateKeyPath(auth.substring(0, colonPosition));
+                        setPassphrase(auth.substring(colonPosition + 1));
+                    } else {
+                        setUsername(auth);
+                        setPassphrase("?");
+                    }
                 } else if (arg == "-k" || arg == "-keystore") {
+                    if (passphrase !=null || privateKeyPath != null ){
+                        throw new IllegalArgumentException("expected either the privatekey or keystore arguments");
+                    }
                     String keyStorePath = args[argi++];
                     setKeyStorePath(keyStorePath);
                 } else if (arg == "-ka" || arg == "-keystorealias") {
@@ -589,7 +586,7 @@ public abstract class Program {
             }
             closeDown();
         } catch (Throwable thrown) {
-            LOG.debug("{}", Throwables.getStackTraceAsString(thrown));
+            //LOG.debug("{}", Throwables.getStackTraceAsString(thrown));
             if (!(thrown instanceof InterruptedException)) {
                 // Some brevity for those who don't
                 LOG.error(Utils.formatThrowable(thrown));
@@ -958,7 +955,7 @@ public abstract class Program {
             LOG.error("A model ID must be provided");
             return null;
         }
-        Model model = workspace.getModel(modelId);
+        Model model = new Model(workspace, new ModelData(modelId));
         if (model == null) {
             LOG.error("Model \"" + modelId
                     + "\" not found in workspace \"" + workspaceId + "\"");
@@ -1096,7 +1093,7 @@ public abstract class Program {
                 passphrase = new String(console.readPassword("Password:"));
             } else {
                 throw new UnsupportedOperationException(
-                        "Password must be specified");
+                        "Password/Passphrase must be specified");
             }
         }
         return passphrase;
@@ -1246,10 +1243,9 @@ public abstract class Program {
      * @throws CertificateException
      * @throws KeyStoreException
      * @throws IOException
-     * @throws NoSuchAlgorithmException
      * @since 1.3.2
      */
-    protected static X509Certificate getCertificate() throws CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException {
+    protected static X509Certificate getCertificate() throws CertificateException, KeyStoreException, IOException {
         String certificatePath = getCertificatePath();
         String keyStorePath = getKeyStorePath();
         if (certificatePath != null) {
@@ -1272,19 +1268,28 @@ public abstract class Program {
      * Private key are always stored in keystore files, so fetches that using password and alias.
      *
      * @return
-     * @throws KeyStoreException
+     * @throws GeneralSecurityException
      */
-    static RSAPrivateKey getPrivateKey() throws KeyStoreException {
+    private static RSAPrivateKey getPrivateKey() throws GeneralSecurityException {
+        String privateKeyPath = getPrivateKeyPath();
         String keyStorePath = getKeyStorePath();
         String keyStorePrivateKeyAlias = getKeyStoreAlias();
-        if (keyStorePath != null && keyStorePrivateKeyAlias != null) {
+        if (privateKeyPath != null) {
+            File privateKeyFile = new File(privateKeyPath);
+            if (privateKeyFile.isFile()) {
+                //load privateKey from file
+                return loadPrivateKeyFromFile(privateKeyPath,passphrase);
+            } else {
+                    throw new RuntimeException("The specified privateKey path '" + privateKeyPath + "' is invalid");
+            }
+        } else if (keyStorePath != null && keyStorePrivateKeyAlias != null) {
             return new KeyStoreManager().getKeyStorePrivateKey(keyStorePath, getKeyStorePassword(), keyStorePrivateKeyAlias);
         } else {
-            throw new AnaplanAPIException("Private key can only be read from KeyStores. Please provide the -keystore and -keystoreprivatekeyalias argument values!");
+            throw new RuntimeException("Could not load the privateKey for authentication. Please check the privateKey parameters in your input.");
         }
     }
 
-    /**
+     /**
      * Returns the certificate path set using setCertificatePath()
      *
      * @return the certificate path
@@ -1302,6 +1307,25 @@ public abstract class Program {
      */
     protected static void setCertificatePath(String certificatePath) {
         Program.certificatePath = certificatePath;
+        Program.userCertificateAuthentication = true;
+    }
+
+    /**
+     * Returns the privateKey path set using setPrivateKeyPath()
+     *
+     * @return the privateKeyPath
+     */
+    public static String getPrivateKeyPath() {
+        return privateKeyPath;
+    }
+
+    /**
+     * Set the path to the privateKey
+     *
+     * @param privateKeyPath
+     */
+    public static void setPrivateKeyPath(String privateKeyPath) {
+        Program.privateKeyPath = privateKeyPath;
         Program.userCertificateAuthentication = true;
     }
 
@@ -1473,6 +1497,32 @@ public abstract class Program {
         }
     }
 
+    /**
+     * Loads a {privateKey} from a file
+     *
+     * @param privateKeyPath
+     * @return a RSAPrivateKey
+     */
+    public static RSAPrivateKey loadPrivateKeyFromFile(String privateKeyPath, String passphrase) {
+        byte [] privateKeyDer;
+        byte [] privateKeyDecrypted;
+        // Read PEM file
+        try (PEMParser pemParser = new PEMParser(new FileReader(privateKeyPath))) {
+            // Convert PEM object to DER
+            PemObject pemObject = pemParser.readPemObject();
+            privateKeyDer = pemObject.getContent();
+            // Decrypt PKCS#8 private key with password (can be skipped if private key is not encrypted
+            PKCS8Key pkcs8Key = (passphrase == null) ? new PKCS8Key(privateKeyDer, getPassphrase().toCharArray()) :
+                    new PKCS8Key(privateKeyDer, passphrase.toCharArray());
+            PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(pkcs8Key.getDecryptedBytes());
+            PrivateKey privateKey = (pkcs8Key.isRSA()) ? KeyFactory.getInstance("RSA").generatePrivate(pkcs8EncodedKeySpec) :
+                    KeyFactory.getInstance("DSA").generatePrivate(pkcs8EncodedKeySpec);
+            return (RSAPrivateKey) privateKey;
+        } catch(Exception e){
+            throw new PrivateKeyException(privateKeyPath + ", " +e);
+        }
+    }
+
     private static void promptForKeystorePassword() {
         Console console = System.console();
         if (console != null) {
@@ -1540,6 +1590,8 @@ public abstract class Program {
                 + "(-auth|-authServiceUrl) <Auth Service URL>: Anaplan SSO server."
                 + "(-c|-certificate) <CA certificate filepath>"
                 + ": Path to user certificate used for authentication (an alternative to using a key store)\n"
+                + "(-pkey|-privatekey) <privatekey path>:<passphrase>"
+                + ": Path to user privatekey used for authentication (an alternative to using a key store) + passphrase\n"
                 + "(-k|-keystore) <keystore path>"
                 + ": Path to local key store containing user certificate(s) for authentication\n"
                 + "(-kp|-keystorepass) <keystore password>"

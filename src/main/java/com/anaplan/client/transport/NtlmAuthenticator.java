@@ -48,7 +48,7 @@ public class NtlmAuthenticator implements Authenticator {
         try {
             ntlmMsg3 = engine.generateType3Msg(username, password, domain, workstation, WWWAuthenticate.get(0).substring(5));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to set up JCIFS NTLM proxy authentication, Please check your NTLM parameters and provide the correct value of domain, workstation, username and password");
         }
         return response.request().newBuilder().header("Authorization", "NTLM " + ntlmMsg3).build();
     }
