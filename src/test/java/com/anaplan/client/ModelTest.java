@@ -27,6 +27,7 @@ public class ModelTest extends BaseTest {
         mockModel = fetchMockModel();
     }
 
+
     @Test
     public void testModelFetchModules() throws Exception {
         assertNotNull(mockModel);

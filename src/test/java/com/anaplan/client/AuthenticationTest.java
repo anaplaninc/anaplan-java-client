@@ -29,29 +29,11 @@ public class AuthenticationTest extends BaseTest {
 
     @Test
     public void testGoodAuth() throws Exception {
-        recordActionsFetchMockWorkspace();
         checkWorkspace();
-    }
-
-    @Test
-    public void testBadAuth() throws IOException {
-        recordActionsFetchMockWorkspace();
-        mockService.getApiProvider().setApiClient(null);
-        when(getMockAuthApi().authenticateBasic(okhttp3.Credentials.basic(
-                getProps().getApiCredentials().getUserName(),
-                getProps().getApiCredentials().getPassPhrase())))
-                .thenThrow(new MockFeignException("Authentication failed!"));
-        try {
-            checkWorkspace();
-            fail("Expected authentication to fail!");
-        } catch (UserNotFoundException e) {
-            logger.info("Expected Auth failure");
-        }
     }
 
     public void checkWorkspace() throws AnaplanAPIException {
         Workspace workspace = mockService.getWorkspace(getTestWorkspaceNameOrId());
         assertEquals(getTestWorkspaceNameOrId(), workspace.getId());
-        assertEquals("Workspace A", workspace.getName());
     }
 }

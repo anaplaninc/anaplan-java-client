@@ -1,9 +1,11 @@
 package com.anaplan.client.auth;
 
 import com.anaplan.client.BaseTest;
+import com.anaplan.client.Program;
 import com.anaplan.client.api.AnaplanAuthenticationAPI;
 import com.anaplan.client.dto.responses.AuthenticationResp;
 import com.anaplan.client.ex.AnaplanAPITransportException;
+import com.anaplan.client.ex.PrivateKeyException;
 import com.anaplan.client.transport.ConnectionProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.CoreMatchers;
@@ -15,6 +17,7 @@ import org.mockito.Mockito;
 import java.io.ByteArrayInputStream;
 import java.io.StringBufferInputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -23,9 +26,7 @@ import java.util.Base64;
 
 import static com.anaplan.client.CertConstants.CERT_PREFIX;
 import static com.anaplan.client.CertConstants.CERT_SUFFIX;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -39,9 +40,10 @@ public class CertificateAuthenticatorTest extends BaseTest {
 
     private final String mockAuthServiceUrl = "http://mock-auth.anaplan.com";
     private final static String CERT_FILEPATH = "auth/sample_cert.pem";
-    private final static String PKCS8_PRIVATE_KEY_FILEPATH = "src/test/resources/auth/sample_privateKey.pkcs8";
+    private final static String PEM_PRIVATE_KEY_FILEPATH = "src/test/resources/auth/sample_privateKey.pem";
     public static final String BEGIN_CERT = "-----BEGIN CERTIFICATE-----";
     public static final String END_CERT = "-----END CERTIFICATE-----";
+    public static final String passphrase = "anaplanconnector";
     private final String mockAuthToken = "authentication-token";
     private static final String KEY_ALGORITHM = "RSA";
     private CertificateAuthenticator certAuth;
@@ -104,7 +106,7 @@ public class CertificateAuthenticatorTest extends BaseTest {
         certificate = (X509Certificate) certificateFactory.generateCertificate(
                 new ByteArrayInputStream(
                         Base64.getDecoder().decode(
-                                new String(getFixture(CERT_FILEPATH), "UTF-8")
+                                new String(getFixture(CERT_FILEPATH), StandardCharsets.UTF_8)
                                         .replaceAll("\n", "")
                                         .split(BEGIN_CERT)[1]
                                         .split(END_CERT)[0]
@@ -121,7 +123,7 @@ public class CertificateAuthenticatorTest extends BaseTest {
     @Test
     public void testGetAuthToken() throws Exception {
         ConnectionProperties props = new ConnectionProperties();
-        props.setApiCredentials(new Credentials(certificate, openPkcs8PKFile(PKCS8_PRIVATE_KEY_FILEPATH)));
+        props.setApiCredentials(new Credentials(certificate, Program.loadPrivateKeyFromFile(PEM_PRIVATE_KEY_FILEPATH,passphrase)));
         props.setAuthServiceUri(new URI(mockAuthServiceUrl));
         certAuth = Mockito.spy(new MockCertificateAuthenticator(props, mockAuthApi));
         AuthenticationResp authenticationResp = objectMapper.readValue(getFixture(authResponse), AuthenticationResp.class);
@@ -132,10 +134,47 @@ public class CertificateAuthenticatorTest extends BaseTest {
         assertEquals(authenticationResp.getItem().getExpiresAt(), certAuth.getAuthTokenExpiresAt());
     }
 
+    @Test
+    public void testNotNullPrivateKeys() throws Exception {
+        RSAPrivateKey privateKeyFromFile = Program.loadPrivateKeyFromFile(PEM_PRIVATE_KEY_FILEPATH,passphrase);
+        assertNotNull(privateKeyFromFile);
+    }
+
+    @Test(expected = PrivateKeyException.class)
+    public void testNullPrivateKeys() throws PrivateKeyException {
+        try {
+            Program.loadPrivateKeyFromFile(null,passphrase);
+        } catch (PrivateKeyException e) {
+            assertThat(e.getMessage(), CoreMatchers.containsString("Could not load your privateKey"));
+            throw e;
+        }
+    }
+
+    @Test(expected = PrivateKeyException.class)
+    public void testNullPassphrase() throws PrivateKeyException {
+        try {
+            Program.loadPrivateKeyFromFile(PEM_PRIVATE_KEY_FILEPATH,null);
+        } catch (PrivateKeyException e) {
+            assertThat(e.getMessage(), CoreMatchers.containsString("Could not load your privateKey"));
+            throw e;
+        }
+    }
+
+    @Test(expected = PrivateKeyException.class)
+    public void testNullPassphrasePrivateKeys() throws PrivateKeyException {
+        try {
+            Program.loadPrivateKeyFromFile(null,null);
+        } catch (PrivateKeyException e) {
+            assertThat(e.getMessage(), CoreMatchers.containsString("Could not load your privateKey"));
+            throw e;
+        }
+    }
+
+
     @Test(expected = AnaplanAPITransportException.class)
     public void testCreateNonceVerificationDataBadPrivateKey() throws Exception {
         ConnectionProperties props = new ConnectionProperties();
-        props.setApiCredentials(new Credentials(certificate, openPkcs8PKFile(PKCS8_PRIVATE_KEY_FILEPATH)));
+        props.setApiCredentials(new Credentials(certificate, Program.loadPrivateKeyFromFile(PEM_PRIVATE_KEY_FILEPATH,passphrase)));
         props.setAuthServiceUri(new URI(mockAuthServiceUrl));
         privateKey = Mockito.mock(RSAPrivateKey.class);
         doReturn(KEY_ALGORITHM)

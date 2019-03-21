@@ -18,35 +18,6 @@ import feign.RequestLine;
 @Headers({"Content-Type: application/json"})
 public interface AnaplanAPI {
 
-    /* Users */
-
-    @RequestLine("GET /users/me")
-    UserResponse getUser();
-
-    /* Workspaces */
-
-    @RequestLine("GET /users/{userId}/workspaces?offset={offset}")
-    WorkspacesResponse getWorkspaces(
-            @Param("userId") String userId,
-            @Param("offset") int offset);
-
-    @RequestLine("GET /users/{userId}/workspaces/{workspaceId}")
-    WorkspaceResponse getWorkspace(
-            @Param("userId") String userId,
-            @Param("workspaceId") String workspaceId);
-
-    /* Models */
-
-    @RequestLine("GET /users/{userId}/models?offset={offset}")
-    ModelsResponse getModels(
-            @Param("userId") String userId,
-            @Param("offset") int offset);
-
-    @RequestLine("GET /users/{userId}/models/{modelId}")
-    ModelResponse getModel(
-            @Param("userId") String userId,
-            @Param("modelId") String modelId);
-
     @RequestLine("GET /workspaces/{workspaceId}/models/{modelId}/modules?offset={offset}")
     ModulesResponse getModules(
             @Param("workspaceId") String workspaceId,

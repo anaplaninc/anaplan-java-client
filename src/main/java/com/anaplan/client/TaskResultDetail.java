@@ -63,18 +63,20 @@ public class TaskResultDetail {
         if (data.getOccurrences() != 0) {
             out.append(": ").append(Integer.toString(data.getOccurrences()));
         }
-        if (getValues().size() != 0) {
-            out.append("\n");
-            getValues().forEach((k, v) -> {
-                try {
-                    if (k.equals("serverAlert") && v == null) {
-                        v = "Completed successfully!";
+        if (getValues() != null) {
+            if (getValues().size() != 0) {
+                out.append("\n");
+                getValues().forEach((k, v) -> {
+                    try {
+                        if (("serverAlert".equals(k)) && v == null) {
+                            v = "Completed successfully!";
+                        }
+                        out.append(k).append(" - ").append(v).append("\n");
+                    } catch (IOException e) {
+                        throw new InvalidTaskResultDetail(e);
                     }
-                    out.append(k).append(" - ").append(v).append("\n");
-                } catch (IOException e) {
-                    throw new InvalidTaskResultDetail(e);
-                }
-            });
+                });
+            }
         }
         return out;
     }

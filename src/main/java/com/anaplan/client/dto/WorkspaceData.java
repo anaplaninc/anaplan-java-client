@@ -45,6 +45,10 @@ public class WorkspaceData {
         this.sizeAllowance = sizeAllowance;
     }
 
+    public WorkspaceData(String id) {
+        this.id = id;
+    }
+
     public boolean equals(Object other) {
         if (!(other != null && other instanceof WorkspaceData)) {
             return false;

@@ -62,15 +62,6 @@ public class Model extends AnaplanApiClientObject {
     }
 
     /**
-     * Get the name of the model.
-     *
-     * @return The name of this model
-     */
-    public String getName() {
-        return data.getName();
-    }
-
-    /**
      * Retrieve the list of available modules.
      *
      * @return A list of the available modules within this model

@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -30,14 +31,20 @@ public class CompressPutBodyInjector implements RequestInterceptor {
     }
 
     private byte[] compress(byte[] source) {
-        try {
-            ByteArrayOutputStream sink = new ByteArrayOutputStream();
-            GZIPOutputStream gzos = new GZIPOutputStream(sink);
-            gzos.write(source, 0, source.length);
-            gzos.close();
-            return sink.toByteArray();
-        } catch (IOException e) {
-            throw new BadFileChunkCompressionError(e);
+        int head = ((int) source[0] & 0xff) | ((source[1] << 8) & 0xff00);
+        ByteArrayOutputStream sink = new ByteArrayOutputStream();
+        //check if matches standard gzip magic number
+        if (GZIPInputStream.GZIP_MAGIC != head) {
+            try {
+                GZIPOutputStream gzos = new GZIPOutputStream(sink);
+                gzos.write(source, 0, source.length);
+                gzos.close();
+                return sink.toByteArray();
+            }catch (IOException e) {
+                throw new BadFileChunkCompressionError(e);
+            }
+        }else {
+                return source;
+            }
         }
-    }
 }

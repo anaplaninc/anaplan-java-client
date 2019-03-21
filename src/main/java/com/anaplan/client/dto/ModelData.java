@@ -8,22 +8,17 @@ package com.anaplan.client.dto;
  */
 public class ModelData {
     private String id;
-    private String name;
 
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public ModelData(String id) {
+        this.id = id;
     }
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public boolean equals(Object other) {
@@ -31,10 +26,10 @@ public class ModelData {
             return false;
         }
         ModelData data = (ModelData) other;
-        return id.equals(data.id) && name.equals(data.name);
+        return id.equals(data.id);
     }
 
     public int hashCode() {
-        return id.hashCode() * 31 + name.hashCode();
+        return id.hashCode();
     }
 }

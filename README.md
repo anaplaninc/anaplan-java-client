@@ -70,6 +70,15 @@ $ git subtree push --prefix doc origin gh-pages
 
 # Releases
 
+## v1.4.1
+
+Features:
+
+- BugFix to handle NullPointerException when Anaplan returns “Another row has already been processed with this key”
+- BugFix - AC did not recognize different column separators
+- Allow users to directly use Private key for authentication
+- This version will automatically ignore extra text in CA public certificate / Private key. There is extra text appears before the “----BEGIN CERTIFICATE----” part. Users do not need to edit the files to remove these lines.
+
 ## v1.4
 
 Features:
@@ -79,8 +88,7 @@ Features:
 - Enabling users to configure retry timeout and number of retries
 - Configurable chunk sizes for imports, ranging from 1 to 50 MB
 - Improved screen logging, including timestamp, classpath for debug lines, Linux process ID, and more.
-- Better security and ease of querying using JDBCparameters moved to ”properties” file. 
-
+- Better security and ease of querying using JDBCparameters moved to “properties” file.
 
 ## v1.3.6
 

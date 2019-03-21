@@ -36,8 +36,4 @@ public abstract class AnaplanApiClientObject {
     AnaplanAPI getApi() {
         return service.getApiProvider().getApiClient();
     }
-
-    String getUserId() {
-        return service.getUserId();
-    }
 }
