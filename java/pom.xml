@@ -190,7 +190,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.anaplan.client</mainClass>
+                            <mainClass>com.anaplan.client.Program</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
