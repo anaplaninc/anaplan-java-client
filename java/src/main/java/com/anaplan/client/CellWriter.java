@@ -17,6 +17,8 @@ package com.anaplan.client;
 import com.anaplan.client.ex.AnaplanAPIException;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
 
 /**
  * Abstract sink for tabulated cell data.
@@ -38,7 +40,16 @@ public interface CellWriter {
      *
      * @param row An array of string cell values, one per column
      */
-    void writeDataRow(Object[] row) throws AnaplanAPIException, IOException;
+    void writeDataRow(Object[] row) throws AnaplanAPIException, IOException, SQLException;
+
+    /**
+     * Write a data row.
+     * This should be called after writeHeaderRow, for each line of data.
+     *
+     * @param separator An array of string cell values, one per column
+     */
+
+    int writeDataRow(String exportId,int maxRetryCount,int retryTimeout, InputStream inputStream,int chunks,String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException;
 
     /**
      * Complete the transfer. Any remaining data is transferred,

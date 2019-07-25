@@ -6,7 +6,7 @@ import com.anaplan.client.dto.responses.RefreshTokenResp;
 import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.transport.AnaplanApiProvider;
 import com.anaplan.client.transport.ConnectionProperties;
-import com.anaplan.client.transport.FeignApiRetryer;
+import com.anaplan.client.transport.retryer.FeignApiRetryer;
 import com.anaplan.client.transport.interceptors.AConnectHeaderInjector;
 import feign.Feign;
 import feign.FeignException;
@@ -24,7 +24,8 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractAuthenticator extends AnaplanApiProvider implements Authenticator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractAuthenticator.class.getName());
-    private static final int TOKEN_EXPIRATION_BACKOFF_SECONDS = 60000;
+    private static final int TOKEN_EXPIRATION_REFRESH_WINDOW = 5 * 60 * 1000;
+    private static final int TOKEN_EXPIRED_WINDOW =  60 * 1000;
     private AnaplanAuthenticationAPI authClient;
     private byte[] authToken;
     private Long authTokenExpiresAt;
@@ -38,15 +39,15 @@ public abstract class AbstractAuthenticator extends AnaplanApiProvider implement
     /**
      * Fetches auth token from Anaplan Auth Service, checks to see if its expired
      * and accordingly fetches a fresh new token or refreshes the existing token, exactly
-     * 1 minute before it expires, as defined by TOKEN_EXPIRATION_BACKOFF_SECONDS.
+     * 1 minute before it expires, as defined by TOKEN_EXPIRED_WINDOW.
      *
      * @return AuthenticationResp
      */
     @Override
     public String getAuthToken() {
-        if (authToken == null || authTokenExpiresAt == null) {
+        if (authToken == null || authTokenExpiresAt == null || System.currentTimeMillis() - authTokenExpiresAt > TOKEN_EXPIRED_WINDOW) {
             authToken = authenticate();
-        } else if (authTokenExpiresAt - TOKEN_EXPIRATION_BACKOFF_SECONDS < System.currentTimeMillis()) {
+        } else if (authTokenExpiresAt - System.currentTimeMillis() < TOKEN_EXPIRATION_REFRESH_WINDOW) {
             authToken = refreshToken();
         }
         return new String(authToken);

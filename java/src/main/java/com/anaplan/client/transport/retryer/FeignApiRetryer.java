@@ -1,4 +1,4 @@
-package com.anaplan.client.transport;
+package com.anaplan.client.transport.retryer;
 
 import com.anaplan.client.Constants;
 import feign.RetryableException;
@@ -14,10 +14,10 @@ public class FeignApiRetryer extends Retryer.Default {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeignApiRetryer.class);
 
-    public static final long DEFAULT_PERIOD = Constants.MIN_RETRY_COUNT * 1000L;
+    public static final long DEFAULT_PERIOD = Constants.MIN_RETRY_TIMEOUT_SECS * 1000L;
     public static final long DEFAULT_MAX_PERIOD = Constants.MAX_RETRY_TIMEOUT_SECS * 1000L;
     public static final int DEFAULT_MAX_ATTEMPTS = Constants.MIN_RETRY_COUNT;
-    public static final double DEFAULT_BACKOFF_MULTIPLIER = 1.5;
+    public static final double DEFAULT_BACKOFF_MULTIPLIER = Constants.DEFAULT_BACKOFF_MULTIPLIER;
 
     private Long period;
     private Long maxPeriod;

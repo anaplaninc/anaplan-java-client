@@ -26,19 +26,9 @@ import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.io.SequenceInputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -166,7 +156,8 @@ public class ServerFile extends NamedObject {
 
             @Override
             public boolean hasMoreElements() {
-                return index < chunkList.size();
+                int chunkListSize = chunkList == null ? 0 : chunkList.size();
+                return index < chunkListSize;
             }
 
             @Override
@@ -245,6 +236,7 @@ public class ServerFile extends NamedObject {
             long length = source.length();
             data.setChunkCount((int) ((length - 1) / chunkSize) + 1);
             ServerFileResponse response = getApi().upsertFileDataSource(getWorkspace().getId(), getModel().getId(), getId(), data);
+            System.setProperty("file.encoding", data.getEncoding());
             if (response == null || response.getItem() == null) {
                 throw new CreateImportDatasourceError(getName());
             }
@@ -271,8 +263,24 @@ public class ServerFile extends NamedObject {
                     buffer = new byte[size];
                 }
                 sourceFile.readFully(buffer, 0, size);
-                totalReadSoFar += size;
-                getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), buffer);
+                //reading the last index of the separator
+                int separatorLastIndex = lastIndexOf(buffer,data.getSeparator());
+                //calculating the size of byte array to load the bytes until the last index of separator
+                int finalSize = separatorLastIndex+1;
+                //creating the buffer to load the byte array until last separator
+                byte[] finalBuffer = new byte[finalSize];
+                //copying the data from existing byte array to new byte array until last separator
+                System.arraycopy(buffer,0,finalBuffer,0,finalSize);
+                //calculating the total read size from the file
+                totalReadSoFar += finalSize;
+                //checking if there is another chunk to decide if to upload the newly created buffer or existing buffer.
+                //existing buffer will be uploaded in case of last chunk
+                if(chunkIterator.hasNext()) {
+                    getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), finalBuffer);
+                }else{
+                    getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), buffer);
+                }
+                sourceFile.seek(totalReadSoFar);
                 LOG.debug("Uploaded chunk: {} (size={}MB)", chunk.getId(), chunkSize / 1000000);
             }
         } finally {
@@ -284,6 +292,27 @@ public class ServerFile extends NamedObject {
                 }
             }
         }
+    }
+
+    /**
+     * returns the last index of single byte separator from a byte array
+     * @param outerArray
+     * @param separator
+     * @return last index of a single byte separator
+     */
+    public int lastIndexOf(byte[] outerArray, String separator) {
+        byte[] smallerArray = separator.getBytes();
+        for(int i = outerArray.length - smallerArray.length; i > 0; --i) {
+            boolean found = true;
+            for(int j = 0; j < smallerArray.length; ++j) {
+                if (outerArray[i+j] != smallerArray[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) return i;
+        }
+        return -1;
     }
 
     /**
@@ -415,6 +444,12 @@ public class ServerFile extends NamedObject {
                     buf.append(text);
                 }
                 output.write(buf.append('\n').toString().getBytes("UTF-8"));
+            }
+
+            @Override
+            public int writeDataRow(String exportId,int maxRetryCount,int retryTimeout,InputStream inputStream,int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException {
+            //dummy value as the implementation is done in JdbcCellWriter
+                return 1;
             }
 
             @Override

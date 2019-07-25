@@ -5,9 +5,9 @@
 
     <!--Logging patterns-->
     <property name="DEBUG_STDOUT" scope="CONTEXT"
-              value="%d{yyyy-MM-dd HH:mm:ss} %highlightex(%-5level) %yellow([%-20.20logger{20}:%cyan(%-5line)]) %magenta(%X{process_id}) |--   %m %ex{5}%n" />
+              value="%d{yyyy-MM-dd HH:mm:ss} %(%-5level) %([%-20.20logger{20}:%(%-5line)]) %(%X{process_id}) |--   %m %ex{5}%n" />
     <property name="STDOUT" scope="CONTEXT"
-              value="%d{yyyy-MM-dd HH:mm:ss} %highlightex(%-5level) %magenta(%X{process_id}) |--   %m %ex{5}%n" />
+              value="%d{yyyy-MM-dd HH:mm:ss} %(%-5level) %(%X{process_id}) |--   %m %ex{5}%n" />
 
     <!-- custom coloring conversion -->
     <conversionRule conversionWord="highlightex" converterClass="com.anaplan.client.logging.LogLevelHighlighter" />

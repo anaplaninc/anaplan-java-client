@@ -14,22 +14,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.Charset;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.fail;
+import static junit.framework.TestCase.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class ServerFileTest extends BaseTest {
@@ -156,6 +146,36 @@ public class ServerFileTest extends BaseTest {
         }
         File file0v3 = getTestDataFile(fixtureFile1);
         assertFilesEquals(file0v3, check0v3File);
+    }
+
+    /**
+     * testing last index Of comma separator
+     * @throws Exception
+     */
+    @Test
+    public void testlastIndexOfComma() throws Exception {
+        int size =100;
+        byte[] buffer = new byte[size];
+        File sourceFile = new File("src/test/resources/files/indexOfCommaSeparator.txt");
+        RandomAccessFile raf = new RandomAccessFile(sourceFile, "r");
+        raf.readFully(buffer, 0, size);
+        int indexOfLastSeparator = mockServerFile.lastIndexOf(buffer,",");
+        assertEquals(90,indexOfLastSeparator);
+    }
+
+    /**
+     * testing last index Of tab separator
+     * @throws Exception
+     */
+    @Test
+    public void testlastIndexOftab() throws Exception {
+        int size =100;
+        byte[] buffer = new byte[size];
+        File sourceFile = new File("src/test/resources/files/indexOfTabSeparator.txt");
+        RandomAccessFile raf = new RandomAccessFile(sourceFile, "r");
+        raf.readFully(buffer, 0, size);
+        int indexOfLastSeparator = mockServerFile.lastIndexOf(buffer,"\t");
+        assertEquals(90,indexOfLastSeparator);
     }
 
     @Test

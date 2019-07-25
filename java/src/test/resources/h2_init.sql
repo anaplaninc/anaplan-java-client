@@ -6,6 +6,12 @@ create memory table TestUserTable (
   colC varchar(255) not null
 );
 
+create memory table TestExportTable (
+  colA varchar(255) not null PRIMARY KEY,
+  colB varchar(255),
+  colC varchar(255)
+);
+
 insert into TestUserTable values ('id1', 1, 'colB-Value1');
 insert into TestUserTable values ('id2', 2, 'colB-Value2');
 insert into TestUserTable values ('id3', 3, 'colB-Value3');
