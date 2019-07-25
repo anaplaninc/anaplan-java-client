@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 
 /**
  * This helps to serialize the raw bytes of file-chunk into an UTF-8 encoded string for upload.
@@ -26,6 +26,6 @@ public class ByteArraySerializer extends StdSerializer<byte[]> {
      */
     @Override
     public void serialize(byte[] bytes, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-        jsonGenerator.writeRawValue(new String(bytes, StandardCharsets.UTF_8));
+        jsonGenerator.writeRawValue(new String(bytes, Charset.forName(System.getProperty("file.encoding"))));
     }
 }

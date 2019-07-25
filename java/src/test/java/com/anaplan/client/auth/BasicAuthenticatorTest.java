@@ -28,7 +28,7 @@ import static org.mockito.Mockito.doReturn;
 public class BasicAuthenticatorTest extends BaseTest {
 
     private final String mockAuthServiceUrl = "http://mock-auth.anaplan.com";
-    private final Long mockAuthTokenExpiresAt = 1496486205L;
+    private final Long mockAuthTokenExpiresAt = System.currentTimeMillis()+300001;
     private final String mockAuthToken = "authentication-token";
     private final String mockRefreshToken = "refresh-token-value";
     private AbstractAuthenticator basicAuth;

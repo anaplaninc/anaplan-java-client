@@ -1,7 +1,7 @@
 package com.anaplan.client.transport.interceptors;
 
+import com.anaplan.client.Constants;
 import com.anaplan.client.ex.AnaplanAPIException;
-import com.anaplan.client.Version;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
@@ -10,10 +10,12 @@ import feign.RequestTemplate;
  */
 public class UserAgentInjector implements RequestInterceptor {
 
-    private static final int MAJOR_VERSION = Version.API_MAJOR;
-    private static final int MINOR_VERSION = Version.API_MINOR;
-    private static final int REVISION_VERSION = Version.REVISION;
-    private static final String RELEASE_VERSION = Version.RELEASE;
+    private static final int MAJOR_VERSION = Constants.AC_MAJOR;
+    private static final int MINOR_VERSION = Constants.AC_MINOR;
+    private static final int REVISION_VERSION = Constants.AC_REVISION;
+
+    // commenting it for the Anaplan Connect 1.4.2 release
+    //private static final String RELEASE_VERSION = Constants.AC_Release;
 
     @Override
     public void apply(RequestTemplate template) {
@@ -27,7 +29,7 @@ public class UserAgentInjector implements RequestInterceptor {
         StringBuilder result = new StringBuilder(getClass().getName());
         result.append("/").append(MAJOR_VERSION).append(".")
                 .append(MINOR_VERSION);
-        result.append(".").append(REVISION_VERSION).append(RELEASE_VERSION);
+        result.append(".").append(REVISION_VERSION);
         String vmIdentifier = System.getProperty("java.vm.name") + " ("
                 + System.getProperty("java.vendor") + ")/"
                 + System.getProperty("java.vm.version") + " ("

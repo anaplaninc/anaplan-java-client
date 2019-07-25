@@ -16,15 +16,20 @@ package com.anaplan.client;
 
 import com.anaplan.client.auth.Credentials;
 import com.anaplan.client.auth.KeyStoreManager;
+import com.anaplan.client.dto.ChunkData;
 import com.anaplan.client.dto.ExportMetadata;
 import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.ex.BadSystemPropertyError;
+import com.anaplan.client.ex.NoChunkError;
 import com.anaplan.client.ex.PrivateKeyException;
 import com.anaplan.client.jdbc.JDBCCellReader;
+import com.anaplan.client.jdbc.JDBCCellWriter;
 import com.anaplan.client.jdbc.JDBCConfig;
 import com.anaplan.client.logging.LogUtils;
 import com.anaplan.client.transport.ConnectionProperties;
+import com.anaplan.client.transport.retryer.AnaplanJdbcRetryer;
+import com.anaplan.client.transport.retryer.FeignApiRetryer;
 import com.google.common.base.Strings;
 import com.opencsv.CSVParser;
 import org.apache.commons.ssl.PKCS8Key;
@@ -51,9 +56,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Collection;
-import java.util.Properties;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * A command-line interface to the Anaplan Connect API library. Running the
@@ -102,6 +105,7 @@ public abstract class Program {
     private static int maxRetryCount = Constants.MIN_RETRY_COUNT;
     private static int retryTimeout = Constants.MIN_RETRY_TIMEOUT_SECS;
     private static int httpConnectionTimeout = Constants.MIN_HTTP_CONNECTION_TIMEOUT_SECS;
+    private ConnectionProperties properties;
 
     private static final Logger LOG = LoggerFactory.getLogger(Program.class);
 
@@ -143,28 +147,6 @@ public abstract class Program {
                     }
                 } else if (arg == "-q" || arg == "-quiet") {
                     quiet = true;
-                } else if (arg == "-MO" || arg == "-modules") {
-                    somethingDone = true;
-                    Model model = getModel(workspaceId, modelId);
-                    if (model != null) {
-                        for (Module module : model.getModules()) {
-                            LOG.info(Utils.formatTSV(
-                                    module.getId(),
-                                    module.getCode(),
-                                    module.getName()));
-                        }
-                    }
-                } else if (arg == "-VI" || arg == "-views") {
-                    somethingDone = true;
-                    Module module = getModule(workspaceId, modelId, moduleId);
-                    if (module != null) {
-                        for (View view : module.getViews()) {
-                            LOG.info(Utils.formatTSV(
-                                    view.getId(),
-                                    view.getCode(),
-                                    view.getName()));
-                        }
-                    }
                 } else if (arg == "-F" || arg == "-files") {
                     somethingDone = true;
                     Model model = getModel(workspaceId, modelId);
@@ -396,7 +378,7 @@ public abstract class Program {
                     String certificatePath = args[argi++];
                     setCertificatePath(certificatePath);
                 } else if (arg == "-pkey" || arg == "-privatekey") {
-                    if (keyStorePath !=null){
+                    if (keyStorePath != null) {
                         throw new IllegalArgumentException("expected either the privatekey or the keystore arguments");
                     }
                     String auth = args[argi++];
@@ -409,7 +391,7 @@ public abstract class Program {
                         setPassphrase("?");
                     }
                 } else if (arg == "-k" || arg == "-keystore") {
-                    if (passphrase !=null || privateKeyPath != null ){
+                    if (passphrase != null || privateKeyPath != null) {
                         throw new IllegalArgumentException("expected either the privatekey or keystore arguments");
                     }
                     String keyStorePath = args[argi++];
@@ -546,10 +528,9 @@ public abstract class Program {
                 } else if (arg.equals("-jdbcproperties")) {
                     String propertiesFilePath = args[argi++];
                     JDBCConfig jdbcConfig = loadJdbcProperties(propertiesFilePath);
-
-                    ServerFile serverFile = getServerFile(workspaceId, modelId,
-                            fileId, true);
-                    if (serverFile != null) {
+                    if (fileId != null) {
+                        ServerFile serverFile = getServerFile(workspaceId, modelId,
+                                fileId, true);
                         CellWriter cellWriter = null;
                         CellReader cellReader = null;
                         try {
@@ -575,6 +556,81 @@ public abstract class Program {
                             if (cellWriter != null)
                                 cellWriter.abort();
                         }
+                    } else if (exportId != null) {
+                        ServerFile serverFile = getServerFile(workspaceId, modelId,
+                                exportId, true);
+                        if (serverFile != null) {
+                            CellWriter cellWriter = null;
+                            somethingDone = true;
+                            Export export = getExport(workspaceId, modelId, exportId);
+                            ExportMetadata emd = export.getExportMetadata();
+                            InputStream inputStream = null;
+                            int columnCount = emd.getColumnCount();
+                            int transferredrows = 0;
+                            int[] mapcols = new int[columnCount];
+                            String separator = emd.getSeparator();
+                            //build map for metadata for exports
+                            HashMap<String, Integer> headerName = new HashMap();
+                            for (int i = 0; i < emd.getHeaderNames().length; i++) {
+                                headerName.put(emd.getHeaderNames()[i], i);
+                            }
+                            for (int k = 0; k < maxRetryCount; k++) {
+                                try {
+                                    List<ChunkData> chunkList = serverFile.getChunks();
+                                    //jdbc params exists
+                                    if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0
+                                            && !jdbcConfig.getJdbcParams()[0].equals("")) {
+                                        mapcols = new int[jdbcConfig.getJdbcParams().length];
+                                        //extract matching anaplan columns
+                                        for (int i = 0; i < jdbcConfig.getJdbcParams().length; i++) {
+                                            String paramName = ((String) jdbcConfig.getJdbcParams()[i]).trim();
+                                            if (headerName.containsKey(paramName)) {
+                                                mapcols[i] = headerName.get(paramName);
+                                            } else {
+                                                LOG.debug("{} from JDBC properties file is not a valid column in Anaplan", jdbcConfig.getJdbcParams()[i]);
+                                                throw new AnaplanAPIException("Please make sure column names in jdbcproperties file match with the exported columns on Anaplan");
+                                            }
+                                        }
+                                    }
+                                    //Retry Fix
+                                    cellWriter = new JDBCCellWriter(jdbcConfig);
+                                    for (ChunkData chunk : chunkList) {
+                                        byte[] chunkContent = serverFile.getChunkContent(chunk.getId());
+                                        if (chunkContent == null) throw new NoChunkError(chunk.getId());
+                                        inputStream = new ByteArrayInputStream(chunkContent);
+                                        transferredrows = cellWriter.writeDataRow(exportId,maxRetryCount,retryTimeout,inputStream, chunkList.size(), chunk.getId(), mapcols, columnCount, separator);
+                                    }
+                                    if (transferredrows != 0) {
+                                        LOG.info("Transferred {} records to {}", transferredrows, jdbcConfig.getJdbcConnectionUrl());
+                                    } else if (transferredrows == 0) {
+                                        LOG.info("No records were transferred to {}", jdbcConfig.getJdbcConnectionUrl());
+                                    }
+                                    k = maxRetryCount;
+                                } catch (AnaplanAPIException ape){
+                                    LOG.error(ape.getMessage());
+                                    k=maxRetryCount;
+                                } catch (Exception e) {
+                                    AnaplanJdbcRetryer anaplanJdbcRetryer = new AnaplanJdbcRetryer((long) (retryTimeout * 1000),
+                                            (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
+                                            FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER);
+                                    Long interval = anaplanJdbcRetryer.nextMaxInterval(k);
+                                    try {
+                                        LOG.debug("Could not connect to the database! Will retry in {} seconds ", interval/1000);
+                                        // do not retry if we get any other error
+                                        Thread.sleep(interval);
+                                    } catch (InterruptedException e1) {
+                                        // we still want to retry, even though sleep was interrupted
+                                        LOG.debug("Sleep was interrupted.");
+                                    }
+                                } finally {
+                                    if (inputStream != null)
+                                        inputStream.close();
+                                    if (cellWriter!=null)
+                                    cellWriter.close();
+                                }
+                            }
+                        }
+
                     }
                 } else {
                     displayHelp();
@@ -1278,9 +1334,9 @@ public abstract class Program {
             File privateKeyFile = new File(privateKeyPath);
             if (privateKeyFile.isFile()) {
                 //load privateKey from file
-                return loadPrivateKeyFromFile(privateKeyPath,passphrase);
+                return loadPrivateKeyFromFile(privateKeyPath, passphrase);
             } else {
-                    throw new RuntimeException("The specified privateKey path '" + privateKeyPath + "' is invalid");
+                throw new RuntimeException("The specified privateKey path '" + privateKeyPath + "' is invalid");
             }
         } else if (keyStorePath != null && keyStorePrivateKeyAlias != null) {
             return new KeyStoreManager().getKeyStorePrivateKey(keyStorePath, getKeyStorePassword(), keyStorePrivateKeyAlias);
@@ -1289,7 +1345,7 @@ public abstract class Program {
         }
     }
 
-     /**
+    /**
      * Returns the certificate path set using setCertificatePath()
      *
      * @return the certificate path
@@ -1483,7 +1539,8 @@ public abstract class Program {
      * @throws CertificateException
      * @throws FileNotFoundException
      */
-    private static X509Certificate loadCertificateFromFile(File certificateFile) throws CertificateException, FileNotFoundException {
+    private static X509Certificate loadCertificateFromFile(File certificateFile) throws
+            CertificateException, FileNotFoundException {
         // loading certificate chain
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         InputStream certificateStream = new FileInputStream(certificateFile);
@@ -1504,8 +1561,8 @@ public abstract class Program {
      * @return a RSAPrivateKey
      */
     public static RSAPrivateKey loadPrivateKeyFromFile(String privateKeyPath, String passphrase) {
-        byte [] privateKeyDer;
-        byte [] privateKeyDecrypted;
+        byte[] privateKeyDer;
+        byte[] privateKeyDecrypted;
         // Read PEM file
         try (PEMParser pemParser = new PEMParser(new FileReader(privateKeyPath))) {
             // Convert PEM object to DER
@@ -1518,8 +1575,8 @@ public abstract class Program {
             PrivateKey privateKey = (pkcs8Key.isRSA()) ? KeyFactory.getInstance("RSA").generatePrivate(pkcs8EncodedKeySpec) :
                     KeyFactory.getInstance("DSA").generatePrivate(pkcs8EncodedKeySpec);
             return (RSAPrivateKey) privateKey;
-        } catch(Exception e){
-            throw new PrivateKeyException(privateKeyPath + ", " +e);
+        } catch (Exception e) {
+            throw new PrivateKeyException(privateKeyPath + ", " + e);
         }
     }
 
@@ -1545,10 +1602,12 @@ public abstract class Program {
         jdbcConfig.setJdbcConnectionUrl(jdbcProps.getProperty("jdbc.connect.url"));
         jdbcConfig.setJdbcUsername(jdbcProps.getProperty("jdbc.username"));
         jdbcConfig.setJdbcPassword(jdbcProps.getProperty("jdbc.password"));
-        try {
-            jdbcConfig.setJdbcFetchSize(Integer.parseInt(jdbcProps.getProperty("jdbc.fetch.size")));
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid JDBC Fetch-size provided in properties.");
+        if (fileId != null) {
+            try {
+                jdbcConfig.setJdbcFetchSize(Integer.parseInt(jdbcProps.getProperty("jdbc.fetch.size")));
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid JDBC Fetch-size provided in properties.");
+            }
         }
         jdbcConfig.setStoredProcedure(Boolean.valueOf(jdbcProps.getProperty("jdbc.isStoredProcedure", "false")));
         jdbcConfig.setJdbcQuery(jdbcProps.getProperty("jdbc.query"));
@@ -1612,10 +1671,6 @@ public abstract class Program {
                 + "(-w|-workspace) (<id>|<name>): select a workspace by id/name\n"
                 + "(-M|-models): list available models in selected workspace\n"
                 + "(-m|-model) (<id>|<name>): select a model by id/name\n"
-                + "(-MO|-modules): list available modules in selected model\n"
-                + "(-mo|-module): (<id>|<name>): select a module by id/name\n"
-                + "(-VI|-views): list available views in selected module\n"
-                + "(-vi|-view): (<id>|<name>): select a view by id/name\n"
                 + "(-F|-files): list available server files in selected model\n"
                 + "(-f|-file) (<id>|<name>): select a server file by id/name\n"
                 + "(-ch|-chunksize): upload chunk-size number, defaults to 1048576.\n"
@@ -1659,7 +1714,7 @@ public abstract class Program {
 
     private static void displayVersion() {
         LOG.debug(Strings.repeat("=", 70));
-        LOG.debug("Anaplan Connect {}.{}.{}", Constants.AC_MAJOR,Constants.AC_MINOR,Constants.AC_REVISION);
+        LOG.debug("Anaplan Connect {}.{}.{}", Constants.AC_MAJOR, Constants.AC_MINOR, Constants.AC_REVISION);
         LOG.debug("{} ({})/ ({})/", System.getProperty("java.vm.name"), System.getProperty("java.vendor"),
                 System.getProperty("java.vm.version"), System.getProperty("java.version"));
         LOG.debug("({}{})/{}", System.getProperty("os.name"), System.getProperty("os.arch"), System.getProperty("os.version"));

@@ -37,6 +37,7 @@ public class AuthRetryTest extends BaseTest {
     private final String mockAuthServiceUrl = "http://mock-auth.anaplan.com";
     private final String mockUsername = "someusername";
     private final String mockPassword = "asdasdasdsa";
+    private final Long AuthTokenExpiresAt = System.currentTimeMillis()+300001;
     private AnaplanAuthenticationAPI mockAuthApi;
     private MockRetryBasicAuthenticator basicAuth;
 
@@ -84,7 +85,7 @@ public class AuthRetryTest extends BaseTest {
         doThrow(new UnknownHostException())
                 .when(mockClient).execute(Mockito.any(Request.class), Mockito.any(Options.class));
         basicAuth.setAuthToken("asdasdsa");
-        basicAuth.setAuthTokenExpiresAt(123123123L);
+        basicAuth.setAuthTokenExpiresAt(AuthTokenExpiresAt);
         testRetry("null executing POST http://mock-auth.anaplan.com/token/refresh");
     }
 }
