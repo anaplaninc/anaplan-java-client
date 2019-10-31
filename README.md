@@ -1,23 +1,18 @@
-![Anaplan Connect](img/anaplan-connect-logo.png)
+# anaplan-java-client
 
-Anaplan Connect is a command-line client and an SDK that makes it easy to communicate with the Anaplan API to execute Import, Export, Delete, and Process actions.
-Please read the [NOTICE.txt](NOTICE.txt) and [LICENSE.txt](LICENSE.txt) files before using Anaplan Connect, particularly if you intend to redistribute it.
+## DOCUMENTATION
 
+The Anaplan Java Client documentation consists of:
 
-# Documentation
+1. "Anaplan API Guide", which shows the workflow of making a series of API calls for import, export, delete, and process. See https://community.anaplan.com/anapedia/integrations/data-integration/anaplan-api-guide
 
-- The [**Anaplan Connect Guide**](https://community.anaplan.com/anapedia/data-integration/anaplan-connect) provides information on installing and using Anaplan Connect from the command-line on Windows, UNIX, GNU/Linux or MacOS environments.
-- The [**Anaplan API Guide**](https://community.anaplan.com/anapedia/integrations/data-integration/anaplan-api-guide) provides information useful to developers who want to access the API directly without using Anaplan Connect.
-- The [**Anaplan API Reference**](http://docs.anaplan.apiary.io/) covers all Anaplan APIs.
-- The **Javadoc documentation** is useful for Java developers wanting to make use of Anaplan Connect as a library component from their own code. The content is available at ```doc/javadoc```, so open ```doc/javadoc/index.html``` in a browser.
-
+2. For those who already understand the workflow, the API Reference at "Anaplan REST API for Integration" at https://anaplanbulkapi20.docs.apiary.io
 
 # Developers
 
-
 ## SDK
 
-The SDK provides the ```Service``` class, representing a connection to the Anaplan Connect server, along with associated classes representing accessible resources on the server.
+The SDK provides the `Service` class, representing a connection to the Anaplan Connect server, along with associated classes representing accessible resources on the server.
 Software using this library should conform to the following pattern:
 
 - A new Service object is instantiated for the service endpoint.
@@ -30,10 +25,10 @@ The SDK also provides:
 - A mechanism to use custom [Transport-providers](src/main/java/com/anaplan/client/transport/README.md) (default: ApacheHttpProvider) for custom API communication.
 - A mechanism to use custom [Serialization handlers](src/main/java/com/anaplan/client/serialization/README.md), to help serialize the data to and from Anaplan.
 
-
 ## Build from source
 
 This is a standard Maven project, so to install, test and package do:
+
 ```
 $ mvn clean install
 $ mvn clean test
@@ -43,10 +38,13 @@ $ mvn clean package
 ## Deploy to Maven Repository (check with contributers)
 
 To deploy to Maven Github repository at anaplaninc.github.io, do:
+
 ```
 $ mvn clean deploy
 ```
+
 Note: Requires a settings.xml file at location ~/.m2/ with contents as shown below and a Github access token. More info at: (https://github.com/settings/tokens):
+
 ```
 <settings>
   <servers>
@@ -61,12 +59,12 @@ Note: Requires a settings.xml file at location ~/.m2/ with contents as shown bel
 ## Update Javadoc Github-pages
 
 To update the Github-pages (branch: gh-pages) site for this repository, with the latest Javadoc, do:
+
 ```
 $ mvn javadoc:javadoc
 $ cp -R target/site/apidocs/* doc/javadoc/.
 $ git subtree push --prefix doc origin gh-pages
 ```
-
 
 # Releases
 
@@ -80,7 +78,6 @@ Features:
 - Configurable chunk sizes for imports, ranging from 1 to 50 MB
 - Improved screen logging, including timestamp, classpath for debug lines, Linux process ID, and more.
 - Better security and ease of querying using JDBCparameters moved to ”properties” file.
-
 
 ## v1.3.6
 
@@ -105,3 +102,4 @@ Bug Fixes as of 19-NOVEMBER-2015
 - RB-68: Change base url for UAT to fix naming convention.
 
 NOTE: Use this for Informatica Connector v1.1.0
+LICENSE See https://github.com/anaplaninc/anaplan-java-client/blob/master/java/LICENSE.txt
