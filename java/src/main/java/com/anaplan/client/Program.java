@@ -32,9 +32,15 @@ import com.anaplan.client.transport.retryer.AnaplanJdbcRetryer;
 import com.anaplan.client.transport.retryer.FeignApiRetryer;
 import com.google.common.base.Strings;
 import com.opencsv.CSVParser;
-import org.apache.commons.ssl.PKCS8Key;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -49,7 +55,7 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyStoreException;
-import java.security.PrivateKey;
+import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -1558,23 +1564,28 @@ public abstract class Program {
      * Loads a {privateKey} from a file
      *
      * @param privateKeyPath
+     * @param passphrase
      * @return a RSAPrivateKey
      */
+
     public static RSAPrivateKey loadPrivateKeyFromFile(String privateKeyPath, String passphrase) {
-        byte[] privateKeyDer;
-        byte[] privateKeyDecrypted;
-        // Read PEM file
-        try (PEMParser pemParser = new PEMParser(new FileReader(privateKeyPath))) {
-            // Convert PEM object to DER
-            PemObject pemObject = pemParser.readPemObject();
-            privateKeyDer = pemObject.getContent();
-            // Decrypt PKCS#8 private key with password (can be skipped if private key is not encrypted
-            PKCS8Key pkcs8Key = (passphrase == null) ? new PKCS8Key(privateKeyDer, getPassphrase().toCharArray()) :
-                    new PKCS8Key(privateKeyDer, passphrase.toCharArray());
-            PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(pkcs8Key.getDecryptedBytes());
-            PrivateKey privateKey = (pkcs8Key.isRSA()) ? KeyFactory.getInstance("RSA").generatePrivate(pkcs8EncodedKeySpec) :
-                    KeyFactory.getInstance("DSA").generatePrivate(pkcs8EncodedKeySpec);
-            return (RSAPrivateKey) privateKey;
+        try {
+            if(passphrase.isEmpty()){
+                PemReader pemReader = new PemReader(new FileReader(privateKeyPath));
+                PemObject pemObject = pemReader.readPemObject();
+                byte[] pemContent = pemObject.getContent();
+                pemReader.close();
+                PKCS8EncodedKeySpec encodedKeySpec = new PKCS8EncodedKeySpec(pemContent);
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                return (RSAPrivateKey) kf.generatePrivate(encodedKeySpec);
+            }
+            Security.addProvider(new BouncyCastleProvider());
+            PEMParser pemParser = new PEMParser(new FileReader(privateKeyPath));
+            PKCS8EncryptedPrivateKeyInfo encryptedKeyPair = (PKCS8EncryptedPrivateKeyInfo) pemParser.readObject();
+            InputDecryptorProvider pkcs8Prov = new JceOpenSSLPKCS8DecryptorProviderBuilder().setProvider("BC").build(passphrase.toCharArray());
+            PrivateKeyInfo privateKeyInfo = encryptedKeyPair.decryptPrivateKeyInfo(pkcs8Prov);
+            JcaPEMKeyConverter jcaPEMKeyConverter = new JcaPEMKeyConverter();
+            return (RSAPrivateKey) jcaPEMKeyConverter.setProvider("BC").getPrivateKey(privateKeyInfo);
         } catch (Exception e) {
             throw new PrivateKeyException(privateKeyPath + ", " + e);
         }
@@ -1667,9 +1678,7 @@ public abstract class Program {
                 + "\n"
                 + "Workspace Contents:\n"
                 + "-------------------\n"
-                + "(-W|-workspaces): list available workspaces\n"
                 + "(-w|-workspace) (<id>|<name>): select a workspace by id/name\n"
-                + "(-M|-models): list available models in selected workspace\n"
                 + "(-m|-model) (<id>|<name>): select a model by id/name\n"
                 + "(-F|-files): list available server files in selected model\n"
                 + "(-f|-file) (<id>|<name>): select a server file by id/name\n"
