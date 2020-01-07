@@ -42,7 +42,7 @@ public class Model extends AnaplanApiClientObject {
     private final Workspace workspace;
     private final ModelData data;
 
-    Model(Workspace workspace, ModelData data) {
+    public Model(Workspace workspace, ModelData data) {
         super(workspace.getService());
         this.workspace = workspace;
         this.data = data;

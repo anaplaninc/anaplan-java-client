@@ -66,6 +66,7 @@ public class Task extends AnaplanApiClientObject {
 
     /**
      * Fetches the running task if any
+     *
      * @return
      */
     public static Task getRunningTask() {
@@ -73,11 +74,11 @@ public class Task extends AnaplanApiClientObject {
     }
 
     TaskFactory getSubject() {
-        return subject;
+        return this.subject;
     }
 
     String getId() {
-        return data.getTaskId();
+        return this.data.getTaskId();
     }
 
     /**
@@ -88,11 +89,11 @@ public class Task extends AnaplanApiClientObject {
      * @return The current status of the task
      */
     public TaskStatus cancel() throws AnaplanAPIException {
-        TaskStatusResponse response = subject.cancelTask(data.getTaskId());
+        TaskStatusResponse response = this.subject.cancelTask(this.data.getTaskId());
         if (response != null && response.getItem() != null) {
             return new TaskStatus(this, response.getItem());
         }
-        throw new InvalidTaskStatusError(data.getTaskId(), response);
+        throw new InvalidTaskStatusError(this.data.getTaskId(), response);
     }
 
     /**
@@ -101,11 +102,11 @@ public class Task extends AnaplanApiClientObject {
      * @return The current status of the task
      */
     public TaskStatus getStatus() throws AnaplanAPIException {
-        TaskStatusResponse response = subject.getTaskStatus(data.getTaskId());
+        TaskStatusResponse response = this.subject.getTaskStatus(this.data.getTaskId());
         if (response != null && response.getItem() != null) {
             return new TaskStatus(this, response.getItem());
         }
-        throw new InvalidTaskStatusError(data.getTaskId(), response);
+        throw new InvalidTaskStatusError(this.data.getTaskId(), response);
     }
 
     /**
@@ -130,15 +131,15 @@ public class Task extends AnaplanApiClientObject {
     private static synchronized void cancelRunningTask(Task runningTask) {
         if (runningTask != null) {
             try {
-                if (System.console() != null)
+                if (System.console() != null) {
                     System.console().printf("\rClient terminated, cancelling...");
+                }
                 runningTask.cancel();
                 trackRunningTask(runningTask, true);
             } catch (Throwable thrown) {
                 LOG.debug("{}", Throwables.getStackTraceAsString(thrown));
                 LOG.error(Utils.formatThrowable(thrown));
             } finally {
-                System.exit(1);
                 try {
                     Thread.currentThread().join();
                 } catch (InterruptedException e) {
@@ -208,7 +209,7 @@ public class Task extends AnaplanApiClientObject {
                 }
             } while (!(wasClosingDown && totalTime > 1000) && (status == null || !(
                     status.getTaskState() == TaskStatus.State.COMPLETE ||
-                    status.getTaskState() == TaskStatus.State.CANCELLED)));
+                            status.getTaskState() == TaskStatus.State.CANCELLED)));
         } finally {
             if (status == null || status.getResult() == null) {
                 LOG.info("No result was provided.");
@@ -228,8 +229,8 @@ public class Task extends AnaplanApiClientObject {
                 LogUtils.logSeparatorOperationResponses();
                 if (status.getResult() != null) {
                     LOG.info(status.getResult().isSuccessful() ?
-                            "<<< The operation was successful >>>  =)" :
-                            "!!! The operation failed !!!  =(");
+                                     "<<< The operation was successful >>>  =)" :
+                                     "!!! The operation failed !!!  =(");
                 }
                 LogUtils.logSeparatorOperationStatus();
                 Arrays.asList(status.getResult().toString().split("\n")).forEach(LOG::info);
