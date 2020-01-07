@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "paging": {
+      "currentPageSize": 2,
+      "offset": 0,
+      "totalSize": 2
+    },
+    "schema": "https://api1-qa1.anaplan.com/2/0/models/F7177FD218234A66B0FBA94F3DC9D014/objects/process"
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  },
+  "processes": [
+    {
+      "id": "118000000015",
+      "name": "Process 0"
+    },
+    {
+      "id": "118000000014",
+      "name": "Process 1"
+    }
+  ]
+}
+
+

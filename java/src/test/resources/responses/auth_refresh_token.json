@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "validationUrl": "https://auth-qa1.anaplan.com/token/validate"
+  },
+  "status": "SUCCESS",
+  "statusMessage": "Token refreshed",
+  "tokenInfo": {
+    "tokenId": "4ed163af-9751-11e7-9719-8b1a1f02078d",
+    "tokenValue": "refresh-token-value",
+    "expiresAt": 1505178032153,
+    "refreshTokenId": "95ec5ca3-9751-11e7-9719-eb1e7abae1fd"
+  }
+}
