@@ -52,7 +52,7 @@ public class ServerFile extends NamedObject {
     }
 
     public ServerFileData getData() {
-        return data;
+        return this.data;
     }
 
     public void setData(ServerFileData data) {
@@ -99,10 +99,10 @@ public class ServerFile extends NamedObject {
         if (target.exists()) {
             if (!target.isFile()) {
                 throw new FileNotFoundException("Path \"" + target
-                        + "\" exists but is not a file");
+                                                        + "\" exists but is not a file");
             } else if (!deleteExisting) {
                 throw new IllegalStateException("File \"" + target
-                        + "\" already exists");
+                                                        + "\" already exists");
             } else if (!target.canWrite()) {
                 throw new FileNotFoundException(
                         "File \""
@@ -123,7 +123,9 @@ public class ServerFile extends NamedObject {
             List<ChunkData> chunkList = getChunks();
             for (ChunkData chunk : chunkList) {
                 byte[] chunkContent = getChunkContent(chunk.getId());
-                if (chunkContent == null) throw new NoChunkError(chunk.getId());
+                if (chunkContent == null) {
+                    throw new NoChunkError(chunk.getId());
+                }
                 partialFile.write(chunkContent);
             }
             partialFile.close();
@@ -150,20 +152,20 @@ public class ServerFile extends NamedObject {
     public InputStream getDownloadStream() {
         // Get list of chunks from server
         final List<ChunkData> chunkList = getApi().getChunks(getModel().getWorkspace().getId(),
-                getModel().getId(), getId()).getItem();
+                                                             getModel().getId(), getId()).getItem();
         return new SequenceInputStream(new Enumeration<InputStream>() {
             int index = 0;
 
             @Override
             public boolean hasMoreElements() {
                 int chunkListSize = chunkList == null ? 0 : chunkList.size();
-                return index < chunkListSize;
+                return this.index < chunkListSize;
             }
 
             @Override
             public InputStream nextElement() {
                 try {
-                    byte[] chunkContent = getChunkContent(chunkList.get(index++).getId());
+                    byte[] chunkContent = getChunkContent(chunkList.get(this.index++).getId());
                     return new ByteArrayInputStream(chunkContent);
                 } catch (Exception thrown) {
                     throw new RuntimeException(
@@ -221,28 +223,28 @@ public class ServerFile extends NamedObject {
         LOG.info("Uploading file: {}", source.getAbsolutePath());
         if (!source.exists()) {
             throw new FileNotFoundException("Path \"" + source
-                    + "\" does not exist");
+                                                    + "\" does not exist");
         }
         if (!source.isFile()) {
             throw new FileNotFoundException("Path \"" + source
-                    + "\" does not refer to a file");
+                                                    + "\" does not refer to a file");
         }
         if (!source.canRead()) {
             throw new FileNotFoundException("File \"" + source
-                    + "\" cannot be read - check ownership and/or permissions");
+                                                    + "\" cannot be read - check ownership and/or permissions");
         }
         RandomAccessFile sourceFile = null;
         try {
             long length = source.length();
-            data.setChunkCount((int) ((length - 1) / chunkSize) + 1);
-            ServerFileResponse response = getApi().upsertFileDataSource(getWorkspace().getId(), getModel().getId(), getId(), data);
-            System.setProperty("file.encoding", data.getEncoding());
+            this.data.setChunkCount((int) ((length - 1) / chunkSize) + 1);
+            ServerFileResponse response = getApi().upsertFileDataSource(getWorkspace().getId(), getModel().getId(), getId(), this.data);
+            System.setProperty("file.encoding", this.data.getEncoding());
             if (response == null || response.getItem() == null) {
                 throw new CreateImportDatasourceError(getName());
             }
-            data = response.getItem();
-            data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
-            data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
+            this.data = response.getItem();
+            this.data.setHeaderRow(this.data.getHeaderRow() == -1 ? 1 : this.data.getHeaderRow());
+            this.data.setFirstDataRow(this.data.getFirstDataRow() == -1 ? 2 : this.data.getFirstDataRow());
             // Get list of chunks from server
             ChunksResponse chunks = getApi().getChunks(getWorkspace().getId(), getModel().getId(), getId());
             if (chunks == null || chunks.getItem() == null) {
@@ -264,20 +266,19 @@ public class ServerFile extends NamedObject {
                 }
                 sourceFile.readFully(buffer, 0, size);
                 //reading the last index of the separator
-                int separatorLastIndex = lastIndexOf(buffer,data.getSeparator());
+                int separatorLastIndex = lastIndexOf(buffer, "\n");
                 //calculating the size of byte array to load the bytes until the last index of separator
-                int finalSize = separatorLastIndex+1;
                 //creating the buffer to load the byte array until last separator
-                byte[] finalBuffer = new byte[finalSize];
+                byte[] finalBuffer = new byte[size];
                 //copying the data from existing byte array to new byte array until last separator
-                System.arraycopy(buffer,0,finalBuffer,0,finalSize);
+                System.arraycopy(buffer, 0, finalBuffer, 0, size);
                 //calculating the total read size from the file
-                totalReadSoFar += finalSize;
+                totalReadSoFar += size;
                 //checking if there is another chunk to decide if to upload the newly created buffer or existing buffer.
                 //existing buffer will be uploaded in case of last chunk
-                if(chunkIterator.hasNext()) {
+                if (chunkIterator.hasNext()) {
                     getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), finalBuffer);
-                }else{
+                } else {
                     getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), buffer);
                 }
                 sourceFile.seek(totalReadSoFar);
@@ -296,21 +297,24 @@ public class ServerFile extends NamedObject {
 
     /**
      * returns the last index of single byte separator from a byte array
+     *
      * @param outerArray
      * @param separator
      * @return last index of a single byte separator
      */
     public int lastIndexOf(byte[] outerArray, String separator) {
         byte[] smallerArray = separator.getBytes();
-        for(int i = outerArray.length - smallerArray.length; i > 0; --i) {
+        for (int i = outerArray.length - smallerArray.length; i > 0; --i) {
             boolean found = true;
-            for(int j = 0; j < smallerArray.length; ++j) {
-                if (outerArray[i+j] != smallerArray[j]) {
+            for (int j = 0; j < smallerArray.length; ++j) {
+                if (outerArray[i + j] != smallerArray[j]) {
                     found = false;
                     break;
                 }
             }
-            if (found) return i;
+            if (found) {
+                return i;
+            }
         }
         return -1;
     }
@@ -324,11 +328,11 @@ public class ServerFile extends NamedObject {
                     getWorkspace().getId(),
                     getModel().getId(),
                     getId(),
-                    data);
+                    this.data);
             if (completeResponse == null || completeResponse.getItem() == null) {
                 throw new CreateImportDatasourceError(getId());
             }
-            data = completeResponse.getItem();
+            this.data = completeResponse.getItem();
         } catch (FeignException e) {
             throw new AnaplanAPIException("Failed to finalize file-upload: " + getId(), e);
         }
@@ -344,17 +348,17 @@ public class ServerFile extends NamedObject {
      * @since 1.2
      */
     public OutputStream getUploadStream(final int chunkSize) {
-        data.setChunkCount(-1);
-        ServerFileResponse response = getApi().upsertFileDataSource(getWorkspace().getId(), getModel().getId(), getId(), data);
+        this.data.setChunkCount(-1);
+        ServerFileResponse response = getApi().upsertFileDataSource(getWorkspace().getId(), getModel().getId(), getId(), this.data);
         if (response == null || response.getItem() == null) {
-            throw new CreateImportDatasourceError(data.getName());
+            throw new CreateImportDatasourceError(this.data.getName());
         }
-        data = response.getItem();
+        this.data = response.getItem();
         return new FilterOutputStream(new ByteArrayOutputStream(chunkSize * 2)) {
             int chunkIndex = 0;
 
             private ByteArrayOutputStream getBuffer() {
-                return (ByteArrayOutputStream) out;
+                return (ByteArrayOutputStream) this.out;
             }
 
             @Override
@@ -381,11 +385,11 @@ public class ServerFile extends NamedObject {
                             getWorkspace().getId(),
                             getModel().getId(),
                             getId(),
-                            String.valueOf(chunkIndex++),
+                            String.valueOf(this.chunkIndex++),
                             getBuffer().toByteArray());
-                    LOG.debug("Uploaded chunk: {} (size={}MB)", chunkIndex, chunkSize / 1000000);
+                    LOG.debug("Uploaded chunk: {} (size={}MB)", this.chunkIndex, chunkSize / 1000000);
                 } catch (FeignException e) {
-                    throw new AnaplanAPIException("Failed to upload chunk(" + chunkIndex +  "): " + getId(), e);
+                    throw new AnaplanAPIException("Failed to upload chunk(" + this.chunkIndex + "): " + getId(), e);
                 }
                 getBuffer().reset();
             }
@@ -421,21 +425,23 @@ public class ServerFile extends NamedObject {
             @Override
             public void writeHeaderRow(Object[] row)
                     throws AnaplanAPIException, IOException {
-                output = getUploadStream(chunkSize);
+                this.output = getUploadStream(chunkSize);
                 writeDataRow(row);
             }
 
             @Override
             public void writeDataRow(Object[] row) throws AnaplanAPIException,
                     IOException {
-                if (output == null) {
+                if (this.output == null) {
                     throw new AnaplanAPIException(
                             "Cell writer is no longer open");
                 }
                 StringBuilder buf = new StringBuilder();
                 int col = 0;
                 for (Object item : row) {
-                    if (col++ != 0) buf.append('\t');
+                    if (col++ != 0) {
+                        buf.append('\t');
+                    }
                     String text = item.toString();
                     if (text.indexOf('\t') != -1) {
                         final String tabChar = "\t";
@@ -443,32 +449,32 @@ public class ServerFile extends NamedObject {
                     }
                     buf.append(text);
                 }
-                output.write(buf.append('\n').toString().getBytes("UTF-8"));
+                this.output.write(buf.append('\n').toString().getBytes("UTF-8"));
             }
 
             @Override
-            public int writeDataRow(String exportId,int maxRetryCount,int retryTimeout,InputStream inputStream,int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException {
-            //dummy value as the implementation is done in JdbcCellWriter
+            public int writeDataRow(String exportId, int maxRetryCount, int retryTimeout, InputStream inputStream, int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException {
+                //dummy value as the implementation is done in JdbcCellWriter
                 return 1;
             }
 
             @Override
             public void close() throws IOException {
-                if (output != null) {
-                    data.setFormat(data.getFormat() == null ? "txt" : data.getFormat());
-                    data.setEncoding(data.getEncoding() == null ? StandardCharsets.UTF_8.toString() : data.getEncoding());
-                    data.setSeparator("\t");
-                    data.setDelimiter(data.getDelimiter() == null ? "\"" : data.getDelimiter());
-                    data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
-                    data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
-                    output.close();
-                    output = null;
+                if (this.output != null) {
+                    ServerFile.this.data.setFormat(ServerFile.this.data.getFormat() == null ? "txt" : ServerFile.this.data.getFormat());
+                    ServerFile.this.data.setEncoding(ServerFile.this.data.getEncoding() == null ? StandardCharsets.UTF_8.toString() : ServerFile.this.data.getEncoding());
+                    ServerFile.this.data.setSeparator("\t");
+                    ServerFile.this.data.setDelimiter(ServerFile.this.data.getDelimiter() == null ? "\"" : ServerFile.this.data.getDelimiter());
+                    ServerFile.this.data.setHeaderRow(ServerFile.this.data.getHeaderRow() == -1 ? 1 : ServerFile.this.data.getHeaderRow());
+                    ServerFile.this.data.setFirstDataRow(ServerFile.this.data.getFirstDataRow() == -1 ? 2 : ServerFile.this.data.getFirstDataRow());
+                    this.output.close();
+                    this.output = null;
                 }
             }
 
             @Override
             public void abort() {
-                output = null;
+                this.output = null;
             }
         };
     }
