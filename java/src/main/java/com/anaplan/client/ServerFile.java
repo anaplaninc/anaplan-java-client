@@ -434,8 +434,8 @@ public class ServerFile extends NamedObject {
                     if (col++ != 0) buf.append('\t');
                     String text = item.toString();
                     if (text.indexOf('\t') != -1) {
-                        throw new AnaplanAPIException(
-                                "Cell text cannot contain tab character");
+                        final String tabChar = "\t";
+                        text = text.replaceAll(tabChar, " ");
                     }
                     buf.append(text);
                 }
