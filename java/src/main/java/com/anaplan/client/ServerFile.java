@@ -263,16 +263,12 @@ public class ServerFile extends NamedObject {
                     buffer = new byte[size];
                 }
                 sourceFile.readFully(buffer, 0, size);
-                //reading the last index of the separator
-                int separatorLastIndex = lastIndexOf(buffer,data.getSeparator());
-                //calculating the size of byte array to load the bytes until the last index of separator
-                int finalSize = separatorLastIndex+1;
                 //creating the buffer to load the byte array until last separator
-                byte[] finalBuffer = new byte[finalSize];
+                byte[] finalBuffer = new byte[size];
                 //copying the data from existing byte array to new byte array until last separator
-                System.arraycopy(buffer,0,finalBuffer,0,finalSize);
+                System.arraycopy(buffer,0,finalBuffer,0,size);
                 //calculating the total read size from the file
-                totalReadSoFar += finalSize;
+                totalReadSoFar += size;
                 //checking if there is another chunk to decide if to upload the newly created buffer or existing buffer.
                 //existing buffer will be uploaded in case of last chunk
                 if(chunkIterator.hasNext()) {
