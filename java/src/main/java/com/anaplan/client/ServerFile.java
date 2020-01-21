@@ -99,10 +99,10 @@ public class ServerFile extends NamedObject {
         if (target.exists()) {
             if (!target.isFile()) {
                 throw new FileNotFoundException("Path \"" + target
-                        + "\" exists but is not a file");
+                                                        + "\" exists but is not a file");
             } else if (!deleteExisting) {
                 throw new IllegalStateException("File \"" + target
-                        + "\" already exists");
+                                                        + "\" already exists");
             } else if (!target.canWrite()) {
                 throw new FileNotFoundException(
                         "File \""
@@ -150,7 +150,7 @@ public class ServerFile extends NamedObject {
     public InputStream getDownloadStream() {
         // Get list of chunks from server
         final List<ChunkData> chunkList = getApi().getChunks(getModel().getWorkspace().getId(),
-                getModel().getId(), getId()).getItem();
+                                                             getModel().getId(), getId()).getItem();
         return new SequenceInputStream(new Enumeration<InputStream>() {
             int index = 0;
 
@@ -221,15 +221,15 @@ public class ServerFile extends NamedObject {
         LOG.info("Uploading file: {}", source.getAbsolutePath());
         if (!source.exists()) {
             throw new FileNotFoundException("Path \"" + source
-                    + "\" does not exist");
+                                                    + "\" does not exist");
         }
         if (!source.isFile()) {
             throw new FileNotFoundException("Path \"" + source
-                    + "\" does not refer to a file");
+                                                    + "\" does not refer to a file");
         }
         if (!source.canRead()) {
             throw new FileNotFoundException("File \"" + source
-                    + "\" cannot be read - check ownership and/or permissions");
+                                                    + "\" cannot be read - check ownership and/or permissions");
         }
         RandomAccessFile sourceFile = null;
         try {
@@ -263,16 +263,12 @@ public class ServerFile extends NamedObject {
                     buffer = new byte[size];
                 }
                 sourceFile.readFully(buffer, 0, size);
-                //reading the last index of the separator
-                int separatorLastIndex = lastIndexOf(buffer,data.getSeparator());
-                //calculating the size of byte array to load the bytes until the last index of separator
-                int finalSize = separatorLastIndex+1;
                 //creating the buffer to load the byte array until last separator
-                byte[] finalBuffer = new byte[finalSize];
+                byte[] finalBuffer = new byte[size];
                 //copying the data from existing byte array to new byte array until last separator
-                System.arraycopy(buffer,0,finalBuffer,0,finalSize);
+                System.arraycopy(buffer,0,finalBuffer,0,size);
                 //calculating the total read size from the file
-                totalReadSoFar += finalSize;
+                totalReadSoFar += size;
                 //checking if there is another chunk to decide if to upload the newly created buffer or existing buffer.
                 //existing buffer will be uploaded in case of last chunk
                 if(chunkIterator.hasNext()) {
@@ -448,7 +444,7 @@ public class ServerFile extends NamedObject {
 
             @Override
             public int writeDataRow(String exportId,int maxRetryCount,int retryTimeout,InputStream inputStream,int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException {
-            //dummy value as the implementation is done in JdbcCellWriter
+                //dummy value as the implementation is done in JdbcCellWriter
                 return 1;
             }
 
