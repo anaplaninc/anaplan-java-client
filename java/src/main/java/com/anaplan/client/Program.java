@@ -48,6 +48,7 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -122,6 +123,8 @@ public abstract class Program {
      */
     //TODO: Modularize main()
     public static void main(String... args) {
+
+        System.setProperty("file.encoding", StandardCharsets.UTF_8.name());
 
         // Register the PID within the logback context
         String name = String.valueOf(ManagementFactory.getRuntimeMXBean().getName());
@@ -523,15 +526,8 @@ public abstract class Program {
                     retrieveOutput(lastResult, outputFile);
                 } else if (arg == "-loadclass") {
                     String className = args[argi++];
-                    try {
-                        Class.forName(className);
-                    } catch (Throwable thrown) {
-                        if (debugLevel > 0) {
-                            thrown.printStackTrace();
-                        } else {
-                            LOG.error("Warning: -loadclass failed ({})", Utils.formatThrowable(thrown));
-                        }
-                    }
+                    //Removing the usage of loadclass parameter
+                    System.err.println("Warning : Loadclass parameter is deprecated starting in Anaplan Connect v1.4.4. Anaplan Connect will automatically load the right driver. This parameter will be removed in a future Anaplan Connect version.");
                 } else if (arg.equals("-jdbcproperties")) {
                     String propertiesFilePath = args[argi++];
                     JDBCConfig jdbcConfig = loadJdbcProperties(propertiesFilePath);
@@ -827,6 +823,10 @@ public abstract class Program {
                                   + "\" not found in workspace " + workspaceId
                                   + ", model " + modelId);
             }
+        }
+        // Set proper encoding based on what server sends back
+        if (serverFile!=null && serverFile.getData()!=null && serverFile.getData().getEncoding()!=null) {
+            System.setProperty("file.encoding",serverFile.getData().getEncoding());
         }
         return serverFile;
     }
