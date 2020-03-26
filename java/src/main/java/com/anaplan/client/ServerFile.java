@@ -121,10 +121,13 @@ public class ServerFile extends NamedObject {
 
             // Get list of chunks from server
             List<ChunkData> chunkList = getChunks();
-            for (ChunkData chunk : chunkList) {
-                byte[] chunkContent = getChunkContent(chunk.getId());
-                if (chunkContent == null) throw new NoChunkError(chunk.getId());
-                partialFile.write(chunkContent);
+            //checking in case chunklist is null
+            if(chunkList!=null) {
+                for (ChunkData chunk : chunkList) {
+                    byte[] chunkContent = getChunkContent(chunk.getId());
+                    if (chunkContent == null) throw new NoChunkError(chunk.getId());
+                    partialFile.write(chunkContent);
+                }
             }
             partialFile.close();
             partialFile = null;
@@ -236,7 +239,6 @@ public class ServerFile extends NamedObject {
             long length = source.length();
             data.setChunkCount((int) ((length - 1) / chunkSize) + 1);
             ServerFileResponse response = getApi().upsertFileDataSource(getWorkspace().getId(), getModel().getId(), getId(), data);
-            System.setProperty("file.encoding", data.getEncoding());
             if (response == null || response.getItem() == null) {
                 throw new CreateImportDatasourceError(getName());
             }
@@ -265,8 +267,10 @@ public class ServerFile extends NamedObject {
                 sourceFile.readFully(buffer, 0, size);
                 //reading the last index of the separator
                 int separatorLastIndex = lastIndexOf(buffer,data.getSeparator());
+                //determining the byte offset based on UTF-16LE encoding
+                int offset=data.getEncoding().equalsIgnoreCase("UTF-16LE")?2:1;
                 //calculating the size of byte array to load the bytes until the last index of separator
-                int finalSize = separatorLastIndex+1;
+                int finalSize = separatorLastIndex+offset;
                 //creating the buffer to load the byte array until last separator
                 byte[] finalBuffer = new byte[finalSize];
                 //copying the data from existing byte array to new byte array until last separator
