@@ -18,7 +18,6 @@ import com.anaplan.client.auth.Credentials;
 import com.anaplan.client.auth.KeyStoreManager;
 import com.anaplan.client.dto.ChunkData;
 import com.anaplan.client.dto.ExportMetadata;
-import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.ex.BadSystemPropertyError;
 import com.anaplan.client.ex.NoChunkError;
@@ -1025,7 +1024,7 @@ public abstract class Program {
             LOG.error("A model ID must be provided");
             return null;
         }
-        Model model = new Model(workspace, new ModelData(modelId));
+        Model model = workspace.getModel(modelId);
         if (model == null) {
             LOG.error("Model \"" + modelId
                               + "\" not found in workspace \"" + workspaceId + "\"");
