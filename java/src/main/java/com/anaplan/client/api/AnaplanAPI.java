@@ -1,10 +1,6 @@
 package com.anaplan.client.api;
 
-import com.anaplan.client.dto.ActionData;
-import com.anaplan.client.dto.ExportData;
-import com.anaplan.client.dto.ImportData;
-import com.anaplan.client.dto.ProcessData;
-import com.anaplan.client.dto.ServerFileData;
+import com.anaplan.client.dto.*;
 import com.anaplan.client.dto.responses.*;
 import feign.Headers;
 import feign.Param;
@@ -17,6 +13,26 @@ import feign.RequestLine;
  */
 @Headers({"Content-Type: application/json"})
 public interface AnaplanAPI {
+
+    /* Workspaces */
+
+    @RequestLine("GET /workspaces?offset={offset}")
+    WorkspacesResponse getWorkspaces(
+            @Param("offset") int offset);
+
+    @RequestLine("GET /workspaces/{workspaceId}")
+    WorkspaceResponse getWorkspace(
+            @Param("workspaceId") String workspaceId);
+
+    /* Models */
+
+    @RequestLine("GET /models?offset={offset}")
+    ModelsResponse getModels(
+            @Param("offset") int offset);
+
+    @RequestLine("GET /models/{modelId}")
+    ModelResponse getModel(
+            @Param("modelId") String modelId);
 
     @RequestLine("GET /workspaces/{workspaceId}/models/{modelId}/modules?offset={offset}")
     ModulesResponse getModules(

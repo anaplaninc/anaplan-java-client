@@ -5,9 +5,7 @@ import com.anaplan.client.api.AnaplanAPI;
 import com.anaplan.client.api.AnaplanAuthenticationAPI;
 import com.anaplan.client.auth.Credentials;
 import com.anaplan.client.dto.ModelData;
-import com.anaplan.client.dto.responses.ModelResponse;
-import com.anaplan.client.dto.responses.UserResponse;
-import com.anaplan.client.dto.responses.WorkspaceResponse;
+import com.anaplan.client.dto.WorkspaceData;
 import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.ex.AnaplanAPITransportException;
 import com.anaplan.client.transport.ConnectionProperties;
@@ -21,14 +19,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.URI;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -116,13 +107,13 @@ public abstract class BaseTest {
             URI serviceLocation = new URI(properties.getString("service.location"));
 
             correctCredentials = new Credentials(properties.getString("user.name"),
-                    properties.getString("user.password"));
+                                                 properties.getString("user.password"));
             lowerCaseCredentials = new Credentials(properties.getString("user.name"),
-                    properties.getString("user.password").toLowerCase());
+                                                   properties.getString("user.password").toLowerCase());
             upperCaseCredentials = new Credentials(properties.getString("user.name"),
-                    properties.getString("user.password").toUpperCase());
+                                                   properties.getString("user.password").toUpperCase());
             incorrectCredentials = new Credentials(properties.getString("user.name"),
-                    properties.getString("user.password") + "#");
+                                                   properties.getString("user.password") + "#");
 
             props = new ConnectionProperties();
             props.setAuthServiceUri(new URI(mockAuthServiceUrl));
@@ -233,7 +224,7 @@ public abstract class BaseTest {
     }
 
     protected Workspace getTestWorkspace() throws AnaplanAPIException {
-        return mockService.getWorkspace(testWorkspace);
+        return new Workspace(mockService, new WorkspaceData(testWorkspace));
     }
 
     protected InputStream getTestDataStream(String name) throws IOException {
@@ -315,7 +306,9 @@ public abstract class BaseTest {
     }
 
     protected static TaskResult runTask(TaskFactory taskFactory, TaskParameters taskParameters) throws AnaplanAPIException {
-        if (null == taskParameters) taskParameters = new TaskParameters();
+        if (null == taskParameters) {
+            taskParameters = new TaskParameters();
+        }
         taskParameters.setLocale("en", "UK");
         Task task = taskFactory.createTask(taskParameters);
         TaskStatus taskStatus;
