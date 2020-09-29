@@ -16,21 +16,8 @@ package com.anaplan.client;
 
 import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.dto.ServerFileData;
-import com.anaplan.client.dto.responses.ActionsResponse;
-import com.anaplan.client.dto.responses.ExportsResponse;
-import com.anaplan.client.dto.responses.ImportsResponse;
-import com.anaplan.client.dto.responses.ModulesResponse;
-import com.anaplan.client.dto.responses.ProcessesResponse;
-import com.anaplan.client.dto.responses.ServerFileResponse;
-import com.anaplan.client.dto.responses.ServerFilesResponse;
-import com.anaplan.client.ex.ActionsNotFoundException;
-import com.anaplan.client.ex.AnaplanAPIException;
-import com.anaplan.client.ex.CreateImportDatasourceError;
-import com.anaplan.client.ex.ExportsNotFoundException;
-import com.anaplan.client.ex.ImportsNotFoundException;
-import com.anaplan.client.ex.ModulesNotFoundException;
-import com.anaplan.client.ex.ProcessesNotFoundException;
-import com.anaplan.client.ex.ServerFilesNotFoundException;
+import com.anaplan.client.dto.responses.*;
+import com.anaplan.client.ex.*;
 import com.anaplan.client.transport.Paginator;
 import feign.FeignException;
 
@@ -59,6 +46,15 @@ public class Model extends AnaplanApiClientObject {
      */
     public String getId() {
         return data.getId();
+    }
+
+    /**
+     * Get the name of the model.
+     *
+     * @return The name of this model
+     */
+    public String getName() {
+        return data.getName();
     }
 
     /**

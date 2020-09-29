@@ -17,14 +17,21 @@ package com.anaplan.client;
 import com.anaplan.client.auth.Authenticator;
 import com.anaplan.client.auth.AuthenticatorFactory;
 import com.anaplan.client.dto.WorkspaceData;
+import com.anaplan.client.dto.responses.WorkspaceResponse;
+import com.anaplan.client.dto.responses.WorkspacesResponse;
+import com.anaplan.client.ex.AnaplanAPIException;
+import com.anaplan.client.ex.WorkspaceNotFoundException;
 import com.anaplan.client.transport.AnaplanApiProvider;
 import com.anaplan.client.transport.ConnectionProperties;
+import com.anaplan.client.transport.Paginator;
 import com.google.common.base.Preconditions;
+import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -95,6 +102,42 @@ public class Service implements Closeable {
     }
 
     /**
+     * Retrieves the list of available workspaces.
+     *
+     * @return The list of workspaces this user has access to
+     * @throws AnaplanAPIException an error occurred.
+     */
+
+    public Iterable<Workspace> getWorkspaces() throws AnaplanAPIException {
+        Service self = this;
+        return new Paginator<Workspace>() {
+
+            @Override
+            public Workspace[] getPage(int offset) {
+                WorkspacesResponse response = apiProvider.getApiClient().getWorkspaces(offset);
+                setPageInfo(response.getMeta().getPaging());
+                if (getPageInfo().getCurrentPageSize() > 0 && response.getItem() != null) {
+                    return response.getItem()
+                            .stream()
+                            .map(workspaceData -> {
+                                Reference<Workspace> workspaceReference = workspaceCache.get(workspaceData);
+                                Workspace workspace = workspaceReference == null ? null : workspaceReference.get();
+                                if (workspace == null) {
+                                    workspace = new Workspace(self, workspaceData);
+                                    workspaceCache.put(workspaceData, new WeakReference<>(workspace));
+                                }
+                                return workspace;
+                            })
+                            .toArray(Workspace[]::new);
+                } else {
+                    return new Workspace[]{};
+                }
+            }
+        };
+    }
+
+
+    /**
      * Retrieve a reference to a workspace from its workspaceId.
      *
      * @param workspaceId The workspace ID or name of the workspace.
@@ -104,7 +147,16 @@ public class Service implements Closeable {
      */
 
     public Workspace getWorkspace(String workspaceId) {
-        return new Workspace(this, new WorkspaceData(workspaceId));
+        try {
+            WorkspaceResponse response = apiProvider.getApiClient().getWorkspace(workspaceId);
+            if (response != null && response.getItem() != null) {
+                return new Workspace(this, response.getItem());
+            } else {
+                throw new WorkspaceNotFoundException(workspaceId);
+            }
+        } catch (FeignException e) {
+            throw new WorkspaceNotFoundException(workspaceId, e);
+        }
     }
 
     /**

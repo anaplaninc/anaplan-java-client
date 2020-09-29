@@ -6,13 +6,17 @@ package com.anaplan.client.dto;
  * Date: 6/21/17
  * Time: 3:41 PM
  */
-public class WorkspaceData {
+public class WorkspaceData extends NamedObjectData {
 
     private String id;
     private boolean active;
     private String name;
     private Long sizeAllowance;
 
+    public WorkspaceData() {
+    }
+
+    @Override
     public String getId() {
         return id;
     }
@@ -21,6 +25,7 @@ public class WorkspaceData {
         return active;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -29,6 +34,7 @@ public class WorkspaceData {
         return sizeAllowance;
     }
 
+    @Override
     public void setId(String id) {
         this.id = id;
     }
@@ -37,6 +43,7 @@ public class WorkspaceData {
         this.active = active;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }
@@ -49,6 +56,7 @@ public class WorkspaceData {
         this.id = id;
     }
 
+    @Override
     public boolean equals(Object other) {
         if (!(other != null && other instanceof WorkspaceData)) {
             return false;
@@ -57,6 +65,7 @@ public class WorkspaceData {
         return id.equals(data.id) && name.equals(data.name);
     }
 
+    @Override
     public int hashCode() {
         return id.hashCode() * 31 + name.hashCode();
     }
