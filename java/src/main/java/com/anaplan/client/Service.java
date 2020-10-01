@@ -17,15 +17,12 @@ package com.anaplan.client;
 import com.anaplan.client.auth.Authenticator;
 import com.anaplan.client.auth.AuthenticatorFactory;
 import com.anaplan.client.dto.WorkspaceData;
-import com.anaplan.client.dto.responses.WorkspaceResponse;
 import com.anaplan.client.dto.responses.WorkspacesResponse;
 import com.anaplan.client.ex.AnaplanAPIException;
-import com.anaplan.client.ex.WorkspaceNotFoundException;
 import com.anaplan.client.transport.AnaplanApiProvider;
 import com.anaplan.client.transport.ConnectionProperties;
 import com.anaplan.client.transport.Paginator;
 import com.google.common.base.Preconditions;
-import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,16 +144,7 @@ public class Service implements Closeable {
      */
 
     public Workspace getWorkspace(String workspaceId) {
-        try {
-            WorkspaceResponse response = apiProvider.getApiClient().getWorkspace(workspaceId);
-            if (response != null && response.getItem() != null) {
-                return new Workspace(this, response.getItem());
-            } else {
-                throw new WorkspaceNotFoundException(workspaceId);
-            }
-        } catch (FeignException e) {
-            throw new WorkspaceNotFoundException(workspaceId, e);
-        }
+        return new Workspace(this, new WorkspaceData(workspaceId));
     }
 
     /**

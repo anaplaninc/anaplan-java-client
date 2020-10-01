@@ -16,10 +16,8 @@ package com.anaplan.client;
 
 import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.dto.WorkspaceData;
-import com.anaplan.client.dto.responses.ModelResponse;
 import com.anaplan.client.dto.responses.ModelsResponse;
 import com.anaplan.client.ex.AnaplanAPIException;
-import com.anaplan.client.ex.ModelNotFoundException;
 import com.anaplan.client.ex.ModelsNotFoundException;
 import com.anaplan.client.transport.Paginator;
 import feign.FeignException;
@@ -108,15 +106,7 @@ public class Workspace extends AnaplanApiClientObject {
      * @return The model, or null if no such model exists in the workspace
      */
     public Model getModel(String modelId) {
-        try {
-            ModelResponse modelResponse = getApi().getModel(modelId);
-            if (modelResponse != null && modelResponse.getItem() != null) {
-                return new Model(this, modelResponse.getItem());
-            }
-        } catch (FeignException e) {
-            throw new ModelNotFoundException(modelId, e);
-        }
-        return null;
+        return new Model(this, new ModelData(modelId));
     }
 
 }
