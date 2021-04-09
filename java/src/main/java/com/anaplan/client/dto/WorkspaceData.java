@@ -12,6 +12,7 @@ public class WorkspaceData extends NamedObjectData {
     private boolean active;
     private String name;
     private Long sizeAllowance;
+    private Long currentSize;
 
     public WorkspaceData() {
     }
@@ -50,6 +51,14 @@ public class WorkspaceData extends NamedObjectData {
 
     public void setSizeAllowance(Long sizeAllowance) {
         this.sizeAllowance = sizeAllowance;
+    }
+
+    public Long getCurrentSize() {
+        return currentSize;
+    }
+
+    public void setCurrentSize(Long currentSize) {
+        this.currentSize = currentSize;
     }
 
     public WorkspaceData(String id) {
