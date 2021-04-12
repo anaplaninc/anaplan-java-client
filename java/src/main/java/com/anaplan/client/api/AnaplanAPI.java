@@ -16,21 +16,21 @@ public interface AnaplanAPI {
 
     /* Workspaces */
 
-    @RequestLine("GET /workspaces?offset={offset}")
+    @RequestLine("GET /workspaces?offset={offset}&tenantDetails=true")
     WorkspacesResponse getWorkspaces(
             @Param("offset") int offset);
 
-    @RequestLine("GET /workspaces/{workspaceId}")
+    @RequestLine("GET /workspaces/{workspaceId}?tenantDetails=true")
     WorkspaceResponse getWorkspace(
             @Param("workspaceId") String workspaceId);
 
     /* Models */
 
-    @RequestLine("GET /models?offset={offset}")
+    @RequestLine("GET /models?offset={offset}&modelDetails=true")
     ModelsResponse getModels(
             @Param("offset") int offset);
 
-    @RequestLine("GET /models/{modelId}")
+    @RequestLine("GET /models/{modelId}?modelDetails=true")
     ModelResponse getModel(
             @Param("modelId") String modelId);
 
