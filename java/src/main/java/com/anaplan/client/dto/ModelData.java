@@ -9,6 +9,11 @@ package com.anaplan.client.dto;
 public class ModelData extends NamedObjectData {
     private String id;
     private String name;
+    private String activeState;
+    private String currentWorkspaceId;
+    private String currentWorkspaceName;
+    private String modelUrl;
+    private String[] categoryValues;
 
     public ModelData() {
     }
@@ -35,6 +40,46 @@ public class ModelData extends NamedObjectData {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getActiveState() {
+        return activeState;
+    }
+
+    public void setActiveState(String activeState) {
+        this.activeState = activeState;
+    }
+
+    public String getCurrentWorkspaceId() {
+        return currentWorkspaceId;
+    }
+
+    public void setCurrentWorkspaceId(String currentWorkspaceId) {
+        this.currentWorkspaceId = currentWorkspaceId;
+    }
+
+    public String getCurrentWorkspaceName() {
+        return currentWorkspaceName;
+    }
+
+    public void setCurrentWorkspaceName(String currentWorkspaceName) {
+        this.currentWorkspaceName = currentWorkspaceName;
+    }
+
+    public String getModelUrl() {
+        return modelUrl;
+    }
+
+    public void setModelUrl(String modelUrl) {
+        this.modelUrl = modelUrl;
+    }
+
+    public String[] getCategoryValues() {
+        return categoryValues;
+    }
+
+    public void setCategoryValues(String[] categoryValues) {
+        this.categoryValues = categoryValues;
     }
 
     @Override

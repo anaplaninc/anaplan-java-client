@@ -39,6 +39,11 @@ public class Model extends AnaplanApiClientObject {
         return workspace;
     }
 
+
+    public ModelData getData() {
+        return data;
+    }
+
     /**
      * Get the identifier of the model.
      *

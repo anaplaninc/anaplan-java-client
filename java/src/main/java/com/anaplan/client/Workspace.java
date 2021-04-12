@@ -43,6 +43,10 @@ public class Workspace extends AnaplanApiClientObject {
         this.data = data;
     }
 
+    public WorkspaceData getData() {
+        return data;
+    }
+
     /**
      * Get the identifier of the workspace.
      *
