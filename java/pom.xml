@@ -20,7 +20,7 @@
         <junit.version>4.12</junit.version>
         <logback.version>1.2.3</logback.version>
         <commons.codec.version>1.12</commons.codec.version>
-        <commons.io.version>2.6</commons.io.version>
+        <commons.io.version>2.7</commons.io.version>
         <org.apache.httpcomponents.httpcore.version>4.4.11</org.apache.httpcomponents.httpcore.version>
         <org.apache.httpcomponents.httpclient.version>4.5.7</org.apache.httpcomponents.httpclient.version>
         <org.apache.httpcomponents.httpmime.version>4.5.7</org.apache.httpcomponents.httpmime.version>
