@@ -1,6 +1,0 @@
-ListWithTabSepSingleQuoDeli	Parent	Code	p1	p2	p3	p4	p5
-emp1			12	ffrom AC1.4 tab|singleQuote	tabsingleQuoteTextDelimiter	2323.3424	m1
-emp2			3243		lname2	34324325	m2
-emp3			34	@#@#@#@#<@#@<@#<@<<<<<<	ln...ame3	43424	m3
-emp4			35	2323232	lname4	34324	m4
-emp5			456	fname5	ln.	34324234	m5

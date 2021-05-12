@@ -1,1 +1,0 @@
-AnaplanClient.bat -user integration@anaplan.com:Integration@123 -debug -service "https://api.r2p2.anaplan.com" -auth "https://auth.r2p2.anaplan.com" -workspaces

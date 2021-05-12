@@ -1,9 +1,0 @@
----
-tests:
-  - testName: "JdbcTest"
-    scripts:
-      - scriptName: "AC1.4_199_tab_separators_jdbc_import.sh"
-        report:
-          messageList:
-            - "Anaplan Connect 1.4.4"
-            - "<<< The operation was successful >>>  =)"

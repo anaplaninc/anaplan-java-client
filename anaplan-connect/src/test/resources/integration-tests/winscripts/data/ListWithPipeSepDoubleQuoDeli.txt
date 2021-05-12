@@ -1,6 +1,0 @@
-"ListWithPipeSepDoubleQuoDeli"|"Parent"|"Code"|"id"|"firstName"|"lastName"|"salary"|"manager"
-"emp1"|||"12"|"f|||||||from AC1.4 pipe|doubleQuote"|"pipe|singleQuoteTextDelimiter"|"2323.3424"|"m1"
-"emp2"|||"3243"|"||||||||||||||||||"|"lname2"|"34324325"|"m2"
-"emp3"|||"34"|"@#@#@#@#<@#@<@#<@<<<<<<||||||||||"|"ln...ame3"|"43424"|"m3"
-"emp4"|||"35"|"|||2|323232"|"ln|||ame4"|"34324"|"m4"
-"emp5"|||"456"|"fname5"|"ln.|||||||||"|"34324234"|"m5"

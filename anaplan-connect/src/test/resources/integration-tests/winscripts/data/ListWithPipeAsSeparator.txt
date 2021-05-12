@@ -1,7 +1,0 @@
-ListWithPipeAsSeparator|Parent|Code|id|individual_price|quantity|total_price
-item1335|||5|14|1|12
-item2|||4|23|2|46
-item3|||3|34|3|102
-item4|||2|45|4|180
-item13355|||1|56|5|280
-itemAC14|||1|56|5|280
