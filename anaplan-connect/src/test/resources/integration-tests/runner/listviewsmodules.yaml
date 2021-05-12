@@ -1,0 +1,328 @@
+---
+tests:
+  - testName: "List-Views"
+    scripts:
+      - scriptName: "AC1.4_213_list_views.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-V-Modelname"
+    scripts:
+      - scriptName: "AC1.4_235_list_V_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-WsName"
+    scripts:
+      - scriptName: "AC1.4_236_list_views_WsName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "Keystore-List-V"
+    scripts:
+      - scriptName: "AC1.4_215_KeyCert_views_V.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "Anaplan Connect 1.4.4"
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "Keystore-List-Views-ModelName"
+    scripts:
+      - scriptName: "AC1.4_225_KeyCert_list_views_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "Keystore-List-V-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_232_KeyCert_views_V_Wsname_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Modules-with-Mo"
+    scripts:
+      - scriptName: "AC1.4_226_list_MO.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+  - testName: "List-Modules-with-Mo-Wsname"
+    scripts:
+      - scriptName: "AC1.4_233_list_MO_WsName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+  - testName: "List-Modules-with-Mo-ModelName"
+    scripts:
+      - scriptName: "AC1.4_234_list_modules_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+  - testName: "List-Modules-with-Mo-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_228_list_MO_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "102000000049\tDelete Cyrillic List Module"
+            - "102000000048\tDelete Large Russian List Model"
+            - "102000000047\tDelete Large Chinese Big5 List Module"
+            - "102000000046\tDelete Chinese Big5 List Module"
+            - "102000000045\tDelete Japanese List Module"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+            - "102000000039\tListWithTabSepDoubQuoDeliCSV module"
+  - testName: "List-modules"
+    scripts:
+      - scriptName: "AC1.4_214_list_modules.sh"
+        report:
+          messageList:
+            - "102000000049\tDelete Cyrillic List Module"
+            - "102000000048\tDelete Large Russian List Model"
+            - "102000000047\tDelete Large Chinese Big5 List Module"
+            - "102000000046\tDelete Chinese Big5 List Module"
+            - "102000000045\tDelete Japanese List Module"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+            - "102000000039\tListWithTabSepDoubQuoDeliCSV module"
+  - testName: "List-Modules-with-modules-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_231_list_modules_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name"
+            - "102000000049\tDelete Cyrillic List Module"
+            - "102000000048\tDelete Large Russian List Model"
+            - "102000000047\tDelete Large Chinese Big5 List Module"
+            - "102000000046\tDelete Chinese Big5 List Module"
+            - "102000000045\tDelete Japanese List Module"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+            - "102000000039\tListWithTabSepDoubQuoDeliCSV module"
+  - testName: "List-Views-with-V-ModuleName-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_227_list_V_in_a_moName_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+
+  - testName: "List-Views-with-V-ModuleName-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_216_list_V_in_a_moduleName_WsNameModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-V-ModuleId-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_229_list_views_moduleId_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-V-ModuleId-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_230_list_V_WsName_Mo.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-views-mo-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_237_list_views_moName_Wsname_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-views-MoName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_238_list_views_moName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-views-MoId"
+    scripts:
+      - scriptName: "AC1.4_239_list_views_MoId.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-views-moduleName-WsName"
+    scripts:
+      - scriptName: "AC1.4_240_list_views_moduleName_WsName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-views-MoName"
+    scripts:
+      - scriptName: "AC1.4_241_list_views_moName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-with-views-moduleName-WsName"
+    scripts:
+      - scriptName: "AC1.4_242_list_views_moId_WsName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+
+

@@ -1,0 +1,9 @@
+Line Item,view-data-test-dimension,view-data-test-columns,Value
+l1,a,c1,1
+l1,a,c2,2
+l1,b,c1,5
+l1,b,c2,6
+l2,a,c1,3
+l2,a,c2,4
+l2,b,c1,7
+l2,b,c2,8

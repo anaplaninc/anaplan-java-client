@@ -1,0 +1,668 @@
+---
+tests:
+  - testName: "Delete List-BasicAuth Non-Default Tenant Exit Code: 1"
+    scripts:
+      - scriptName: "stg_AC1.4_01_delete_ND.sh"
+        report:
+          messageList:
+            - "Initializing Service..."
+            - "Authenticating via Basic..."
+            - "Workspace not found: Workspace not found for Workspace-ID: 2c9ba1b6750e78550175ddafd38c02e0"
+        failInfo:
+          exitCode : 1
+  - testName: "Import List-BasicAuth Non-Default Tenant Exit Code: 1"
+    scripts:
+      - scriptName: "AC1.4_08_import_list_CSV_ND.sh"
+        report:
+          messageList:
+            - "Initializing Service..."
+            - "Authenticating via Basic..."
+            - "Workspace not found: Workspace not found for Workspace-ID: 2c9ba1b6750e78550175ddafd38c02e0"
+        failInfo:
+          exitCode : 1
+  - testName: "export List-BasicAuth Non-Default Tenant Exit Code:1 "
+    scripts:
+      - scriptName: "AC1.4_15_list_imported_exported_csv_ND.sh"
+        report:
+          messageList:
+            - "Initializing Service..."
+            - "Authenticating via Basic..."
+            - "Workspace not found: Workspace not found for Workspace-ID: 2c9ba1b6750e78550175ddafd38c02e0"
+        failInfo:
+          exitCode: 1
+
+#  - testName: "Delete List-BasicAuth List Tab separated TXT Import-BasicAuth MultiCol Module TXT Import"
+#    scripts:
+#      - scriptName: "AC1.4_07_delete_2775List.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_02_import_list_TXT.sh"
+#        report:
+#          messageList:
+#            - "Authenticating via Basic..."
+#            - "successCreateCount - 2"
+#            - "successRowCount - 2"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 2"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#      - scriptName: "AC1.4_16_list_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/Grid - coresrv-2776-list.txt"
+#          orgFile: "export-files/coresrv-2776-list.txt"
+#          fileSize: 91
+#      - scriptName: "AC1.4_29_import_module_multicol_TXT.sh"
+#        report:
+#          messageList:
+#            - "Authenticating via Basic..."
+#            - "The operation was successful"
+#            - "boolean3 cells: 1068"
+#            - "lineItemName - boolean3"
+#            - "rowCount - 1068"
+#            - "num2 cells: 1068 (445 ignored)"
+#            - "lineItemName - num2"
+#            - "rowCount - 1068"
+#            - "ignoredCount - 445"
+#            - "text1 cells: 1068"
+#            - "lineItemName - text1"
+#            - "rowCount - 1068"
+#  - testName: "Delete List-CertAuth List Comma separated CSV Import-CertAuthAuth SingleCol Module CSV Import"
+#    scripts:
+#      - scriptName: "AC1.4_30_Digicert_valid_user_bothKey&CertInKeystore_delete.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_64_Digicert_valid_user_bothKey&CertInKeystore_import_list_CSV.sh"
+#        report:
+#          messageList:
+#            - "Authenticating via Certificate..."
+#            - "successRowCount - 3"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 3"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 3"
+#      - scriptName: "AC1.4_15_list_imported_exported_csv.sh" #useCert not keystore.
+#        exportFile:
+#          exportedFile: "export/imported-exported-coresrv-2775-list.csv"
+#          orgFile: "export-files/coresrv-2775-list.csv"
+#          fileSize: 104
+#      - scriptName: "AC1.4_79_Digicert_valid_user_bothKey&CertInKeystore_import_module_SingleCol_CSV.sh"
+#        report:
+#          messageList:
+#            - "Authenticating via Certificate..."
+#            - "The operation was successful"
+#            - "lineItemName - col3"
+#            - "rowCount - 36"
+#            - "ignoredCount - 15"
+#            - "ignoredCount - 51"
+#  - testName: "Delete List-CertAuth List Tab delimited TXT Import-CertAuth MultiCol Module TXT Import"
+#    scripts:
+#      - scriptName: "AC1.4_07_delete_2775List.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_76_Digicert_valid_user_bothKey&CertInKeystore_import_list_TXT.sh"
+#        report:
+#          messageList:
+#            - "successCreateCount - 2"
+#            - "successRowCount - 2"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 2"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#      - scriptName: "AC1.4_16_list_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/Grid - coresrv-2776-list.txt"
+#          orgFile: "export-files/coresrv-2776-list.txt"
+#          fileSize: 91
+#      - scriptName: "AC1.4_78_Digicert_valid_user_bothKey&CertInKeystore_import_module_multicol_TXT.sh"
+#        report:
+#          messageList:
+#            - "Authenticating via Certificate..."
+#            - "boolean3 cells: 1068"
+#            - "lineItemName - boolean3"
+#            - "rowCount - 1068"
+#            - "num2 cells: 1068 (445 ignored)"
+#            - "lineItemName - num2"
+#            - "rowCount - 1068"
+#            - "ignoredCount - 445"
+#            - "text1 cells: 1068"
+#            - "lineItemName - text1"
+#            - "rowCount - 1068"
+#  - testName: "Delete List-CertAuth Import List Colon separated CSV, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_122_delete_ListWithColonSepSingleQuoDeli.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_56_Digicert_valid_user_bothKey&CertInKeystore_import_list_colon_sep_singleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successCreateCount - 5"
+#            - "successUpdateCount - 0"
+#            - "successRowCount - 5"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#      - scriptName: "AC1.4_123_list_colon_sep_singlequote_deli_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithColonSepSingleQuoDeli.csv"
+#          orgFile: "export-files/ListWithColonSepSingleQuoDeli.csv"
+#          fileSize: 362
+#  - testName: "Delete List-BasicAuth Import List Colon separated CSV, Double Quote delimiter "
+#    scripts:
+#      - scriptName: "AC1.4_124_delete_ListWithColonSepDoubleQuoDeli.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_54_Digicert_valid_user_bothKey&CertInKeystore_import_list_colon_sep_doubleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successCreateCount - 5"
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#      - scriptName: "AC1.4_125_list_colon_sep_doublequote_deli_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithColonSepDoubleQuoDeli.csv"
+#          orgFile: "export-files/ListWithColonSepDoubleQuoDeli.csv"
+#          fileSize: 363
+#  - testName: "Delete List-BasicAuth Import List  Colon separated TXT, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_126_delete_ListWithColonSepSingleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_57_Digicert_valid_user_bothKey&CertInKeystore_import_list_colon_sep_singleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successCreateCount - 5"
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#      - scriptName: "AC1.4_127_list_colon_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithColonSepSingleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithColonSepSingleQuoDeliTXT.txt"
+#          fileSize: 358
+#  - testName: "Delete List-BasicAuth Import List Colon separated TXT, Double Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_128_delete_ListWithColonSepDoubleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_55_Digicert_valid_user_bothKey&CertInKeystore_import_list_colon_sep_doubleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_129_list_colon_sep_doublequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithColonSepDoubQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithColonSepDoubQuoDeliTXT.txt"
+#          fileSize: 364
+#  - testName: "Delete List-BasicAuth Import List Comma separated TXT, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_130_delete_ListWithCommaSepSingleleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_63_Digicert_valid_user_bothKey&CertInKeystore_import_list_comma_sep_singleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_131_list_comma_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithCommaSepSingleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithCommaSepSingleQuoDeliTXT.txt"
+#          fileSize: 340
+#    #  - testName: "Delete List-BasicAuth Import List Comma separated TXT, Double Quote delimiter "
+#    scripts:
+#      - scriptName: "AC1.4_132_delete_ListWithCommaSepDoubleleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_59_Digicert_valid_user_bothKey&CertInKeystore_import_list_comma_sep_doubleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_131_list_comma_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithCommaSepSingleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithCommaSepDoubQuoDeliTXT.txt"
+#          fileSize: 340
+#  - testName: "Delete List-BasicAuth Import List Comma separated CSV, Double Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_134_delete_ListWithCommaSepDoubleleQuoDeliCSV.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_60_Digicert_valid_user_bothKey&CertInKeystore_import_list_comma_sep_doubQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_131_list_comma_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithCommaSepSingleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithCommaSepSingleQuoDeliTXT.txt"
+#          fileSize: 340
+#  - testName: "Delete List-BasicAuth Import List Comma separated CSV, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_136_delete_ListWithCommaSepSingleQuoDeliCSV.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_62_Digicert_valid_user_bothKey&CertInKeystore_import_list_comma_sep_singleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_131_list_comma_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithCommaSepSingleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithCommaSepSingleQuoDeliTXT.txt"
+#          fileSize: 340
+#  - testName: "Delete List-BasicAuth Import List Pipe separated CSV, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_138_delete_ListWithPipeSepSingleQuoDeliCSV.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_68_Digicert_valid_user_bothKey&CertInKeystore_import_list_pipe_sep_singleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_139_list_pipe_sep_singlequote_deli_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithPipeSepSingleQuoDeli.csv"
+#          orgFile: "export-files/ListWithPipeSepSingleQuoDeli.csv"
+#          fileSize: 348
+#  - testName: "Delete List-BasicAuth Import List Pipe separated CSV, Double Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_140_delete_ListWithPipeSepDoubleQuoDeliCSV.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_66_Digicert_valid_user_bothKey&CertInKeystore_import_list_pipe_sep_doubleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_141_list_pipe_sep_doublequote_deli_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithPipeSepDoubQuoDeli.csv"
+#          orgFile: "export-files/ListWithPipeSepDoubQuoDeli.csv"
+#          fileSize: 346
+#  - testName: "Delete List-BasicAuth Import List Pipe separated TXT, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_142_delete_ListWithPipeSepSingleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_69_Digicert_valid_user_bothKey&CertInKeystore_import_list_pipe_sep_singleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_143_list_pipe_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithPipeSepSingleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithPipeSepSingleQuoDeliTXT.txt"
+#          fileSize: 352
+#  - testName: "Delete List-BasicAuth Import List Pipe separated TXT, Double Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_144_delete_ListWithPipeSepDoubleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_67_Digicert_valid_user_bothKey&CertInKeystore_import_list_pipe_sep_doubleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_145_list_pipe_sep_doublequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithPipeSepDoubleQuoDeliTXT.txt"
+#          orgFile: "export-files/ListWithPipeSepDoubleQuoDeliTXT.txt"
+#          fileSize: 351
+#  - testName: "Delete List-BasicAuth Import List Tab separated CSV, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_146_delete_ListWithTabSepSingleQuoDeliCSV.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_75_Digicert_valid_user_bothKey&CertInKeystore_import_list_tab_singleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 2"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 2"
+#        failInfo:
+#          dumpFile: "dump/ListWithTabSepSingQuoDeliCS from ListWithTabSepSingleQuoDeli"
+#      - scriptName: "AC1.4_147_list_tab_sep_singlequote_deli_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithTabSepSingQuoDeliCSV.csv"
+#          orgFile: "export-files/ListWithTabSepSingQuoDeliCSV.csv"
+#          fileSize: 191
+#  - testName: "Delete List-BasicAuth Import List Tab separated CSV, Double Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_148_delete_ListWithTabSepDoubleQuoDeliCSV.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_71_Digicert_valid_user_bothKey&CertInKeystore_import_list_tab_doubleQuote_deli_CSV.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_149_list_tab_sep_doublequote_deli_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithTabSepDoubQuoDeliCSV.csv"
+#          orgFile: "export-files/ListWithTabSepDoubQuoDeliCSV.csv"
+#          fileSize: 291
+#  - testName: "Delete List-BasicAuth Import List Tab separated TXT, Single Quote delimiter"
+#    scripts:
+#      - scriptName: "AC1.4_150_delete_ListWithTabSepSingleQuoDeliTXT.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_74_Digicert_valid_user_bothKey&CertInKeystore_import_list_tab_sep_singleQuote_deli_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 5"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 5"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 5"
+#      - scriptName: "AC1.4_151_list_tab_sep_singlequote_deli_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListWithTabSepSingleQuoDeli.txt"
+#          orgFile: "export-files/ListWithTabSepSingleQuoDeli.txt"
+#          fileSize: 293
+#  - testName: "Delete Large Japanese List-BasicAuth List TXT Import-BasicAuth List Export TXT"
+#    scripts:
+#      - scriptName: "AC1.4_158_Digicert_valid_user_bothKey&CertInKeystore_delete_LargeJapaneseList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_159_Digicert_valid_user_bothKey&CertInKeystore_import_LargeJapaneseList_TXT.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 136"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 136"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 136"
+#      - scriptName: "AC1.4_160_example_LargeJapaneselist_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-Japaneselist.txt"
+#          orgFile: "export-files/LargeJapaneseList.txt"
+#          fileSize: 2900322
+#  - testName: "Delete UTF16LE Encoding List-BasicAuth List Tab Separated CSV Import-BasicAuth List Export TXT"
+#    scripts:
+#      - scriptName: "AC1.4_164_Digicert_valid_user_bothKey&CertInKeystore_delete_UTF16LEList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_115_list_import_UTF16LE_csv.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 7"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 7"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 7"
+#      - scriptName: "AC1.4_165_example_UTF16LElist_imported_exported_csv.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-ListUTF16LE.csv"
+#          orgFile: "export-files/ListUTF16LE.csv"
+#          fileSize: 186
+#  - testName: "Delete Japanese SHIFT-JIS Encoding List-BasicAuth List CSV Import-BasicAuth List Export CSV"
+#    scripts:
+#      - scriptName: "AC1.4_166_Digicert_valid_user_bothKey&CertInKeystore_delete_JapaneseList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_110_list_import_JapaneseChar_csv.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 7"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 7"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 7"
+#      - scriptName: "AC1.4_113_list_export_JapaneseChar_csv.sh"
+#        exportFile:
+#          exportedFile: "export/basic-auth-export-JapaneseList.csv"
+#          orgFile: "export-files/JapaneseList.csv"
+#          fileSize: 177
+#  - testName: "Delete Chinese Big5 Encoding List-BasicAuth List CSV Import-BasicAuth List Export CSV"
+#    scripts:
+#      - scriptName: "AC1.4_167_Digicert_valid_user_bothKey&CertInKeystore_delete_ChineseBig5TXTList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_109_list_import_ChineseCharBig5_txt.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 4"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 4"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 4"
+#      - scriptName: "AC1.4_112_list_export_ChineseCharBig5_txt.sh"
+#        exportFile:
+#          exportedFile: "export/Basic-Auth-Export-ChineseBig5.txt"
+#          orgFile: "export-files/ChineseBig5.txt"
+#          fileSize: 160
+#  - testName: "Delete Large UTF16LE Encoding List-BasicAuth List CSV Import-BasicAuth List Export CSV"
+#    scripts:
+#      - scriptName: "AC1.4_169_Digicert_valid_user_bothKey&CertInKeystore_delete_UTF16LELargeList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_168_list_import_LargeUTF16LE_txt.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 50095"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 50095"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 50095"
+#      - scriptName: "AC1.4_170_example_LargeUTF16LElist_imported_exported_txt.sh"
+#        exportFile:
+#          exportedFile: "export/imported-exported-LargeListUTF16LE.txt"
+#          orgFile: "export-files/integra_2342_utf16le.txt"
+#          fileSize: 893620
+#  - testName: "Delete Large Chinese Big5 Encoding List-BasicAuth List CSV Import-BasicAuth List Export CSV"
+#    scripts:
+#      - scriptName: "AC1.4_171_Digicert_valid_user_bothKey&CertInKeystore_delete_LargeChineseBig5CSVList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_172_list_import_LargeChineseCharBig5_csv.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 251"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 251"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 251"
+#      - scriptName: "AC1.4_173_list_export_LargeChineseCharBig5_csv.sh"
+#        exportFile:
+#          exportedFile: "export/Grid - LargeChineseBig5List.csv"
+#          orgFile: "export-files/LargeChineseBig5List.csv"
+#          fileSize: 2124964
+#  - testName: "Delete Large Russian UTF16 List-BasicAuth List TXT Import-BasicAuth List Export TXT"
+#    scripts:
+#      - scriptName: "AC1.4_174_Digicert_valid_user_bothKey&CertInKeystore_delete_LargeRussianTXTList.sh"
+#        report:
+#          messageList:
+#            - "<<< The operation was successful >>>"
+#      - scriptName: "AC1.4_175_list_import_LargeRussianUTF16_txt.sh"
+#        report:
+#          messageList:
+#            - "successRowCount - 101"
+#            - "successUpdateCount - 0"
+#            - "totalRowCount - 101"
+#            - "totalUpdateCount - 0"
+#            - "renamedCount - 0"
+#            - "updatedCount - 0"
+#            - "successCreateCount - 101"
+#      - scriptName: "AC1.4_176_list_export_LargeRussianUTF16List_txt.sh"
+#        exportFile:
+#          exportedFile: "export/Imported-Exported-LargeRussianList.txt"
+#          orgFile: "export-files/LargeRussianList.txt"
+#          fileSize: 1212211
+#  #  - testName: "Delete Cyrillic List-BasicAuth JDBC MySQL Import-BasicAuth List Export CSV" # needs vpn in pipeline.  Passes locally w/.
+#  #    scripts:
+#  #      - scriptName: "AC1.4_181_CyrillicDelete.sh"
+#  #        report:
+#  #          messageList:
+#  #            - "<<< The operation was successful >>>"
+#  #      - scriptName: "AC1.4_180_BasicAuth-JDBCCyrillicImportMySQL.sh"
+#  #        report:
+#  #          messageList:
+#  #            - "successRowCount - 252"
+#  #            - "successUpdateCount - 0"
+#  #            - "totalRowCount - 252"
+#  #            - "totalUpdateCount - 0"
+#  #            - "renamedCount - 0"
+#  #            - "updatedCount - 0"
+#  #            - "successCreateCount - 252"
+#  #      - scriptName: "AC1.4_182_CyrillicList_export.sh"
+#  #        exportFile:
+#  #          exportedFile: "export/Imported-Exported-cyrillicExport.csv"
+#  #          orgFile: "export-files/cyrillicList.csv"
+#  #          fileSize: 1712
+#
+#  #  - testName: "BasicAuth Proxy Test - List CSV Import & Module CSV import"  #fails with data issues
+#  #    scripts:
+#  #      - scriptName: "AC1.4_154_delete_DepModuleSmallModule.sh"
+#  #        report:
+#  #          messageList:
+#  #            - "<<< The operation was successful >>>"
+#  #      - scriptName: "AC1.4_87_BasicAuth-AuthProxyModuleImport-CSV.sh"
+#  #        report:
+#  #          messageList:
+#  #            - "successRowCount - 252"
+#  #            - "successUpdateCount - 0"
+#  #            - "totalRowCount - 252"
+#  #            - "totalUpdateCount - 0"
+#  #            - "renamedCount - 0"
+#  #            - "updatedCount - 0"
+#  #            - "successCreateCount - 252"
+#  #            - "Setting up proxy..."
+#  #      - scriptName: "AC1.4_182_CyrillicList_export.sh"
+#  #        exportFile:
+#  #          exportedFile: "export/Imported-Exported-cyrillicExport.csv"
+#  #          orgFile: "export-files/cyrillicList.csv"
+#  #          fileSize: 1712
+#
+##  - testName: "No Auth Proxy Test - List TXT Import "# needs vpn in pipeline.  Passes locally w/.
+##    scripts:
+##      - scriptName: "AC1.4_07_delete_2775List.sh"
+##        report:
+##          messageList:
+##            - "<<< The operation was successful >>>"
+##      - scriptName: "AC1.4_86_BasicAuth-UnauthProxyListImport-TXT.sh"
+##        report:
+##          messageList:
+##            - "successRowCount - 2"
+##            - "successUpdateCount - 0"
+##            - "totalRowCount - 2"
+##            - "totalUpdateCount - 0"
+##            - "renamedCount - 0"
+##            - "updatedCount - 0"
+##            - "successCreateCount - 2"
+##            - "Setting up proxy..."
+#
+##      - scriptName: "AC1.4_156_export_coresrv2776List-AfterNoAuthProxyImport.sh" # can't find this script *156*
+##        exportFile:
+##          exportedFile: "export/Imported-Exported-cyrillicExport.csv"
+##          orgFile: "export-files/cyrillicList.csv"
+##          fileSize: 1712

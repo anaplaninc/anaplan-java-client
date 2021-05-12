@@ -1,0 +1,8 @@
+com/anaplan/client/auth/KeyStoreManager.class
+com/anaplan/client/auth/AuthenticatorFactoryUtil.class
+com/anaplan/client/auth/AbstractAuthenticator.class
+com/anaplan/client/auth/AuthenticatorFactoryUtil$1.class
+com/anaplan/client/transport/JCIFSEngine.class
+com/anaplan/client/auth/CertificateAuthenticator.class
+com/anaplan/client/transport/NtlmAuthenticator.class
+com/anaplan/client/auth/BasicAuthenticator.class

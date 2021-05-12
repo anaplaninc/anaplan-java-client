@@ -1,0 +1,265 @@
+---
+tests:
+  - testName: "View-Data-Json-DefaultView"
+    scripts:
+      - scriptName: "AC1.4_217_view_data_json_defaultview.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - view-data-defaultview.json"
+        exportFile:
+          exportedFile: "view-data/view-data-defaultview.json"
+          orgFile: "view-data-orig/view-data-defaultview.json"
+          fileSize: 13767818
+  - testName: "View-Id-Data-Json"
+    scripts:
+      - scriptName: "AC1.4_218_view_id_data_json.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - view-data.json"
+        exportFile:
+          exportedFile: "view-data/view-data.json"
+          orgFile: "view-data-orig/view-data.json"
+          fileSize: 13767818
+  - testName: "View-Name-Data-Json"
+    scripts:
+      - scriptName: "AC1.4_219_view_name_data_json.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - view-data.json"
+        exportFile:
+          exportedFile: "view-data/view-data.json"
+          orgFile: "view-data-orig/view-data.json"
+          fileSize: 13767818
+  - testName: "View-Data-Json-NofilePath"
+    scripts:
+      - scriptName: "AC1.4_220_view_data_json_nofilename.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - Large Module for jdbc_default.json"
+        exportFile:
+          exportedFile: "view-data/view-data.json"
+          orgFile: "view-data-orig/view-data.json"
+          fileSize: 13767818
+  - testName: "View-Data-Json-Bad-Req-1Millioncells"
+    scripts:
+      - scriptName: "AC1.4_221_view_data_json_bad_request_1mil.sh"
+        report:
+          messageList:
+            - "Anaplan API: \"Bad Request: View contains too many cells to export: 2,000,000 cells but cell limit is 1,000,000\""
+        failInfo:
+          exitCode: 1
+  - testName: "View-Data-Json-Pagedimension"
+    scripts:
+      - scriptName: "E2E_AC_2001_01_view_json_data_pages.sh"
+        report:
+          messageList:
+            - "Starting export for the view - default"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_01_view_json_data_pages.json"
+          orgFile: "view-data-orig/E2E_AC_2001_01_view_json_data_pages.json"
+          fileSize: 185
+  - testName: "E2E_AC_2001_02_view_json_data_2_pages"
+    scripts:
+      - scriptName: "E2E_AC_2001_02_view_json_data_2_pages.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - E2E_AC_2001_02_view_json_data_2_pages.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_02_view_json_data_2_pages.json"
+          orgFile: "view-data-orig/E2E_AC_2001_02_view_json_data_2_pages.json"
+          fileSize: 184
+  - testName: "E2E_AC_2001_03_view_json_data_pagename_itemname"
+    scripts:
+      - scriptName: "E2E_AC_2001_03_view_json_data_pagename_itemname.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - E2E_AC_2001_03_view_json_data_pagename_itemname.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_03_view_json_data_pagename_itemname.json"
+          orgFile: "view-data-orig/E2E_AC_2001_03_view_json_data_pagename_itemname.json"
+          fileSize: 184
+  - testName: "E2E_AC_2001_04_view_json_data_multi_pagename_itemname"
+    scripts:
+      - scriptName: "E2E_AC_2001_04_view_json_data_multi_pagename_itemname.sh"
+        report:
+          messageList:
+            - "View - view-rows-ab-pages exported successfully to the file - E2E_AC_2001_04_view_json_data_multi_pagename_itemname.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_04_view_json_data_multi_pagename_itemname.json"
+          orgFile: "view-data-orig/E2E_AC_2001_04_view_json_data_multi_pagename_itemname.json"
+          fileSize: 4483
+  - testName: "E2E_AC_2001_05_view_json_data_pagename_itemname_specialchars"
+    scripts:
+      - scriptName: "E2E_AC_2001_05_view_json_data_pagename_itemname_specialchars.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - E2E_AC_2001_05_view_json_data_pagename_itemname_specialcharacters.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_05_view_json_data_pagename_itemname_specialcharacters.json"
+          orgFile: "view-data-orig/E2E_AC_2001_05_view_json_data_pagename_itemname_specialcharacters.json"
+  - testName: "E2E_AC_2001_06_view_json_data_pagename_itemname_specialchars_3pages"
+    scripts:
+      - scriptName: "E2E_AC_2001_06_view_json_data_pagename_itemname_specialchars_3pages.sh"
+        report:
+          messageList:
+            - "Starting export for the view - for, Dimention:Tests\\:"
+            - "Export for the view completed successfully"
+            - "exported successfully to the file"
+        exportFile:
+          exportedFile: "complex-2-pages-2rows-1cols3Pages_for, Dimention:Tests\\:.json"
+          orgFile: "view-data-orig/E2E_AC_2001_06_view_json_data_pagename_itemname_specialchars_3pages.json"
+          fileSize: 2985
+  - testName: "E2E_AC_2001_08_view_json_data_2pages_and_characters"
+    scripts:
+      - scriptName: "E2E_AC_2001_08_view_json_data_2pages_and_characters.sh"
+        report:
+          messageList:
+            - "Starting export for the view - for, Dimention:Tests\\:"
+            - "Export for the view completed successfully"
+            - "exported successfully to the file - E2E_AC_2001_08_view_json_data_2pages.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_08_view_json_data_2pages.json"
+          orgFile: "view-data-orig/E2E_AC_2001_08_view_json_data_2pages.json"
+          fileSize: 3046
+  - testName: "E2E_AC_2001_07_view_json_data_3pages"
+    scripts:
+      - scriptName: "E2E_AC_2001_07_view_json_data_3pages.sh"
+        report:
+          messageList:
+            - "Starting export for the view - for, Dimention:Tests\\:"
+            - "Export for the view completed successfully"
+            - "exported successfully to the file - E2E_AC_2001_07_view_json_data_3pages.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_07_view_json_data_3pages.json"
+          orgFile: "view-data-orig/E2E_AC_2001_07_view_json_data_3pages.json"
+          fileSize : 3046
+  - testName: "E2E_AC_2001_09_view_json_data_3pages_sepVariables"
+    scripts:
+      - scriptName: "E2E_AC_2001_09_view_json_data_3pages_sepVariables.sh"
+        report:
+          messageList:
+            - "Starting export for the view - for, Dimention:Tests\\:"
+            - "Export for the view completed successfully"
+            - "exported successfully to the file - E2E_AC_2001_09_view_json_data_3pages_sepVariables.json"
+        exportFile:
+          exportedFile: "E2E_AC_2001_Test/E2E_AC_2001_09_view_json_data_3pages_sepVariables.json"
+          orgFile: "view-data-orig/E2E_AC_2001_09_view_json_data_3pages_sepVariables.json"
+          fileSize: 3046
+  - testName: "E2E_AC_2001_10_view_json_data_Error_3342"
+    scripts:
+      - scriptName: "E2E_AC_2001_10_view_json_data_Error_3342.sh"
+        report:
+          messageList:
+            - "PageDimension \"view-data-testlist,pages\" not found in view \"102000000102\", model \"72E11A73F55D41A98CCDF8626210B96E\""
+            - "Page dimension not found: view-data-testlist,pages"
+        failInfo:
+          exitCode: 1
+  - testName: "ViewData-allNames-mo-vi"
+    scripts:
+      - scriptName: "AC1.4_244_viewname_wsName_allnames_mo_vi_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_244.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_244.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allNames-moId-vi"
+    scripts:
+      - scriptName: "AC1.4_245_viewname_wsName_allnames_moId_vi_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_245.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_245.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allIds-mo-vi"
+    scripts:
+      - scriptName: "AC1.4_246_viewData_ids_mo_vi_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_246.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_246.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allIds-mo-viName"
+    scripts:
+      - scriptName: "AC1.4_247_viewData_ids_moId_viName_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_247.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_247.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allNames-mo-viewId"
+    scripts:
+      - scriptName: "AC1.4_248_viewname_wsName_allnames_moName_viewId_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_248.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_248.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allNames-module-viewId"
+    scripts:
+      - scriptName: "AC1.4_249_viewname_wsName_allnames_moduleName_viewId_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_249.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_249.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allIds-mo-view"
+    scripts:
+      - scriptName: "AC1.4_250_viewData_ids_mo_view_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_250.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_250.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-allNames-module-vi"
+    scripts:
+      - scriptName: "AC1.4_251_viewData_Names_module_vi_data_json.sh"
+        report:
+          messageList:
+            - "View - Mutilple Signers Module view2 exported successfully to the file - multipleSignersViewData_251.json "
+        exportFile:
+          exportedFile: "view-data/multipleSignersViewData_251.json"
+          orgFile: "view-data-orig/multipleSignersViewData.json"
+          fileSize: 829
+  - testName: "ViewData-invalid-moduleId-3291"
+    scripts:
+      - scriptName: "AC1.4_252_viewname_invalidModuleId_3291.sh"
+        report:
+          messageList:
+            - "Module \"102000999010\" not found in workspace \"Default Integrations Workspace\", model \"Anaplan Connect Testing Automation Model\""
+  - testName: "ViewData-invalid-moduleName-3291"
+    scripts:
+      - scriptName: "AC1.4_253_viewData_Names_InvalidModulename_3291.sh"
+        report:
+          messageList:
+            - "Module \"Mutilple BOGUSNAME Module\" not found in workspace \"Default Integrations Workspace\", model \"Anaplan Connect Testing Automation Model\""
+  - testName: "ViewData-invalid-viewName"
+    scripts:
+      - scriptName: "AC1.4_254_viewname_invalidName.sh"
+        report:
+          messageList:
+            - "View \"Mutilple BOGUSNAME Module view2\" not found in workspace \"2c9ba1a8702a01f40170ca620ed8177f\", model \"72E11A73F55D41A98CCDF8626210B96E\""
+        failInfo:
+          exitCode: 1
+  - testName: "ViewData-invalid-viewId"
+    scripts:
+      - scriptName: "AC1.4_255_viewData_invalidViewId.sh"
+        report:
+          messageList:
+            - "View \"102000999010\" not found in workspace \"2c9ba1a8702a01f40170ca620ed8177f\", model \"72E11A73F55D41A98CCDF8626210B96E\""
+            - "View not found: 102000999010"
+        failInfo:
+          exitCode: 1
