@@ -1,5 +1,0 @@
-com/anaplan/client/jdbc/JDBCConfig.class
-com/anaplan/client/jdbc/JDBCUtils.class
-com/anaplan/client/jdbc/JDBCCellReader.class
-com/anaplan/client/jdbc/JDBCCellWriter.class
-com/anaplan/client/jdbc/AnaplanJdbcRetryer.class
