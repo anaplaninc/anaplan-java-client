@@ -14,6 +14,11 @@ public class ModelData extends NamedObjectData {
     private String currentWorkspaceName;
     private String modelUrl;
     private String[] categoryValues;
+    public Long lastSavedSerialNumber;
+    public String lastModifiedByUserGuid;
+    public Long memoryUsage;
+    public String isoCreationDate;
+    public String lastModified;
 
     public ModelData() {
     }
@@ -82,6 +87,46 @@ public class ModelData extends NamedObjectData {
         this.categoryValues = categoryValues;
     }
 
+    public Long getLastSavedSerialNumber() {
+        return lastSavedSerialNumber;
+    }
+
+    public void setLastSavedSerialNumber(Long lastSavedSerialNumber) {
+        this.lastSavedSerialNumber = lastSavedSerialNumber;
+    }
+
+    public String getLastModifiedByUserGuid() {
+        return lastModifiedByUserGuid;
+    }
+
+    public void setLastModifiedByUserGuid(String lastModifiedByUserGuid) {
+        this.lastModifiedByUserGuid = lastModifiedByUserGuid;
+    }
+
+    public Long getMemoryUsage() {
+        return memoryUsage;
+    }
+
+    public void setMemoryUsage(Long memoryUsage) {
+        this.memoryUsage = memoryUsage;
+    }
+
+    public String getIsoCreationDate() {
+        return isoCreationDate;
+    }
+
+    public void setIsoCreationDate(String isoCreationDate) {
+        this.isoCreationDate = isoCreationDate;
+    }
+
+    public String getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (!(other != null && other instanceof ModelData)) {
@@ -90,7 +135,7 @@ public class ModelData extends NamedObjectData {
         ModelData data = (ModelData) other;
         return id.equals(data.id);
     }
-
+    
     @Override
     public int hashCode() {
         return id.hashCode();
