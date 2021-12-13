@@ -21,12 +21,24 @@ import com.anaplan.client.dto.responses.ServerFileResponse;
 import com.anaplan.client.ex.AnaplanAPIException;
 import com.anaplan.client.ex.CreateImportDatasourceError;
 import com.anaplan.client.ex.NoChunkError;
+import com.anaplan.client.logging.ChunksResponseLogger;
 import com.anaplan.client.logging.LogUtils;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Enumeration;
@@ -65,11 +77,15 @@ public class ServerFile extends NamedObject {
      * @return
      */
     List<ChunkData> getChunks() {
-        return getApi().getChunks(
+        ChunksResponse response =
+                getApi().getChunks(
                 getWorkspace().getId(),
                 getModel().getId(),
-                getId())
-                .getItem();
+                getId());
+
+        ChunksResponseLogger.log(response);
+
+        return response.getItem();
     }
 
     /**
