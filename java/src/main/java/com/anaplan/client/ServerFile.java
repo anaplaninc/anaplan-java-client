@@ -14,12 +14,8 @@
 
 package com.anaplan.client;
 
-import com.anaplan.client.api.AnaplanAPI;
 import com.anaplan.client.dto.ChunkData;
-import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.dto.ServerFileData;
-import com.anaplan.client.dto.Status;
-import com.anaplan.client.dto.WorkspaceData;
 import com.anaplan.client.dto.responses.ChunksResponse;
 import com.anaplan.client.dto.responses.ServerFileResponse;
 import com.anaplan.client.ex.AnaplanAPIException;
@@ -30,18 +26,7 @@ import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.io.SequenceInputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Enumeration;
@@ -81,44 +66,10 @@ public class ServerFile extends NamedObject {
      */
     List<ChunkData> getChunks() {
         return getApi().getChunks(
-                        getWorkspace().getId(),
-                        getModel().getId(),
-                        getId())
+                getWorkspace().getId(),
+                getModel().getId(),
+                getId())
                 .getItem();
-    }
-
-    /**
-     * Note: This method is excessively verbose on purpose. There is an NPE being thrown occasionally when calling
-     * {@link #getChunks()} so we are trying to identify what exactly is causing it
-     *
-     * @return the {@link ChunksResponse}
-     */
-    ChunksResponse getChunksResponse() {
-        if (this.data == null) {
-            throw new IllegalStateException("ServerFile data is null");
-        }
-        AnaplanAPI api = getApi();
-        if (api == null) {
-            throw new IllegalStateException("API is null");
-        }
-        Workspace workspace = getWorkspace();
-        if (workspace == null) {
-            throw new IllegalStateException("Workspace is null");
-        }
-        WorkspaceData workspaceData = workspace.getData();
-        if (workspaceData == null) {
-            throw new IllegalStateException("Workspace Data is null");
-        }
-        Model model = getModel();
-        if (model == null) {
-            throw new IllegalStateException("Model is null");
-        }
-        ModelData modelData = model.getData();
-        if (modelData == null) {
-            throw new IllegalStateException("Model Data is null");
-        }
-
-        return api.getChunks(workspaceData.getId(), modelData.getId(), getId());
     }
 
     /**
@@ -169,24 +120,10 @@ public class ServerFile extends NamedObject {
             partialFile.setLength(0);
 
             // Get list of chunks from server
-            ChunksResponse response = getChunksResponse();
-            Status status = response.getStatus();
-            if (status.getCode() != 200) {
-                LOG.error("Received non-200 response from server. Response Code: " + status.getCode() + ", Message: " + status.getMessage());
-                throw new IllegalStateException("Received status code " + status.getCode() + " from server");
-            }
-
-            if (response.getItem() == null) {
-                LOG.warn("Received status code 200 but chunk list was null");
-                throw new IllegalStateException("Null chunk list received from server");
-            }
-
-            List<ChunkData> chunkList = response.getItem();
+            List<ChunkData> chunkList = getChunks();
             for (ChunkData chunk : chunkList) {
                 byte[] chunkContent = getChunkContent(chunk.getId());
-                if (chunkContent == null) {
-                    throw new NoChunkError(chunk.getId());
-                }
+                if (chunkContent == null) throw new NoChunkError(chunk.getId());
                 partialFile.write(chunkContent);
             }
             partialFile.close();
@@ -329,14 +266,14 @@ public class ServerFile extends NamedObject {
                 //creating the buffer to load the byte array until last separator
                 byte[] finalBuffer = new byte[size];
                 //copying the data from existing byte array to new byte array until last separator
-                System.arraycopy(buffer, 0, finalBuffer, 0, size);
+                System.arraycopy(buffer,0,finalBuffer,0,size);
                 //calculating the total read size from the file
                 totalReadSoFar += size;
                 //checking if there is another chunk to decide if to upload the newly created buffer or existing buffer.
                 //existing buffer will be uploaded in case of last chunk
-                if (chunkIterator.hasNext()) {
+                if(chunkIterator.hasNext()) {
                     getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), finalBuffer);
-                } else {
+                }else{
                     getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), buffer);
                 }
                 sourceFile.seek(totalReadSoFar);
@@ -355,24 +292,21 @@ public class ServerFile extends NamedObject {
 
     /**
      * returns the last index of single byte separator from a byte array
-     *
      * @param outerArray
      * @param separator
      * @return last index of a single byte separator
      */
     public int lastIndexOf(byte[] outerArray, String separator) {
         byte[] smallerArray = separator.getBytes();
-        for (int i = outerArray.length - smallerArray.length; i > 0; --i) {
+        for(int i = outerArray.length - smallerArray.length; i > 0; --i) {
             boolean found = true;
-            for (int j = 0; j < smallerArray.length; ++j) {
-                if (outerArray[i + j] != smallerArray[j]) {
+            for(int j = 0; j < smallerArray.length; ++j) {
+                if (outerArray[i+j] != smallerArray[j]) {
                     found = false;
                     break;
                 }
             }
-            if (found) {
-                return i;
-            }
+            if (found) return i;
         }
         return -1;
     }
@@ -447,7 +381,7 @@ public class ServerFile extends NamedObject {
                             getBuffer().toByteArray());
                     LOG.debug("Uploaded chunk: {} (size={}MB)", chunkIndex, chunkSize / 1000000);
                 } catch (FeignException e) {
-                    throw new AnaplanAPIException("Failed to upload chunk(" + chunkIndex + "): " + getId(), e);
+                    throw new AnaplanAPIException("Failed to upload chunk(" + chunkIndex +  "): " + getId(), e);
                 }
                 getBuffer().reset();
             }
@@ -497,9 +431,7 @@ public class ServerFile extends NamedObject {
                 StringBuilder buf = new StringBuilder();
                 int col = 0;
                 for (Object item : row) {
-                    if (col++ != 0) {
-                        buf.append('\t');
-                    }
+                    if (col++ != 0) buf.append('\t');
                     String text = item.toString();
                     if (text.indexOf('\t') != -1) {
                         final String tabChar = "\t";
@@ -511,7 +443,7 @@ public class ServerFile extends NamedObject {
             }
 
             @Override
-            public int writeDataRow(String exportId, int maxRetryCount, int retryTimeout, InputStream inputStream, int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException {
+            public int writeDataRow(String exportId,int maxRetryCount,int retryTimeout,InputStream inputStream,int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator) throws AnaplanAPIException, IOException, SQLException {
                 //dummy value as the implementation is done in JdbcCellWriter
                 return 1;
             }
