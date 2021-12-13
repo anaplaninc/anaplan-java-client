@@ -18,7 +18,9 @@ import com.anaplan.client.dto.ChunkData;
 import com.anaplan.client.dto.ServerFileData;
 import com.anaplan.client.dto.TaskResultData;
 import com.anaplan.client.dto.TaskResultDetailData;
+import com.anaplan.client.dto.responses.ChunksResponse;
 import com.anaplan.client.ex.AnaplanAPIException;
+import com.anaplan.client.logging.ChunksResponseLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,10 +124,14 @@ public class TaskResult {
             List<ChunkData> getChunks() {
                 if (isNestedResult) {
                     LOG.debug("Fetching {} action's nested-dump file chunks for task={}, dumpfileid={}", task.getSubject().getClass().getSimpleName(), task.getId(), dumpFileId);
-                    return task.getSubject().getNestedDumpFileChunks(task.getId(), dumpFileId).getItem();
+                    ChunksResponse response = task.getSubject().getNestedDumpFileChunks(task.getId(), dumpFileId);
+                    ChunksResponseLogger.log(response);
+                    return response.getItem();
                 } else {
                     LOG.debug("Fetching {} action's dump file chunks for task={}", task.getSubject().getClass().getSimpleName(), task.getId());
-                    return task.getSubject().getDumpFileChunks(task.getId()).getItem();
+                    ChunksResponse response =task.getSubject().getDumpFileChunks(task.getId());
+                    ChunksResponseLogger.log(response);
+                    return response.getItem();
                 }
             }
 
