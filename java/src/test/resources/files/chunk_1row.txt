@@ -1,2 +1,0 @@
-id,no,col
-id10,10,colB-Value

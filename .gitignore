@@ -1,0 +1,22 @@
+build/
+
+# IntelliJ
+*.iml
+.idea/
+
+# Maven
+target/
+
+**/.DS_Store
+
+integrationtests/export/*.*
+!integrationtests/export/.gitkeep
+integrationtests/anaplan-connect-1.4.4-jar-with-dependencies.jar
+integrationtests/dump/*
+integrationtests/*log
+src/test/resources/integration-tests/scripts/AnaplanClient.sh
+
+# VS Code
+**/*workspace
+# jenv
+.java-version
