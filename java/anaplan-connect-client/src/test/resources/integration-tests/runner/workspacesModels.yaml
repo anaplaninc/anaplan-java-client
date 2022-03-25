@@ -1,0 +1,10 @@
+---
+tests:
+  - testName: "CertAuth-models type"
+    scripts:
+      - scriptName: "AC1.4_192_BasicAuthModelsTypoList.sh"
+        report:
+          messageList:
+            - "Options are:"
+            - "(-W|-workspaces): list available workspaces"
+            - "(-M|-models): list available models"

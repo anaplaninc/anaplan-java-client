@@ -1,0 +1,40 @@
+---
+tests:
+  - testName: "CertAuth-Export-list-CSV"
+    scripts:
+      - scriptName: "AC1.4_34_Digicert_valid_user_bothKey&CertInKeystore_export_list_CSV.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-Grid-coresrv-2779-list.csv"
+          orgFile: "export-files/coresrv-2779-list.csv"
+          fileSize: 138
+  - testName: "CertAuth-Export-list-XLS"
+    scripts:
+      - scriptName: "AC1.4_39_Digicert_valid_user_bothKey&CertInKeystore_export_list_XLS.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-Grid - LargeList.xls"
+          orgFile: "export-files/LargeList.xls"
+  - testName: "CertAuth-Export-list-TXT"
+    scripts:
+      - scriptName: "AC1.4_38_Digicert_valid_user_bothKey&CertInKeystore_export_list_TXT.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-Grid-LargeList.txt"
+          orgFile: "export-files/LargeList.txt"
+  - testName: "CertAuth-Export-list-PDF"
+    scripts:
+      - scriptName: "AC1.4_37_Digicert_valid_user_bothKey&CertInKeystore_export_list_PDF.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-Grid-SmallList.pdf"
+          orgFile: "export-files/SmallList.pdf"
+          fileSize: 33537

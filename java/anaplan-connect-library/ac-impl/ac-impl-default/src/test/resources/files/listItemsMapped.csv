@@ -1,0 +1,5 @@
+nameMapped,parentMapped,codeMapped,prop1Mapped,prop2Mapped,subsetMapped
+test1,,code1,value for prop1,10,true
+test2,,code2,"multiline
+string:8('^&""
+specialcharacters",5,false

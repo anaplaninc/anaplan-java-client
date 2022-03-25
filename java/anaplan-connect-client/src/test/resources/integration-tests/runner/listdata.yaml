@@ -1,0 +1,10 @@
+---
+tests:
+  - testName: "Add-Item-JDBC"
+    scripts:
+      - scriptName: "E2E_AC_2006_add_item_list_jdbc.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+        failInfo:
+          exitCode: 0

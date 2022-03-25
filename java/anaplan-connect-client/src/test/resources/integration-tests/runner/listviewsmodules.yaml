@@ -1,0 +1,125 @@
+---
+tests:
+  - testName: "List-Views-WsName"
+    scripts:
+      - scriptName: "AC1.4_236_list_views_WsName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+
+                2022-03-25 09:26:20 INFO  [c.a.client.Service  :95   ] 77055 |--   Initializing Service...
+                2022-03-25 09:26:20 INFO  [a.BasicAuthenticator:24   ] 77055 |--   Authenticating via Basic...
+                2022-03-25 09:26:24 INFO  [c.a.client.Program  :1118 ] 77055 |--   Module_ID	Module_Name	View_ID	View_Name
+                2022-03-25 09:26:24 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000117	multi	102000000117	default
+                2022-03-25 09:26:24 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000112	test_name	102000000112	default
+                2022-03-25 09:26:25 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000109	pagination-with-numbered-lists	102000000109	default
+                2022-03-25 09:26:25 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000116	Module1	102000000116	default
+                2022-03-25 09:26:25 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000104	Numerical grid	102000000104	default
+                2022-03-25 09:26:25 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000102	module-specialcharacters	102000000102	default
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000101	module-nopage	102000000101	default
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000101	module-nopage	639000000000	module-nopage-2
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000099	INTEGRA-3184	102000000099	default
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000099	INTEGRA-3184	635000000000	INTEGRA-3184-b
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000099	INTEGRA-3184	635000000001	INTEGRA-3184-view
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000098	complex-module-2pages	102000000098	default
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000098	complex-module-2pages	633000000000	complex-r2-c2
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000098	complex-module-2pages	633000000001	complex-r3-c2
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000097	complex-2-pages-2rows-2cols	102000000097	default
+                2022-03-25 09:26:26 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000097	complex-2-pages-2rows-2cols	631000000000	view-rows-ab-pages
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000103	complex-2-pages-2rows-1cols3Pages	102000000103	default
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000103	complex-2-pages-2rows-1cols3Pages	649000000000	view-rows-ab-pages
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000103	complex-2-pages-2rows-1cols3Pages	649000000001	row-time-3page
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000103	complex-2-pages-2rows-1cols3Pages	649000000002	dateAsCols
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000103	complex-2-pages-2rows-1cols3Pages	649000000003	dateAsCols2
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000103	complex-2-pages-2rows-1cols3Pages	649000000004	for, Dimention:Tests\:
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000096	complex-1	102000000096	default
+                2022-03-25 09:26:27 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000095	multipagedimension	102000000095	default
+                2022-03-25 09:26:28 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000094	morethan1million	102000000094	default
+                2022-03-25 09:26:28 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000100	module-nopages	102000000100	default
+                2022-03-25 09:26:28 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000093	view-data-test	102000000093	default
+                2022-03-25 09:26:28 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000093	view-data-test	617000000000	view-data-test-lineiteminpages
+                2022-03-25 09:26:28 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000093	view-data-test	617000000001	view-data-test-columnsinpages
+                2022-03-25 09:26:28 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000092	integra2262-bis	102000000092	default
+                2022-03-25 09:26:29 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000087	integra2262	102000000087	default
+                2022-03-25 09:26:29 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000081	INTEGRA-2682-テスト	102000000081	default
+                2022-03-25 09:26:29 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000083	INTEGRA-2682-テスト Big5	102000000083	default
+                2022-03-25 09:26:29 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000082	INTEGRA-2682-テスト GBK	102000000082	default
+                2022-03-25 09:26:30 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000074	dantest	102000000074	default
+                2022-03-25 09:26:30 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000073	danm0	102000000073	default
+                2022-03-25 09:26:30 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000072	Integra-2935	102000000072	default
+                2022-03-25 09:26:30 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000070	tudor-m0	102000000070	default
+                2022-03-25 09:26:31 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000068	2636_JDBC_Tabs	102000000068	default
+                2022-03-25 09:26:31 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000079	2636_JDBC_Semicolon	102000000079	default
+                2022-03-25 09:26:31 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000080	2636_JDBC_Custom	102000000080	default
+                2022-03-25 09:26:31 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000066	tudor-test-module	102000000066	default
+                2022-03-25 09:26:32 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000053	dumpModule	102000000053	default
+                2022-03-25 09:26:32 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000052	empty_v2	102000000052	default
+                2022-03-25 09:26:32 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000049	Delete Cyrillic List Module	102000000049	default
+                2022-03-25 09:26:32 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000048	Delete Large Russian List Model	102000000048	default
+                2022-03-25 09:26:33 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000047	Delete Large Chinese Big5 List Module	102000000047	default
+                2022-03-25 09:26:33 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000046	Delete Chinese Big5 List Module	102000000046	default
+                2022-03-25 09:26:33 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000045	Delete Japanese List Module	102000000045	default
+                2022-03-25 09:26:33 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000044	Delete UTF16LE List	102000000044	default
+                2022-03-25 09:26:34 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000043	Delete Module for Large UTF16LE List	102000000043	default
+                2022-03-25 09:26:34 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000042	Delete DepModuleSmall module	102000000042	default
+                2022-03-25 09:26:34 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000041	ListWithTabSepDoubQuoDeli module	102000000041	default
+                2022-03-25 09:26:34 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000040	ListWithTabSepSingleQuoDeli module	102000000040	default
+                2022-03-25 09:26:35 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000039	ListWithTabSepDoubQuoDeliCSV module	102000000039	default
+                2022-03-25 09:26:35 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000038	ListWithTabSepSingQuoDeliCSV module	102000000038	default
+                2022-03-25 09:26:35 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000037	ListWithPipeSepDoubleQuoDeliTXT module	102000000037	default
+                2022-03-25 09:26:36 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000036	ListWithPipeSepSingleQuoDeliTXT module	102000000036	default
+                2022-03-25 09:26:36 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000035	ListWithPipeSepDoubQuoDeli module	102000000035	default
+                2022-03-25 09:26:36 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000034	ListWithPipeSepSingleQuoDeli module	102000000034	default
+                2022-03-25 09:26:36 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000033	ListWithCommaSepSingleQuoDeli module	102000000033	default
+                2022-03-25 09:26:37 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000032	ListWithCommaSepDoubQuoDeli module	102000000032	default
+                2022-03-25 09:26:37 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000031	ListWithCommaSepDoubQuoDeliTXT module	102000000031	default
+                2022-03-25 09:26:37 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000030	ListWithCommaSepSingleQuoDeliTXT module	102000000030	default
+                2022-03-25 09:26:37 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000029	ListWithColonSepDoubQuoDeliTXT module	102000000029	default
+                2022-03-25 09:26:38 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000028	ListWithColonSepSingleQuoDeliTXT module	102000000028	default
+                2022-03-25 09:26:38 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000027	ListWithColonSepDoubleQuoDeli module	102000000027	default
+                2022-03-25 09:26:38 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000025	ListWithColonSepSingleQuoDeli module	102000000025	default
+                2022-03-25 09:26:38 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000024	LargeJapaneseModule	102000000024	default
+                2022-03-25 09:26:39 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000022	ModuleWithProcessedIgnoredFailedRows	102000000022	default
+                2022-03-25 09:26:39 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000021	DuplicateKeyModule	102000000021	default
+                2022-03-25 09:26:39 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000020	DeleteModuleForProxy	102000000020	default
+                2022-03-25 09:26:40 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000019	DepListModuleSmall	102000000019	default
+                2022-03-25 09:26:40 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000018	Delete Lists	102000000018	default
+                2022-03-25 09:26:40 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000017	Delete coresrv-2776 module	102000000017	default
+                2022-03-25 09:26:40 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000016	Delete Coresrv-2775-module	102000000016	default
+                2022-03-25 09:26:41 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000015	Large Module	102000000015	default
+                2022-03-25 09:26:41 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000023	Large Module for jdbc	102000000023	default
+                2022-03-25 09:26:41 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000014	2779-module-everyone	102000000014	default
+                2022-03-25 09:26:41 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000013	2779-admin-module	102000000013	default
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000012	2779-private-module	102000000012	default
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000011	Docusign module	102000000011	default
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000011	Docusign module	267000000000	view 1
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000010	Mutilple Signers Module	102000000010	default
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000010	Mutilple Signers Module	263000000000	Mutilple Signers Module view1
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000010	Mutilple Signers Module	263000000001	Mutilple Signers Module view2
+                2022-03-25 09:26:42 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000009	coresrv-2775-module	102000000009	default
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000007	coresrv-2779-module	102000000007	default
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000006	New Hires Module	102000000006	default
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000006	New Hires Module	247000000000	view1
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000006	New Hires Module	247000000001	view2
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000006	New Hires Module	247000000002	view3
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000005	Dep Module Without Time	102000000005	default
+                2022-03-25 09:26:43 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000004	SalesReps	102000000004	default
+                2022-03-25 09:26:44 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000002	delete Depmodule	102000000002	default
+                2022-03-25 09:26:44 INFO  [c.a.client.Program  :1129 ] 77055 |--   102000000000	DepModule	102000000000	default
+
+                Process finished with exit code 0

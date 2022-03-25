@@ -1,0 +1,366 @@
+---
+tests:
+  - testName: "Delete List-BasicAuth Import List  Comma separated CSV Import-BasicAuth SingleCol Module CSV "
+    scripts:
+      - scriptName: "stg_AC1.4_01_delete.sh"
+        report:
+          messageList:
+            - "The operation was successful"
+      - scriptName: "AC1.4_08_import_list_CSV.sh"
+        report:
+          messageList:
+            - "successRowCount - 3"
+            - "successUpdateCount - 0"
+            - "totalRowCount - 3"
+            - "totalUpdateCount - 0"
+            - "renamedCount - 0"
+            - "updatedCount - 0"
+            - "successCreateCount - 3"
+            - "<<< The operation was successful >>>"
+      - scriptName: "AC1.4_15_list_imported_exported_csv.sh"
+        exportFile:
+          exportedFile: "export/imported-exported-coresrv-2775-list.csv"
+          orgFile: "export-files/coresrv-2775-list.csv"
+          fileSize: 104
+      - scriptName: "AC1.4_26_module_import_SingleCol_csv.sh"
+        report:
+          messageList:
+            - "lineItemName - col3"
+            - "rowCount - 36"
+            - "ignoredCount - 15"
+            - "ignoredCount - 51"
+            - "Run status: Complete. (100.0%)"
+            - "The operation was successful"
+  - testName: "Delete List-BasicAuth List Tab separated TXT Import-BasicAuth MultiCol Module TXT Import"
+    scripts:
+      - scriptName: "AC1.4_07_delete_2775List.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+      - scriptName: "AC1.4_02_import_list_TXT.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "successCreateCount - 2"
+            - "successRowCount - 2"
+            - "successUpdateCount - 0"
+            - "totalRowCount - 2"
+            - "totalUpdateCount - 0"
+            - "renamedCount - 0"
+            - "updatedCount - 0"
+      - scriptName: "AC1.4_16_list_imported_exported_txt.sh"
+        exportFile:
+          exportedFile: "export/Grid - coresrv-2776-list.txt"
+          orgFile: "export-files/coresrv-2776-list.txt"
+          fileSize: 91
+      - scriptName: "AC1.4_29_import_module_multicol_TXT.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "The operation was successful"
+            - "boolean3 cells: 1068"
+            - "lineItemName - boolean3"
+            - "rowCount - 1068"
+            - "num2 cells: 1068 (445 ignored)"
+            - "lineItemName - num2"
+            - "rowCount - 1068"
+            - "ignoredCount - 445"
+            - "text1 cells: 1068"
+            - "lineItemName - text1"
+            - "rowCount - 1068"
+  - testName: "Delete List-CertAuth List Comma separated CSV Import-CertAuthAuth SingleCol Module CSV Import"
+    scripts:
+      - scriptName: "AC1.4_30_Digicert_valid_user_bothKey&CertInKeystore_delete.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+      - scriptName: "AC1.4_64_Digicert_valid_user_bothKey&CertInKeystore_import_list_CSV.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "successRowCount - 3"
+            - "successUpdateCount - 0"
+            - "totalRowCount - 3"
+            - "totalUpdateCount - 0"
+            - "renamedCount - 0"
+            - "updatedCount - 0"
+            - "successCreateCount - 3"
+      - scriptName: "AC1.4_15_list_imported_exported_csv.sh" #useCert not keystore.
+        exportFile:
+          exportedFile: "export/imported-exported-coresrv-2775-list.csv"
+          orgFile: "export-files/coresrv-2775-list.csv"
+          fileSize: 104
+      - scriptName: "AC1.4_79_Digicert_valid_user_bothKey&CertInKeystore_import_module_SingleCol_CSV.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "The operation was successful"
+            - "lineItemName - col3"
+            - "rowCount - 36"
+            - "ignoredCount - 15"
+            - "ignoredCount - 51"
+  - testName: "BasicAuth-Export-list-CSV"
+    scripts:
+      - scriptName: "AC1.4_11_list_export_csv.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/basic-auth-Grid-coresrv-2779-list.csv"
+          orgFile: "export-files/coresrv-2779-list.csv"
+          fileSize: 138
+  - testName: "BasicAuth-Export-list-XLS"
+    scripts:
+      - scriptName: "AC1.4_14_list_export_xls.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/basic-auth-Grid - LargeList.xls"
+          orgFile: "export-files/LargeList.xls"
+  - testName: "BasicAuth-Export-list-TXT"
+    scripts:
+      - scriptName: "AC1.4_13_list_export_txt.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/basic-auth-Grid-LargeList.txt"
+          orgFile: "export-files/LargeList.txt"
+  - testName: "BasicAuth-Export-module-multicol-CSV"
+    scripts:
+      - scriptName: "AC1.4_17_module_export_csv_multicol.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/basic-auth-coresrv-2779-module - multicol.csv"
+          orgFile: "export-files/coresrv-2779-module.csv"
+          fileSize: 2182
+  - testName: "BasicAuth-Export-module-multicol-XLS"
+    scripts:
+      - scriptName: "AC1.4_04_module_export_xls_multicol.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/basic-auth-coresrv-2779-module-tab-multi-col.xls"
+          orgFile: "export-files/coresrv-2779-module-multicol.xls"
+          fileSize: 22528
+  - testName: "BasicAuth-Export-module-multicol-TXT"
+    scripts:
+      - scriptName: "AC1.4_21_module_export_txt_multicol.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/basic-auth-coresrv-2779-module-tab-multi-col.txt"
+          orgFile: "export-files/coresrv-2779-module -multicol.txt"
+          fileSize: 2182
+  - testName: "BasicAuth-LARGE-Export-module-tabularSigleCol"
+    scripts:
+      - scriptName: "AC1.4_157_module_LARGE_export_csv.sh"
+        report:
+          messageList:
+            - "A workspace ID must be provided"
+            - "An import, export, action or process must be specified before -execute"
+            - "Export failed - ignoring content"
+  - testName: "CertAuth-Export-list-CSV"
+    scripts:
+      - scriptName: "AC1.4_34_Digicert_valid_user_bothKey&CertInKeystore_export_list_CSV.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-Grid-coresrv-2779-list.csv"
+          orgFile: "export-files/coresrv-2779-list.csv"
+          fileSize: 138
+  - testName: "CertAuth-Export-list-XLS"
+    scripts:
+      - scriptName: "AC1.4_39_Digicert_valid_user_bothKey&CertInKeystore_export_list_XLS.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-Grid - LargeList.xls"
+          orgFile: "export-files/LargeList.xls"
+  - testName: "CertAuth-Valid-Export-module-multicol-CSV"
+    scripts:
+      - scriptName: "AC1.4_40_Digicert_valid_user_bothKey&CertInKeystore_export_module_multicol_CSV.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/certauth-coresrv-2779-module - multicol.csv"
+          orgFile: "export-files/coresrv-2779-module.csv"
+  - testName: "CertAuth-Valid-Export-module-multicol-XLS"
+    scripts:
+      - scriptName: "AC1.4_47_Digicert_valid_user_bothKey&CertInKeystore_export_module_multicol_XLS.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2779-module-tab-multi-col.xls"
+          orgFile: "export-files/coresrv-2779-module-multicol.xls"
+          fileSize: 22528
+  - testName: "BasicAuth-Workspaces"
+    scripts:
+      - scriptName: "AC1.4_187_BasicAuthWorkspaceList.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "WS_ID\tWS_NAME\tWS_ALLOCATED_SIZE\tWS_SIZE"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t5368709120"
+  - testName: "CertAuth-Workspaces"
+    scripts:
+      - scriptName: "AC1.4_190_Digicert_valid_user_bothKey&CertInKeystore_WorkspacesList.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "WS_ID\tWS_NAME\tWS_ALLOCATED_SIZE\tWS_SIZE"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t5368709120"
+  - testName: "BasicAuth-Models"
+    scripts:
+      - scriptName: "AC1.4_195_BasicAuthModelsList.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "WS_ID\tWS_NAME\tMODEL_ID\tMODEL_NAME\tMODEL_SIZE"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t0C6835888635444DA7565238D67C71B9\tQA Production Test App"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t0FC473F4DB56405880D79E6130321A98\tQA Production Test App (2)"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t18952A03D6604BA0B65E62027ED5F3D5\tTestingArchivee22"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t26BBFE92948745B6A355004C9FBAE38F\tQA Production Test App (3)"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t4583B18B74F341028E84BB4833A01C22\tConcord Testing\t597336083"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t4F5771B494474386A4C34F787183DCF5\tAnaplan Modeling Examples v1.0.3 July 2015"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t502195E828A94E1AA62C228D80FACE06\tAnaplan Connect Testing Automation Model"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t825737B6CD394AAEB76F61869F10C373\tSFDC Regression"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t949FF7279D1C4344A13E9E973696B1D9\tInformatica Import_Export Testing"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t96C20854332546C48832CA8338358B35\tSpringboard_Demo"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t9FB031F525CA45E3A5CE7A9616806EE7\tBudgeting, Planning and Forecasting"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tB03FDD32F0BE4B4DA4AB145730174010\tDocusign Testing"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tD16C94617F2F4975B6C33876FF4C8A0D\tMulesoft QA Regression Model"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tE97357262F354BCC811DE2820B46F16E\tTestingArchive"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tEA7E2796C4E944FABE56C3156F3DF9F7\tSudoku v.1.0.1 Oct 2015"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tF713F31C45D64B9BB8C2654D12378007\tOrg_Springboard_Demo"
+  - testName: "CertAuth-M"
+    scripts:
+      - scriptName: "AC1.4_193_Digicert_valid_user_bothKey&CertInKeystore_MList.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "WS_ID\tWS_NAME\tMODEL_ID\tMODEL_NAME\tMODEL_SIZE"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t0C6835888635444DA7565238D67C71B9\tQA Production Test App"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t0FC473F4DB56405880D79E6130321A98\tQA Production Test App (2)"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t18952A03D6604BA0B65E62027ED5F3D5\tTestingArchivee22"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t26BBFE92948745B6A355004C9FBAE38F\tQA Production Test App (3)"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t4583B18B74F341028E84BB4833A01C22\tConcord Testing\t597336083"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t4F5771B494474386A4C34F787183DCF5\tAnaplan Modeling Examples v1.0.3 July 2015"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t502195E828A94E1AA62C228D80FACE06\tAnaplan Connect Testing Automation Model"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t825737B6CD394AAEB76F61869F10C373\tSFDC Regression"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t949FF7279D1C4344A13E9E973696B1D9\tInformatica Import_Export Testing"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t96C20854332546C48832CA8338358B35\tSpringboard_Demo"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\t9FB031F525CA45E3A5CE7A9616806EE7\tBudgeting, Planning and Forecasting"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tB03FDD32F0BE4B4DA4AB145730174010\tDocusign Testing"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tD16C94617F2F4975B6C33876FF4C8A0D\tMulesoft QA Regression Model"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tE97357262F354BCC811DE2820B46F16E\tTestingArchive"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tEA7E2796C4E944FABE56C3156F3DF9F7\tSudoku v.1.0.1 Oct 2015"
+            - "8a81b08e4f6d2b43014ffc5ed96c54c8\tQA SF Regression workspace\tF713F31C45D64B9BB8C2654D12378007\tOrg_Springboard_Demo"
+  - testName: "List-Views"
+    scripts:
+      - scriptName: "AC1.4_213_list_views.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Views-WsName"
+    scripts:
+      - scriptName: "AC1.4_236_list_views_WsName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "Keystore-List-Views-ModelName"
+    scripts:
+      - scriptName: "AC1.4_225_KeyCert_list_views_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Certificate..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000052\tempty_v2\t102000000052\tdefault"
+            - "102000000049\tDelete Cyrillic List Module\t102000000049\tdefault"
+            - "102000000048\tDelete Large Russian List Model\t102000000048\tdefault"
+            - "102000000047\tDelete Large Chinese Big5 List Module\t102000000047\tdefault"
+            - "102000000046\tDelete Chinese Big5 List Module\t102000000046\tdefault"
+            - "102000000010\tMutilple Signers Module\t102000000010\tdefault"
+            - "102000000010\tMutilple Signers Module\t263000000000\tMutilple Signers Module view1"
+            - "102000000010\tMutilple Signers Module\t263000000001\tMutilple Signers Module view2"
+            - "102000000009\tcoresrv-2775-module\t102000000009\tdefault"
+            - "102000000007\tcoresrv-2779-module\t102000000007\tdefault"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+  - testName: "List-Modules-with-Mo"
+    scripts:
+      - scriptName: "AC1.4_226_list_MO.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+  - testName: "List-Modules-with-Mo-ModelName"
+    scripts:
+      - scriptName: "AC1.4_234_list_modules_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name"
+            - "102000000044\tDelete UTF16LE List"
+            - "102000000043\tDelete Module for Large UTF16LE List"
+            - "102000000042\tDelete DepModuleSmall module"
+            - "102000000041\tListWithTabSepDoubQuoDeli module"
+            - "102000000040\tListWithTabSepSingleQuoDeli module"
+  - testName: "List-Views-with-V-ModuleName-WsName-ModelName"
+    scripts:
+      - scriptName: "AC1.4_227_list_V_in_a_moName_WsName_ModelName.sh"
+        report:
+          messageList:
+            - "Authenticating via Basic..."
+            - "Module_ID\tModule_Name\tView_ID\tView_Name"
+            - "102000000006\tNew Hires Module\t102000000006\tdefault"
+            - "102000000006\tNew Hires Module\t247000000000\tview1"
+            - "102000000006\tNew Hires Module\t247000000001\tview2"
+            - "102000000006\tNew Hires Module\t247000000002\tview3"
+

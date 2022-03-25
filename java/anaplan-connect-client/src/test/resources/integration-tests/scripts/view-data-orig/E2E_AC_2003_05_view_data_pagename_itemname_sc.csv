@@ -1,0 +1,7 @@
+view-data-test-dimension,Line Items,view-data-test-columns,Value
+"a,b",l1,c1,1
+"a,b",l1,"c,2,",2
+"a,b",l1,"co,lu: mn 3",0
+"a,b",l2,c1,3
+"a,b",l2,"c,2,",4
+"a,b",l2,"co,lu: mn 3",0

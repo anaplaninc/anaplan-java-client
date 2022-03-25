@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "paging": {
+      "currentPageSize": 1,
+      "offset": 0,
+      "totalSize": 1
+    },
+    "schema": "https://api1-qa1.anaplan.com/2/0/models/F7177FD218234A66B0FBA94F3DC9D014/objects/chunk"
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  },
+  "chunks": [
+    {
+      "id": "0",
+      "name": "Chunk 0"
+    }
+  ]
+}

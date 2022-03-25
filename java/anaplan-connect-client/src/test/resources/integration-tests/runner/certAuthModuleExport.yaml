@@ -1,0 +1,81 @@
+---
+tests:
+  - testName: "CertAuth-Valid-Export-module-multicol-CSV"
+    scripts:
+      - scriptName: "AC1.4_40_Digicert_valid_user_bothKey&CertInKeystore_export_module_multicol_CSV.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/certauth-coresrv-2779-module - multicol.csv"
+          orgFile: "export-files/coresrv-2779-module.csv"
+  - testName: "CertAuth-Valid-Export-module-multicol-XLS"
+    scripts:
+      - scriptName: "AC1.4_47_Digicert_valid_user_bothKey&CertInKeystore_export_module_multicol_XLS.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2779-module-tab-multi-col.xls"
+          orgFile: "export-files/coresrv-2779-module-multicol.xls"
+          fileSize: 22528
+  - testName: "CertAuth-Valid-Export-module-multicol-TXT"
+    scripts:
+      - scriptName: "AC1.4_45_Digicert_valid_user_bothKey&CertInKeystore_export_module_multicol_TXT.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2779-module-tab-multi-col.txt"
+          orgFile: "export-files/coresrv-2779-module -multicol.txt"
+          fileSize: 2182
+  - testName: "CertAuth-Valid-Export-module-multicol-PDF"
+    scripts:
+      - scriptName: "AC1.4_41_Digicert_valid_user_bothKey&CertInKeystore_export_module_multicol_PDF.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2779-module-tab-multi-col.pdf"
+          orgFile: "export-files/coresrv-2779-module -multicol.pdf"
+          fileSize: 29310
+  - testName: "CertAuth-Valid-Export-module-tabularSigleCol-CSV"
+    scripts:
+      - scriptName: "AC1.4_48_Digicert_valid_user_bothKey&CertInKeystore_export_module_tabSingleCol_CSV.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2775-module-tabularSingleCol.csv"
+          orgFile: "export-files/coresrv-2775-module -tabSinglecol.csv"
+          fileSize: 2568
+  - testName: "CertAuth-Valid-Export-module-tabularSigleCol-XLS"
+    scripts:
+      - scriptName: "AC1.4_52_Digicert_valid_user_bothKey&CertInKeystore_export_module_tabSingleCol_XLS.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2775-module-tabularSingleCol.xls"
+          orgFile: "export-files/coresrv-2775-module -tabSingleCol.xls"
+          fileSize: 19456
+  - testName: "CertAuth-Valid-Export-module-tabularSigleCol-TXT"
+    scripts:
+      - scriptName: "AC1.4_50_Digicert_valid_user_bothKey&CertInKeystore_export_module_tabSingleCol_TXT.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2775-module-tabularSingleCol.txt"
+          orgFile: "export-files/coresrv-2775-module -tabSinglecol.txt"
+          fileSize: 2568
+  - testName: "CerAuth-Valid-Export-module-tabularSigleCol-PDF"
+    scripts:
+      - scriptName: "AC1.4_49_Digicert_valid_user_bothKey&CertInKeystore_export_module_tabSingleCol_PDF.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/cert-auth-coresrv-2775-module-tabularSingleCol.pdf"
+          orgFile: "export-files/coresrv-2775-module -tabSinglecol.pdf"
+          fileSize: 27434

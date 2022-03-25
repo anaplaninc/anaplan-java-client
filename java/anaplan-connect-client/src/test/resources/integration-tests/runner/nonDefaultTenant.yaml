@@ -1,0 +1,137 @@
+---
+tests:
+  - testName: "List Workspace Contents Non-Default Tenant"
+    scripts:
+      - scriptName: "E2E_AC_2005_01_get_views_nd.sh"
+        report:
+          messageList:
+            - "Module_ID	Module_Name	View_ID	View_Name"
+            - "102000000053\tdumpModule\t483000000000\tNonDefaultTenantModelModuleView"
+            - "102000000060\tNonDefaultTenantModelModule\t102000000060\tdefault"
+            - "102000000053	dumpModule	102000000053	default"
+            - "102000000000	DepModule	102000000000	default"
+  - testName: "E2E_AC_2005_02_get_modules_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_02_get_modules_nd.sh"
+        report:
+          messageList:
+            - "Module_ID	Module_Name"
+            - "102000000060\tNonDefaultTenantModelModule"
+            - "102000000053	dumpModule"
+            - "102000000000	DepModule"
+  - testName: "E2E_AC_2005_03_get_lists_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_03_get_lists_nd.sh"
+        report:
+          messageList:
+            - "id	name"
+            - "101000000068\tNonDefaultTenantModelList"
+            - "101000000064	Data from Gaga"
+            - "101000000091	DemoList"
+  - testName: "E2E_AC_2005_04_get_files_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_04_get_files_nd.sh"
+        report:
+          messageList:
+            - "113000000000		DepProjects.csv"
+            - "113000000171\t\tNonDefaultTenantModelFile"
+            - "116000000093\t\tNonDefaultTenantModelModuleExport"
+            - "Current Page - empty_v2.csv"
+  - testName: "E2E_AC_2005_05_download_file_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_05_download_file_nd.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+        exportFile:
+          exportedFile: "export/Grid - coresrv-2776-list.txt"
+          orgFile: "export-files/coresrv-2776-list.txt"
+          fileSize: 91
+  - testName: "E2E_AC_2005_06_get_list_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_06_get_list_nd.sh"
+        report:
+          messageList:
+            - "List - coresrv-2779-list exported successfully to the file - coresrv-2779-list.csv"
+        exportFile:
+          exportedFile: "E2E_AC_2005_Test/coresrv-2779-list.csv"
+          orgFile: "list-data-orig/coresrv-2779-list.csv"
+          fileSize: 118
+  - testName: "E2E_AC_2005_07_get_module_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_07_get_module_nd.sh"
+        report:
+          messageList:
+            - "View - default exported successfully to the file - coresrv-2779-module.json"
+        exportFile:
+          exportedFile: "E2E_AC_2005_Test/coresrv-2779-module.json"
+          orgFile: "view-data-orig/coresrv-2779-module.json"
+          fileSize: 484
+  - testName: "E2E_AC_2005_08_list_imports_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_08_list_imports_nd.sh"
+        report:
+          messageList:
+            - "112000000093\t\tNonDefaultTenantModelImport\tList data\t113000000121"
+            - "112000000000		DepProjects-6-5-17 from DepProjects.csv	List data	113000000000"
+            - "112000000152		tudor-test from upload2.csv	Module data	113000000184"
+  - testName: "E2E_AC_2005_09_list_exports_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_09_list_exports_nd.sh"
+        report:
+          messageList:
+            - "116000000093\t\tNonDefaultTenantModelModuleExport"
+            - "116000000000		Grid - DepProjects-6-5-17.csv"
+            - "116000000095		Current Page - empty_v2.csv"
+  - testName: "E2E_AC_2005_10_export_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_10_export_nd.sh"
+        report:
+          messageList:
+            - "serverAlert - Completed successfully!"
+            - "exportName - Grid - coresrv-2775-list.csv"
+  - testName: "E2E_AC_2005_11_list_actions_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_11_list_actions_nd.sh"
+        report:
+          messageList:
+            - " 117000000029		cyrillicDelete"
+            - "117000000000		delete from list"
+  - testName: "E2E_AC_2005_12_action_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_12_action_nd.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+  - testName: "E2E_AC_2005_13_import_file_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_13_import_file_nd.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+            - "successCreateCount - "
+            - "successRowCount - "
+            - "successUpdateCount - "
+  - testName: "E2E_AC_2005_14_list_processes_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_14_list_processes_nd.sh"
+        report:
+          messageList:
+            - "118000000007\t\tNonDefaultTenantModelProcess"
+            - "118000000005		process : dump1"
+            - "118000000001		import export delete"
+  - testName: "E2E_AC_2005_15_process_nd"
+    scripts:
+      - scriptName: "E2E_AC_2005_15_process_nd.sh"
+        report:
+          messageList:
+            - "<<< The operation was successful >>>"
+            - "The file \"data/coresrv-2776-list.csv\" has been uploaded as coresrv-2776-list.csv"
+            - "The file \"data/coresrv-2779-module.csv\" has been uploaded as coresrv-2779-module.csv"
+            - "serverAlert - Completed successfully"
+            - "Downloading file"
+            - "basic-auth-process-coresrv-2779-module - multicol.csv"
+            - "Downloading file"
+            - "export/basic-auth-process-coresrv-2775-module - tabularSingleCol.csv"
+            - "Running Action: delete from list"
+            - "Run status: Complete"

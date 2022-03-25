@@ -1,0 +1,13 @@
+[{
+  "nameMapped": "test1",
+  "codeMapped": "code1",
+  "prop1Mapped": "value for prop1",
+  "prop2Mapped": 10,
+  "subsetMapped": true
+}, {
+  "nameMapped": "test2",
+  "codeMapped": "code2",
+  "prop1Mapped": "multiline\nstring:8('^&\"\nspecialcharacters",
+  "prop2Mapped": 5,
+  "subsetMapped": false
+}]

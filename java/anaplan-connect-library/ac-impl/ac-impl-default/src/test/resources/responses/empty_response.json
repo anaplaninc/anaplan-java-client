@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "schema": "https://api-qa1.anaplan.com/2/0/objects/models",
+    "paging": {
+      "currentPageSize": 0,
+      "totalSize": 0,
+      "offset": 0
+    }
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  }
+}

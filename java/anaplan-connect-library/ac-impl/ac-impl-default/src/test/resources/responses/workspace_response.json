@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "schema": "https://api-qa1.anaplan.com/2/0/objects/workspace"
+  },
+  "workspace": {
+    "id": "testWorkspaceNameOrId",
+    "active": true,
+    "name": "Workspace A",
+    "sizeAllowance": 1073741824
+  },
+  "status": {
+    "code": 200,
+    "message": "Success"
+  }
+}
