@@ -17,7 +17,7 @@
     <artifactory-maven-plugin.version>2.7.0</artifactory-maven-plugin.version>
     <build-info-maven-plugin.version>1.0.3</build-info-maven-plugin.version>
 
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <jdk.version>1.8</jdk.version>
     <compiler.plugin.version>3.8.0</compiler.plugin.version>
 
