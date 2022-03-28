@@ -416,6 +416,10 @@
       <artifactId>feign-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-okhttp</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
@@ -497,79 +501,30 @@
           <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
         </configuration>
       </plugin>
-      <!--
-       Maven Github plugin:
-       1. To setup authentication, create ~/.m2/settings.xml with these
-          contents, with a new Github access token
-          (https://github.com/settings/tokens):
-          <settings>
-            <servers>
-              <server>
-                <id>github</id>
-                <password><GITHUB PERSONAL ACCESS TOKEN></password>
-              </server>
-            </servers>
-          </settings>
-       2. Run "mvn clean deploy" to push maven artifacts to Github repo
-          at anaplaninc.github.io.
-      -->
-      <plugin>
-        <groupId>com.github.github</groupId>
-        <artifactId>site-maven-plugin</artifactId>
-        <version>${github.maven.plugin.version}</version>
-        <configuration>
-          <server>${github.global.server}</server>
-          <!-- git commit message -->
-          <message>Maven artifacts for v${project.version} built on ${maven.build.timestamp}</message>
-          <!-- disable webpage processing -->
-          <noJekyll>true</noJekyll>
-          <!-- matches distribution management repository url above -->
-          <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
-          <!-- remote branch name -->
-          <branch>refs/heads/mvn-repo-ac</branch>
-          <!-- set filters, select all recursively -->
-          <includes>
-            <include>**/*</include>
-          </includes>
-          <!-- github repo name -->
-          <repositoryName>anaplaninc.github.io</repositoryName>
-          <!-- github username  -->
-          <repositoryOwner>anaplaninc</repositoryOwner>
-        </configuration>
-        <executions>
-          <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
-          <execution>
-            <goals>
-              <goal>site</goal>
-            </goals>
-            <phase>deploy</phase>
-          </execution>
-        </executions>
-      </plugin>
       <!-- Maven Javadoc plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${maven.javadoc.plugin.version}</version>
       </plugin>
-      <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>6.1.6</version>
-        <configuration>
-          <failBuildOnCVSS>7</failBuildOnCVSS>
-          <suppressionFiles>
-            <suppressionFile>${user.dir}/suppression.xml</suppressionFile>
-          </suppressionFiles>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+      <!--      <plugin>-->
+      <!--        <groupId>org.owasp</groupId>-->
+      <!--        <artifactId>dependency-check-maven</artifactId>-->
+      <!--        <version>6.1.6</version>-->
+      <!--        <configuration>-->
+      <!--          <failBuildOnCVSS>7</failBuildOnCVSS>-->
+      <!--          <suppressionFiles>-->
+      <!--            <suppressionFile>${user.dir}/suppression.xml</suppressionFile>-->
+      <!--          </suppressionFiles>-->
+      <!--        </configuration>-->
+      <!--        <executions>-->
+      <!--          <execution>-->
+      <!--            <goals>-->
+      <!--              <goal>check</goal>-->
+      <!--            </goals>-->
+      <!--          </execution>-->
+      <!--        </executions>-->
+      <!--      </plugin>-->
     </plugins>
   </build>
 
