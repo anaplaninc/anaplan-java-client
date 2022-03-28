@@ -13,9 +13,6 @@
   <artifactId>ac-integrations-jdbc</artifactId>
   <name>Anaplan Storage SDK Library Integrations JDBC</name>
   <packaging>jar</packaging>
-  <properties>
-    <common-csv>1.9.0</common-csv>
-  </properties>
 
   <dependencies>
     <dependency>

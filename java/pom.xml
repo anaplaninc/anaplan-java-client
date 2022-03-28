@@ -29,41 +29,34 @@
     <org.apache.httpcomponents.httpclient.version>4.5.7</org.apache.httpcomponents.httpclient.version>
     <org.apache.httpcomponents.httpmime.version>4.5.7</org.apache.httpcomponents.httpmime.version>
     <org.apache.httpcomponents.fluent-hc.version>4.5.7</org.apache.httpcomponents.fluent-hc.version>
-
+    <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
+    <github.maven.plugin.version>0.12</github.maven.plugin.version>
+    <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
     <github.global.server>github</github.global.server>
-
 
     <feign-jackson.version>10.0.0</feign-jackson.version>
     <guava.version>30.0-jre</guava.version>
     <opencsv.version>5.5.1</opencsv.version>
     <mysql.connector.version>8.0.28</mysql.connector.version>
-    <h2.version>1.4.197</h2.version>
-
+    <h2.version>2.0.204</h2.version>
+    <protobuf-java.version>3.16.1</protobuf-java.version>
     <jcifs.version>1.3.17</jcifs.version>
-    <jackson.version>2.10.0</jackson.version>
-    <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
-    <github.maven.plugin.version>0.12</github.maven.plugin.version>
-    <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
+
     <mockito.version>1.10.19</mockito.version>
-    <mysql.connector.version>8.0.16</mysql.connector.version>
     <lombok.version>1.16.18</lombok.version>
-    <bouncycastle.version>1.64</bouncycastle.version>
-    <okhttp.version>3.14.4</okhttp.version>
+    <bouncycastle.version>1.67</bouncycastle.version>
     <ac.version>${project.version}</ac.version>
 
 
     <slf4j-api.version>1.7.30</slf4j-api.version>
     <jackson.version>2.13.2</jackson.version>
+    <jackson-databind.version>2.13.2.1</jackson-databind.version>
     <feign.version>10.0.0</feign.version>
     <okhttp.version>4.8.0</okhttp.version>
-    <bouncycastle.version>1.67</bouncycastle.version>
     <junit-jupiter.version>5.6.0</junit-jupiter.version>
     <httpclient.version>4.5.13</httpclient.version>
     <commons-codec.version>1.13</commons-codec.version>
     <commons.io.version>2.8.0</commons.io.version>
-    <mockito.version>1.10.19</mockito.version>
-    <guava.version>30.0-jre</guava.version>
-    <h2.version>2.0.204</h2.version>
     <common-csv-version>1.9.0</common-csv-version>
   </properties>
 
@@ -141,6 +134,11 @@
         <version>${slf4j-api.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
         <version>${jackson.version}</version>
@@ -153,7 +151,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson-databind.version}</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
@@ -289,6 +287,12 @@
         <version>1.3</version>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>jcifs</groupId>
+        <artifactId>jcifs</artifactId>
+        <version>${jcifs.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -343,17 +347,14 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
-      <version>${feign-jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
@@ -400,19 +401,12 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>jcifs</groupId>
-      <artifactId>jcifs</artifactId>
-      <version>${jcifs.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp</artifactId>
-      <version>${okhttp.version}</version>
     </dependency>
     <dependency>
       <groupId>io.github.openfeign</groupId>
@@ -421,17 +415,14 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>${h2.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -443,8 +434,6 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
-      <version>${mockito.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -453,9 +442,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
-      <version>${bouncycastle.version}</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
     </dependency>
   </dependencies>
   <distributionManagement>
@@ -570,7 +558,7 @@
         <configuration>
           <failBuildOnCVSS>7</failBuildOnCVSS>
           <suppressionFiles>
-            <suppressionFile>${project.basedir}/suppression.xml</suppressionFile>
+            <suppressionFile>${user.dir}/suppression.xml</suppressionFile>
           </suppressionFiles>
         </configuration>
         <executions>

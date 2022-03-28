@@ -36,14 +36,11 @@
     <artifactory-maven-plugin.version>2.7.0</artifactory-maven-plugin.version>
     <build-info-maven-plugin.version>1.0.3</build-info-maven-plugin.version>
     <slf4j-api.version>1.7.30</slf4j-api.version>
-    <jackson.version>2.13.2</jackson.version>
     <okhttp.version>4.8.0</okhttp.version>
-    <bouncycastle.version>1.67</bouncycastle.version>
     <junit-jupiter.version>5.6.0</junit-jupiter.version>
     <httpclient.version>4.5.13</httpclient.version>
     <commons-codec.version>1.13</commons-codec.version>
     <commons.io.version>2.8.0</commons.io.version>
-    <mockito.version>1.10.19</mockito.version>
     <h2.version>2.0.204</h2.version>
   </properties>
 
