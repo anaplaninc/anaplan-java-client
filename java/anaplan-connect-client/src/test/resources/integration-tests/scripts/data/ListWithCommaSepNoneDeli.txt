@@ -1,4 +1,0 @@
-coresrv-2775-list,Parent,Code,p1,p2,p3
-item1,,,,1468944,14
-item2,,,,16,4
-item3,,,,591656976,24324

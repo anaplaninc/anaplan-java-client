@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.anaplan.client</groupId>
+    <groupId>com.anaplan.java.client</groupId>
     <artifactId>ac-auth</artifactId>
-    <version>1.2.1</version>
+    <version>3.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -18,7 +18,7 @@
   <dependencies>
 
     <dependency>
-      <groupId>com.anaplan.client</groupId>
+      <groupId>com.anaplan.java.client</groupId>
       <artifactId>api-core</artifactId>
     </dependency>
     <dependency>

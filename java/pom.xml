@@ -4,33 +4,42 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.anaplan.client</groupId>
+  <groupId>com.anaplan.java.client</groupId>
   <artifactId>anaplan-connect</artifactId>
   <packaging>pom</packaging>
-  <version>2.0.0</version>
+  <version>3.0.0</version>
   <name>Anaplan Connect</name>
 
   <properties>
     <category>Community</category>
-    <licensePath>LICENSE.md</licensePath>
+    <licensePath>LICENSE.txt</licensePath>
     <maven.build.timestamp.format>MMM dd, yyyy @ KK:mm:ss a (z)</maven.build.timestamp.format>
+    <artifactory-maven-plugin.version>2.7.0</artifactory-maven-plugin.version>
+    <build-info-maven-plugin.version>1.0.3</build-info-maven-plugin.version>
+
+    <junit.version>4.12</junit.version>
     <jdk.version>1.8</jdk.version>
     <compiler.plugin.version>3.8.0</compiler.plugin.version>
-    <feign-jackson.version>10.0.0</feign-jackson.version>
-    <github.global.server>github</github.global.server>
-    <junit.version>4.12</junit.version>
-    <logback.version>1.2.3</logback.version>
+
     <commons.codec.version>1.12</commons.codec.version>
     <commons.io.version>2.6</commons.io.version>
+    <logback.version>1.2.9</logback.version>
+
     <org.apache.httpcomponents.httpcore.version>4.4.11</org.apache.httpcomponents.httpcore.version>
     <org.apache.httpcomponents.httpclient.version>4.5.7</org.apache.httpcomponents.httpclient.version>
     <org.apache.httpcomponents.httpmime.version>4.5.7</org.apache.httpcomponents.httpmime.version>
     <org.apache.httpcomponents.fluent-hc.version>4.5.7</org.apache.httpcomponents.fluent-hc.version>
-    <guava.version>27.0.1-jre</guava.version>
-    <opencsv.version>4.5</opencsv.version>
+
+    <github.global.server>github</github.global.server>
+
+
+    <feign-jackson.version>10.0.0</feign-jackson.version>
+    <guava.version>30.0-jre</guava.version>
+    <opencsv.version>5.5.1</opencsv.version>
+    <mysql.connector.version>8.0.28</mysql.connector.version>
     <h2.version>1.4.197</h2.version>
+
     <jcifs.version>1.3.17</jcifs.version>
-    <feign.version>10.0.0</feign.version>
     <jackson.version>2.10.0</jackson.version>
     <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
     <github.maven.plugin.version>0.12</github.maven.plugin.version>
@@ -40,14 +49,297 @@
     <lombok.version>1.16.18</lombok.version>
     <bouncycastle.version>1.64</bouncycastle.version>
     <okhttp.version>3.14.4</okhttp.version>
-  </properties>
-  <modules>
-    <module></module>
-    <module>anaplan-connect-client</module>
-    <module>anaplan-connect-library</module>
-  </modules>
+    <ac.version>${project.version}</ac.version>
 
+
+    <slf4j-api.version>1.7.30</slf4j-api.version>
+    <jackson.version>2.13.2</jackson.version>
+    <feign.version>10.0.0</feign.version>
+    <okhttp.version>4.8.0</okhttp.version>
+    <bouncycastle.version>1.67</bouncycastle.version>
+    <junit-jupiter.version>5.6.0</junit-jupiter.version>
+    <httpclient.version>4.5.13</httpclient.version>
+    <commons-codec.version>1.13</commons-codec.version>
+    <commons.io.version>2.8.0</commons.io.version>
+    <mockito.version>1.10.19</mockito.version>
+    <guava.version>30.0-jre</guava.version>
+    <h2.version>2.0.204</h2.version>
+    <common-csv-version>1.9.0</common-csv-version>
+  </properties>
+
+  <modules>
+    <module>anaplan-connect-library</module>
+    <module>anaplan-connect-client</module>
+  </modules>
+  <dependencyManagement>
+    <dependencies>
+      <!-- SDK dependencies -->
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-auth</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-auth-default</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-http</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-http-feign</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-impl</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-impl-default</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-integrations</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-integrations-jdbc</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-log</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-log-logback</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>ac-utils</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anaplan.java.client</groupId>
+        <artifactId>api-core</artifactId>
+        <version>${ac.version}</version>
+      </dependency>
+      <!-- external dependencies -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jackson</artifactId>
+        <version>${feign-jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-core</artifactId>
+        <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-okhttp</artifactId>
+        <version>${feign.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk15on</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpclient.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>${commons-codec.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${junit-jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit-jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit-jupiter.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons.io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-csv</artifactId>
+        <version>${common-csv-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.opencsv</groupId>
+        <artifactId>opencsv</artifactId>
+        <version>${opencsv.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>${mysql.connector.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf-java.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>${h2.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest-all</artifactId>
+        <version>1.3</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
@@ -71,7 +363,16 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>${mysql.connector.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -87,7 +388,6 @@
     <dependency>
       <groupId>com.opencsv</groupId>
       <artifactId>opencsv</artifactId>
-      <version>${opencsv.version}</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -117,18 +417,6 @@
     <dependency>
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-core</artifactId>
-      <version>${feign.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-okhttp</artifactId>
-      <version>${feign.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.squareup.okhttp3</groupId>
-          <artifactId>okhttp</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -275,7 +563,24 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${maven.javadoc.plugin.version}</version>
       </plugin>
-
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>6.1.6</version>
+        <configuration>
+          <failBuildOnCVSS>7</failBuildOnCVSS>
+          <suppressionFiles>
+            <suppressionFile>${project.basedir}/suppression.xml</suppressionFile>
+          </suppressionFiles>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

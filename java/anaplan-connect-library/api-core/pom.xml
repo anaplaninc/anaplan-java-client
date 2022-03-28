@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.anaplan.client</groupId>
-    <artifactId>ac-parent</artifactId>
-    <version>1.2.1</version>
+    <groupId>com.anaplan.java.client</groupId>
+    <artifactId>anaplan-connect-library</artifactId>
+    <version>3.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -20,13 +20,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.anaplan.client</groupId>
+      <groupId>com.anaplan.java.client</groupId>
       <artifactId>ac-utils</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.opencsv</groupId>
-      <artifactId>opencsv</artifactId>
-      <version>${opencsv-version}</version>
     </dependency>
     <!-- TODO: remove this -->
     <dependency>
@@ -40,7 +35,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-csv</artifactId>
-      <version>${common-csv-version}</version>
     </dependency>
   </dependencies>
 
