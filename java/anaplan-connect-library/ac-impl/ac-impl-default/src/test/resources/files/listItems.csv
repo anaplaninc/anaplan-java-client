@@ -1,0 +1,8 @@
+name,parent,code,prop1,prop2,subset
+test1,,code1,value for prop1,10,true
+test2,,code2,"multiline
+string:8('^&""
+specialcharacters",5,false
+test3,,code3,value for prop1,10,true
+test4,,code4,value for prop1,10,true
+test5,,code5,value for prop1,10,true

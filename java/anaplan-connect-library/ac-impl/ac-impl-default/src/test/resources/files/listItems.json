@@ -1,0 +1,13 @@
+[{
+  "name": "test1",
+  "code": "code1",
+  "prop1": "value for prop1",
+  "prop2": 10,
+  "subset": true
+}, {
+  "name": "test2",
+  "code": "code2",
+  "prop1": "multiline\nstring:8('^&\"\nspecialcharacters",
+  "prop2": 5,
+  "subset": false
+}]

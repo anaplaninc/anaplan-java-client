@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "schema": "https://api-qa1.anaplan.com/2/0/objects/workspace",
+    "paging": {
+      "currentPageSize": 4,
+      "totalSize": 6,
+      "offset": 0
+    }
+  },
+  "models": [
+    {
+      "activeState": "UNLOCKED",
+      "id": "testModelGuid",
+      "name": "Model 0",
+      "currentWorkspaceId": "testWorkspaceNameOrId"
+    },
+    {
+      "activeState": "UNLOCKED",
+      "id": "08B4AFAF5DEA463999B0A5CBCC18DF69",
+      "name": "Model 1",
+      "currentWorkspaceId": "testWorkspaceNameOrId"
+    },
+    {
+      "activeState": "UNLOCKED",
+      "id": "6D203BA7549241C7BEE26C93DE987F12",
+      "name": "Model 2",
+      "currentWorkspaceId": "testWorkspaceNameOrId"
+    },
+    {
+      "activeState": "UNLOCKED",
+      "id": "616FFCEA5CBE4A1C81EF0B72DF7DA2CA",
+      "name": "Model 3",
+      "currentWorkspaceId": "testWorkspaceNameOrId"
+    }
+  ],
+  "status": {
+    "code": 200,
+    "message": "Success"
+  }
+}
