@@ -20,19 +20,10 @@
       <groupId>com.anaplan.java.client</groupId>
       <artifactId>api-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-core</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <!-- Set a compiler level -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

@@ -16,10 +16,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-csv</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.anaplan.java.client</groupId>
       <artifactId>api-core</artifactId>
     </dependency>

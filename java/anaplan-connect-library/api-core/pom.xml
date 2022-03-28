@@ -14,19 +14,11 @@
   <artifactId>api-core</artifactId>
   <name>Anaplan Storage SDK Library API</name>
   <packaging>jar</packaging>
-  <properties>
-    <opencsv-version>5.5.1</opencsv-version>
-  </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.anaplan.java.client</groupId>
       <artifactId>ac-utils</artifactId>
-    </dependency>
-    <!-- TODO: remove this -->
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-csv</artifactId>
     </dependency>
   </dependencies>
 

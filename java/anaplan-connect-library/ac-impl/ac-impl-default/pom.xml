@@ -35,25 +35,6 @@
       <groupId>com.anaplan.java.client</groupId>
       <artifactId>ac-http-feign</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-okhttp</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.squareup.okhttp3</groupId>
-          <artifactId>okhttp</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-    </dependency>
-      <dependency>
-          <groupId>com.opencsv</groupId>
-          <artifactId>opencsv</artifactId>
-          <scope>test</scope>
-      </dependency>
   </dependencies>
 
   <build>
