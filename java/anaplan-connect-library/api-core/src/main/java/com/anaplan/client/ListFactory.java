@@ -7,13 +7,7 @@ import java.util.Map;
 /**
  * A named entity in an Anaplan model that can initiate CRUD actions for list item on the server.
  */
-public abstract class ListFactory {
-
-  /**
-   * Constructor
-   */
-  protected ListFactory() {
-  }
+public interface ListFactory {
 
   /**
    * Add an item to list

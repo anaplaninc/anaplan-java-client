@@ -1,6 +1,5 @@
 //   Copyright 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -24,6 +23,8 @@ import java.net.URLEncoder;
 
 public class EncodingUtils {
 
+  private EncodingUtils(){}
+
   private static final String CHARSET = "UTF-8";
 
   /**
@@ -31,7 +32,7 @@ public class EncodingUtils {
    *
    * @param value The value to be encoded.
    * @return The encoded value.
-   * @throws UnsupportedEncodingException
+   * @throws UnsupportedEncodingException encoding fail
    */
   public static String encodeAndXor(String value) throws UnsupportedEncodingException {
     String xored = convertViaXOR(value);
@@ -43,7 +44,7 @@ public class EncodingUtils {
    *
    * @param value The value to be decoded.
    * @return The decoded value.
-   * @throws UnsupportedEncodingException
+   * @throws UnsupportedEncodingException decoding fail
    */
   public static String decodeAndXor(String value) throws UnsupportedEncodingException {
     String urlDecoded = URLDecoder.decode(value, CHARSET);

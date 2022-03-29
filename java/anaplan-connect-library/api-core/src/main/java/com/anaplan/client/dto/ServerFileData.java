@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:32 PM
  */
-public class ServerFileData extends NamedObjectData {
+public class ServerFileData extends NamedObjectData implements Serializable {
 
   private int chunkCount;
   private String origin;

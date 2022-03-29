@@ -1,6 +1,5 @@
 //   Copyright 2011 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -16,7 +15,6 @@ package com.anaplan.client;
 
 import com.anaplan.client.dto.ItemMetadataRow;
 import com.anaplan.client.dto.ModuleData;
-import com.anaplan.client.dto.ViewDimensionMetadata;
 import com.anaplan.client.dto.ViewMetadata;
 import com.anaplan.client.dto.ViewMetadataRow;
 import com.anaplan.client.dto.responses.ItemData;
@@ -25,7 +23,6 @@ import com.anaplan.client.dto.responses.ViewsResponse;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.PageDimensionNotFoundException;
 import com.anaplan.client.exceptions.ViewDataNotFoundException;
-import com.anaplan.client.exceptions.ViewDimensionMetadataNotFoundException;
 import com.anaplan.client.exceptions.ViewMetadataNotFoundException;
 import com.anaplan.client.exceptions.ViewNotFoundException;
 import com.anaplan.client.listwriter.ListItemFileWriter;
@@ -34,10 +31,10 @@ import com.anaplan.client.listwriter.SingleColumnCsvTransformer;
 import com.anaplan.client.transport.Paginator;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -94,71 +91,73 @@ public class Module extends NamedObject {
    * @param pages       Paginated search: pages
    */
   public void exportViewData(String fileType, String fileId, String workspaceId, String modelId, String viewId,
-      String[] pages) throws JsonProcessingException {
+      String[] pages) throws IOException {
     String searchPages = null;
-    if (workspaceId != null && modelId != null) {
+    if (workspaceId == null || modelId == null) {
+      return;
+    }
       View view = getView(Optional.ofNullable(viewId).orElse("default"));
       if (fileId == null) {
         fileId = super.getName() + "_" + view.getName() + (JSON.equalsIgnoreCase(fileType) ? ".json" : ".csv");
       }
-      if (view != null) {
-        File targetFile = new File(fileId);
-        Collection<List<String>> searchPageSplit = new ArrayList<>();
-        ViewMetadata viewMetadata = getViewMetadata(modelId, view);
-        if (pages != null) {
-          for (String page : pages) {
-            String[] dimensions = dimensionSplit(page);
-            ViewMetadataRow viewMetadataRow = getViewMetadataRow(modelId, viewMetadata, escapeBackSlash(dimensions[0]));
-            if (viewMetadataRow != null) {
-              String itemId = getItemId(viewMetadataRow, modelId, escapeBackSlash(dimensions[1]));
-              searchPageSplit.add(Arrays.asList(viewMetadataRow.getId(), itemId));
-            } else {
-              LOG.error("PageDimension \"" + escapeBackSlash(dimensions[0])
-                  + "\" not found in view \"" + viewId
-                  + "\", model \"" + modelId + "\"");
-              throw new PageDimensionNotFoundException(escapeBackSlash(dimensions[0]));
-            }
-          }
-          searchPages = searchPageSplit.stream().map(
-              nextList -> nextList.stream()
-                  .collect(Collectors.joining(":")))
-              .collect(Collectors.joining(","));
-        }
-        LOG.info("Starting export for the view - {} ", view.getName());
-        try {
-          if (CSV_SINGLE_COL.equalsIgnoreCase(fileType)) {
-            String linesCsv = getViewDataCsv(modelId, view, searchPages);
-            String singleColumnCsv = SingleColumnCsvTransformer.toSingleColumn(viewMetadata, linesCsv);
-            ListItemFileWriter.linesToFile(view.getName(), targetFile.toPath(), singleColumnCsv);
-          } else if (CSV_MULTI_COL.equalsIgnoreCase(fileType)) {
-            String linesCsv = getViewDataCsv(modelId, view, searchPages);
-            String multiColumnCsv = MultiColumnCsvTransformer.toMultiColumn(viewMetadata, linesCsv);
-            ListItemFileWriter.linesToFile(view.getName(), targetFile.toPath(), multiColumnCsv);
-          } else if (JSON.equalsIgnoreCase(fileType)) {
-            String linesJson = getApi().getViewDataJson(modelId, view.getId(), searchPages);
-            ListItemFileWriter.linesToFile(view.getName(), targetFile.toPath(), linesJson);
-          }
-          LOG.info("Export for the view completed successfully");
-        } catch (AnaplanAPIException aae) {
-          String message = null;
-          try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonFactory factory = mapper.getFactory();
-            JsonParser parser = factory.createParser(aae.getMessage());
-            JsonNode actualObj = mapper.readTree(parser);
-            message = actualObj.get("status").get("message").toPrettyString();
-          } catch (Exception e) {
-            throw aae;
-          }
-          throw new AnaplanAPIException(message);
-        }
-      } else {
-        LOG.error("View \"" + viewId
-            + "\" not found in workspace \"" + workspaceId
-            + "\", model \"" + modelId + "\"");
+      if (view == null) {
+        LOG.error("View \"{}\" not found in workspace \"{}\", model \"{}\"", viewId, workspaceId, modelId);
         throw new ViewNotFoundException(viewId);
       }
+    File targetFile = new File(fileId);
+    Collection<List<String>> searchPageSplit = new ArrayList<>();
+    ViewMetadata viewMetadata = getViewMetadata(modelId, view);
+    if (pages != null) {
+      searchPages = getSearchPage(pages, viewMetadata, modelId, viewId, searchPageSplit);
     }
+    LOG.info("Starting export for the view - {} ", view.getName());
+    try {
+      if (CSV_SINGLE_COL.equalsIgnoreCase(fileType)) {
+        String linesCsv = getViewDataCsv(modelId, view, searchPages);
+        String singleColumnCsv = SingleColumnCsvTransformer.toSingleColumn(viewMetadata, linesCsv);
+        ListItemFileWriter.linesToFile(view.getName(), targetFile.toPath(), singleColumnCsv);
+      } else if (CSV_MULTI_COL.equalsIgnoreCase(fileType)) {
+        String linesCsv = getViewDataCsv(modelId, view, searchPages);
+        String multiColumnCsv = MultiColumnCsvTransformer.toMultiColumn(viewMetadata, linesCsv);
+        ListItemFileWriter.linesToFile(view.getName(), targetFile.toPath(), multiColumnCsv);
+      } else if (JSON.equalsIgnoreCase(fileType)) {
+        String linesJson = getApi().getViewDataJson(modelId, view.getId(), searchPages);
+        ListItemFileWriter.linesToFile(view.getName(), targetFile.toPath(), linesJson);
+      }
+      LOG.info("Export for the view completed successfully");
+    } catch (AnaplanAPIException | IOException aae) {
+      String message;
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonFactory factory = mapper.getFactory();
+        JsonParser parser = factory.createParser(aae.getMessage());
+        JsonNode actualObj = mapper.readTree(parser);
+        message = actualObj.get("status").get("message").toPrettyString();
+      } catch (Exception e) {
+        throw aae;
+      }
+      throw new AnaplanAPIException(message);
+    }
+  }
+
+  private String getSearchPage(String[] pages, ViewMetadata viewMetadata, final String modelId, final String viewId, Collection<List<String>> searchPageSplit) {
+    for (String page : pages) {
+      String[] dimensions = dimensionSplit(page);
+      final String dimensionEscaped = escapeBackSlash(dimensions[0]);
+      ViewMetadataRow viewMetadataRow = getViewMetadataRow(viewMetadata, dimensionEscaped);
+      if (viewMetadataRow != null) {
+        String itemId = getItemId(viewMetadataRow, modelId, escapeBackSlash(dimensions[1]));
+        searchPageSplit.add(Arrays.asList(viewMetadataRow.getId(), itemId));
+      } else {
+        LOG.error("PageDimension \"{}\" not found in view \"{}\", model \"{}\"", dimensionEscaped,
+            viewId, modelId);
+        throw new PageDimensionNotFoundException(escapeBackSlash(dimensions[0]));
+      }
+    }
+    return searchPageSplit.stream().map(
+        nextList -> nextList.stream()
+            .collect(Collectors.joining(":")))
+        .collect(Collectors.joining(","));
   }
 
   /**
@@ -197,7 +196,7 @@ public class Module extends NamedObject {
    * @param modelId Model id
    * @return View metadata
    */
-  private ItemMetadataResponse getItemMetadata(ViewMetadataRow viewMetadataRow, String modelId, String itemId) throws JsonProcessingException {
+  private ItemMetadataResponse getItemMetadata(ViewMetadataRow viewMetadataRow, String modelId, String itemId) {
     ItemData itemData = new ItemData();
     List<String> names = new ArrayList<>();
     names.add(itemId);
@@ -212,52 +211,18 @@ public class Module extends NamedObject {
   }
 
   /**
-   * Retrieve dimension metadata
-   *
-   * @param modelId Model id
-   * @param view    View
-   * @return Dimension metadata
-   */
-  private ViewDimensionMetadata getViewDimensionMetadata(String modelId, View view, String dimensionId) {
-    try {
-      return getApi().getViewDimensionMetadata(modelId, view.getId(), dimensionId).getViewDimensionMetadata();
-    } catch (Exception e) {
-      throw new ViewDimensionMetadataNotFoundException(dimensionId, e);
-    }
-  }
-
-  /**
-   * Get all dimensionId:itemId combinations for two lists of params. Will be used as pages http param
-   */
-  private String[] getPages(List<String> dimensionIds, String modelId, View view) {
-    List<String> pageList = new ArrayList();
-    if (dimensionIds != null) {
-      for (String dimensionId : dimensionIds) {
-        List<String> itemIds = getViewDimensionMetadata(modelId, view, dimensionId).getItems().stream()
-            .map(ViewMetadataRow::getId)
-            .collect(Collectors.toList());
-        for (String itemId : itemIds) {
-          pageList.add(dimensionId + ":" + itemId);
-        }
-      }
-    }
-    return pageList.toArray(new String[pageList.size()]);
-  }
-
-  /**
    * Get all pageDimensionId for page names
    */
 
-  private ViewMetadataRow getViewMetadataRow(String modelId, ViewMetadata viewMetadata, String pageDimensionIdOrName) {
+  private ViewMetadataRow getViewMetadataRow(ViewMetadata viewMetadata, String pageDimensionIdOrName) {
     if (pageDimensionIdOrName == null) {
       return null;
     }
     if (viewMetadata != null) {
-      ViewMetadataRow viewMetadataRow = viewMetadata.getPages().stream()
+      return viewMetadata.getPages().stream()
           .filter(pageDimension -> pageDimensionIdOrName.equals(pageDimension.getName()) || pageDimensionIdOrName.equals(pageDimension.getId())
               || pageDimensionIdOrName.equals(pageDimension.getCode()))
           .findAny().orElse(null);
-      return viewMetadataRow;
     }
     return null;
   }
@@ -266,7 +231,7 @@ public class Module extends NamedObject {
    * Get all itemIds for Item names/codes/ids
    */
 
-  private String getItemId(ViewMetadataRow viewMetadataRow, String modelId, String itemIdOrName) throws JsonProcessingException {
+  private String getItemId(ViewMetadataRow viewMetadataRow, String modelId, String itemIdOrName) {
     if (itemIdOrName == null) {
       return null;
     } else {
@@ -275,7 +240,7 @@ public class Module extends NamedObject {
         ItemMetadataRow itemMetadataRow = itemMetadataResponse.getItem().stream()
             .filter(item -> itemIdOrName.equals(item.getId()) || itemIdOrName.equals(item.getName()) || itemIdOrName.equals(item.getCode()))
             .findAny().orElse(null);
-        return itemMetadataRow.getId();
+        return itemMetadataRow == null ? "" : itemMetadataRow.getId();
       }
       return itemIdOrName;
     }

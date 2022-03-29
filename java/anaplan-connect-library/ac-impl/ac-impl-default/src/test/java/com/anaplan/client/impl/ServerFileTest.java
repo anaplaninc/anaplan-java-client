@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ServerFileTest extends BaseTest {
+class ServerFileTest extends BaseTest {
 
   private static final String chunksResponseFile = "responses/file_chunks_response.json";
   private static final String multiChunksResponseFile = "responses/file_multi_chunks_response.json";
@@ -65,7 +65,7 @@ public class ServerFileTest extends BaseTest {
   }
 
   @Test
-  public void testDownloadFileWithOverwrite() throws Exception {
+  void testDownloadFileWithOverwrite() throws Exception {
     // mock out fetching of file chunks from server and
     when(mockModel.getApi().getChunks(
         mockModel.getWorkspace().getId(),
@@ -96,7 +96,7 @@ public class ServerFileTest extends BaseTest {
   }
 
   @Test
-  public void testFileUploadStream() throws Exception {
+  void testFileUploadStream() throws Exception {
 
     InputStream source0v3 = null;
     OutputStream uploadStream = null;
@@ -142,7 +142,7 @@ public class ServerFileTest extends BaseTest {
   }
 
   @Test
-  public void testDownloadStream() throws Exception {
+  void testDownloadStream() throws Exception {
     InputStream downloadStream = null;
     Path pathname = getTempFolderPath().resolve("download_data.txt");
     java.nio.file.Files.createFile(pathname);
@@ -182,10 +182,10 @@ public class ServerFileTest extends BaseTest {
   /**
    * testing last index Of comma separator
    *
-   * @throws Exception
+   * @throws Exception test fail
    */
   @Test
-  public void testlastIndexOfComma() throws Exception {
+  void testlastIndexOfComma() throws Exception {
     int size = 100;
     byte[] buffer = new byte[size];
     File sourceFile = new File("src/test/resources/files/indexOfCommaSeparator.txt");
@@ -199,10 +199,10 @@ public class ServerFileTest extends BaseTest {
   /**
    * testing last index Of no separator in file
    *
-   * @throws Exception
+   * @throws Exception test fail
    */
   @Test
-  public void testlastIndexOfTabSeparatorNotPresentInData() throws Exception {
+  void testlastIndexOfTabSeparatorNotPresentInData() throws Exception {
     int size = 100;
     byte[] buffer = new byte[size];
     File sourceFile = new File("src/test/resources/files/indexOfNoSeparator.txt");
@@ -215,10 +215,10 @@ public class ServerFileTest extends BaseTest {
   /**
    * testing last index Of tab separator
    *
-   * @throws Exception
+   * @throws Exception test fail
    */
   @Test
-  public void testlastIndexOftab() throws Exception {
+  void testlastIndexOftab() throws Exception {
     int size = 100;
     byte[] buffer = new byte[size];
     File sourceFile = new File("src/test/resources/files/indexOfTabSeparator.txt");
@@ -229,7 +229,7 @@ public class ServerFileTest extends BaseTest {
   }
 
   @Test
-  public void testFileUploadWithNoSeparator() throws IOException {
+  void testFileUploadWithNoSeparator() throws IOException {
     String path = Objects
         .requireNonNull(this.getClass().getClassLoader().getResource("files/M1-orig.csv")).getPath();
     File file = new File(path);
@@ -268,7 +268,7 @@ public class ServerFileTest extends BaseTest {
   }
 
   @Test
-  public void testFileUploadFailsWithMultiSeparator() {
+  void testFileUploadFailsWithMultiSeparator() {
     File file = new File(this.getClass().getClassLoader().getResource("files/M1-orig.csv").getPath());
     ServerFileData sfd = new ServerFileData();
     sfd.setChunkCount(1);
@@ -279,12 +279,15 @@ public class ServerFileTest extends BaseTest {
     sfd.setFormat(".txt");
     sfd.setId("1130000000001");
     mockServerFile.setData(sfd);
-    assertThrows(
-        IllegalStateException.class, () -> mockServerFile.upLoad(file, false, fetchChunkSize(1)));
+    try{
+      mockServerFile.upLoad(file, false, fetchChunkSize(1));
+    } catch (Exception e) {
+      assertTrue(e instanceof IllegalStateException);
+    }
   }
 
   @Test
-  public void testCreateServerFile() throws Exception {
+  void testCreateServerFile() throws Exception {
     String newFileName = "NewFile1";
     // mock out calls to POST to server to help create new Server-File.
     doReturn(createFeignResponse(createFileResponse, ServerFileResponse.class))
@@ -302,37 +305,37 @@ public class ServerFileTest extends BaseTest {
   }
 
   @Test
-  public void splitSeparatorsEmpty() {
+  void splitSeparatorsEmpty() {
     assertThrows(IllegalStateException.class, () -> ServerFile.splitSeparators(""));
   }
 
   @Test
-  public void splitSeparatorsNull() {
+  void splitSeparatorsNull() {
     assertThrows(IllegalStateException.class, ()->ServerFile.splitSeparators(null));
   }
 
   @Test
-  public void splitSeparatorsOneChar() {
+  void splitSeparatorsOneChar() {
     assertEquals(Collections.singletonList("\t"), ServerFile.splitSeparators("\t"));
   }
 
   @Test
-  public void splitSeparatorsMultiple() {
+  void splitSeparatorsMultiple() {
     assertEquals(Collections.singletonList("aaa"), ServerFile.splitSeparators("aaa"));
   }
 
   @Test
-  public void splitSeparatorsCombination() {
+  void splitSeparatorsCombination() {
     assertEquals(Arrays.asList(",", ";", "aaa"), ServerFile.splitSeparators(",;aaa"));
   }
 
   @Test
-  public void splitSeparatorsAll() {
+  void splitSeparatorsAll() {
     assertEquals(Arrays.asList("\t", ",", ";", "aaa"), ServerFile.splitSeparators("\t,;aaa"));
   }
 
   @Test
-  public void splitSeparatorsOrder() {
+  void splitSeparatorsOrder() {
     assertEquals(Arrays.asList("aaa\t,;"), ServerFile.splitSeparators("aaa\t,;"));
   }
 

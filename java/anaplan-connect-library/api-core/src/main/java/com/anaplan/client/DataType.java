@@ -1,6 +1,5 @@
 //   Copyright 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -24,14 +23,14 @@ public enum DataType {
   NONE, NUMBER, ENTITY(
       "LIST"), DATE, TEXT, BOOLEAN, FORMAT, SUMMARY, MULTISELECT_HIERARCHY, MULTISELECT_USER, MULTISELECT_ENTITY, MULTISELECT_MODULE, ACTION_DEFINITION, MIXED;
 
-  private final String _label;
+  private final String label;
 
   private DataType() {
     this(null);
   }
 
   private DataType(String label) {
-    _label = label;
+    this.label = label;
   }
 
   /**
@@ -39,7 +38,7 @@ public enum DataType {
    * returns "LIST".
    */
   public String getLabel() {
-    return _label == null ? name() : _label;
+    return label == null ? name() : label;
   }
 
 }

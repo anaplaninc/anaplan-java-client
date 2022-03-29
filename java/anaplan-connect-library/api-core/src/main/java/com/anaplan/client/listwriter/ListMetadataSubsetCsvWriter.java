@@ -13,7 +13,9 @@ import java.util.stream.Stream;
  */
 public class ListMetadataSubsetCsvWriter {
 
-  public static final String[] FIXED_COLUMN_NAMES_LIST_SUBSET = {"id", "name"};
+  private ListMetadataSubsetCsvWriter(){}
+
+  protected static final String[] FIXED_COLUMN_NAMES_LIST_SUBSET = {"id", "name"};
 
   /**
    * Get column names for a list of elements

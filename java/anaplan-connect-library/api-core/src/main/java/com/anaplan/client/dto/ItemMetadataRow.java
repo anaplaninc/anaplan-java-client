@@ -1,6 +1,8 @@
 package com.anaplan.client.dto;
 
-public class ItemMetadataRow {
+import java.io.Serializable;
+
+public class ItemMetadataRow implements Serializable {
 
   private String id;
   private String name;

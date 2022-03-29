@@ -10,16 +10,11 @@ import feign.Feign;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Provides an AnaplanAuthenticationAPI implementation that internally uses feign
  */
 public class FeignAuthenticationAPIProvider {
-
-  private static final Logger LOG = LoggerFactory
-      .getLogger(FeignAuthenticationAPIProvider.class.getName());
 
   protected ConnectionProperties connectionProperties;
   private Supplier<Client> clientSupplier;

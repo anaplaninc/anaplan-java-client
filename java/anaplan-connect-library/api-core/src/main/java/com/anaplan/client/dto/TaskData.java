@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:33 PM
  */
-public class TaskData {
+public class TaskData implements Serializable {
 
   private String taskId;
 

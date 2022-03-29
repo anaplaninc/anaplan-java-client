@@ -4,6 +4,8 @@ import static com.anaplan.client.Strings.lenientFormat;
 
 public class Preconditions {
 
+  private Preconditions(){}
+
   /**
    * Ensures that an object reference passed as a parameter to the calling method is not null.
    *

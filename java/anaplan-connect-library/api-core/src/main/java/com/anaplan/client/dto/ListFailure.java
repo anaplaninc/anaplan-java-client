@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * A list failure object that contains information about CRUD operations.
  */
-public class ListFailure {
+public class ListFailure implements Serializable {
 
   private int requestIndex;
   private String failureType;

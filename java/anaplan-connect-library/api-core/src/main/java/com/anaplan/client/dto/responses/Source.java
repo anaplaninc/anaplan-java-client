@@ -1,16 +1,17 @@
 package com.anaplan.client.dto.responses;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Source {
-  public String textEncoding;
-  public String columnSeparator;
-  public String textDelimiter;
-  public int headerRow;
-  public int firstDataRow;
-  public String decimalSeparator;
-  public List<String> headerNames;
-  public int columnCount;
+public class Source implements Serializable {
+  private String textEncoding;
+  private String columnSeparator;
+  private String textDelimiter;
+  private int headerRow;
+  private int firstDataRow;
+  private String decimalSeparator;
+  private List<String> headerNames;
+  private int columnCount;
 
   public String getTextEncoding() {
     return textEncoding;

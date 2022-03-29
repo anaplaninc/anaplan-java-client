@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Created by Ashish Goyal Date: 08/18/20 Time: 6:43 PM
  */
-public class PaginatorTest extends BaseTest {
+class PaginatorTest extends BaseTest {
 
   private Model mockModel;
 
@@ -26,7 +26,7 @@ public class PaginatorTest extends BaseTest {
   }
 
   @Test
-  public void testMultipleResults() throws Exception {
+  void testMultipleResults() throws Exception {
     when(mockModel.getApi().getModels(0))
         .thenReturn(createFeignResponse("responses/page1_response.json", ModelsResponse.class));
     when(mockModel.getApi().getModels(4))
@@ -38,7 +38,7 @@ public class PaginatorTest extends BaseTest {
   }
 
   @Test
-  public void testEmptyResponse() throws Exception {
+  void testEmptyResponse() throws Exception {
     Workspace testWorkspace = getTestWorkspacebyId();
     when(mockModel.getApi().getModels(0))
         .thenReturn(createFeignResponse("responses/empty_response.json", ModelsResponse.class));

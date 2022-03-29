@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Meta list object
  */
-public class MetaList {
+public class MetaList implements Serializable {
     private String schema;
 
     public String getSchema() {

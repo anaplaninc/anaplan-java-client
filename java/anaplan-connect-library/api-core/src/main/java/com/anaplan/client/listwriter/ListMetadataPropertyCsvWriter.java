@@ -13,7 +13,9 @@ import java.util.stream.Stream;
  */
 public class ListMetadataPropertyCsvWriter {
 
-  public static String[] FIXED_COLUMN_NAMES_LIST_METADATA_PROPERTY = new String[]{
+  private ListMetadataPropertyCsvWriter(){}
+
+  protected static final String[] FIXED_COLUMN_NAMES_LIST_METADATA_PROPERTY = new String[]{
       "name", "format", "formula", "referencedBy", "id"};
 
   /**

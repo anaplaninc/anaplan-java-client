@@ -6,25 +6,32 @@ import org.slf4j.LoggerFactory;
 
 public class LogUtils {
 
+  private LogUtils(){}
+
   private static final Logger LOG = LoggerFactory.getLogger(LogUtils.class);
 
   public static void logSeparatorRunAction() {
-    LOG.info(Strings.repeat("= ", 30));
+    final String logText = Strings.repeat("= ", 30);
+    LOG.info(logText);
   }
 
   public static void logSeparatorUpload() {
-    LOG.info(Strings.repeat("↑ ", 30));
+    final String logText = Strings.repeat("↑ ", 30);
+    LOG.info(logText);
   }
 
   public static void logSeparatorDownload() {
-    LOG.info(Strings.repeat("↓ ", 30));
+    final String logText = Strings.repeat("↓ ", 30);
+    LOG.info(logText);
   }
 
   public static void logSeparatorOperationResponses() {
-    LOG.info(Strings.repeat("-", 41));
+    final String logText = Strings.repeat("-", 30);
+    LOG.info(logText);
   }
 
   public static void logSeparatorOperationStatus() {
-    LOG.info(Strings.repeat("- ", 21));
+    final String logText = Strings.repeat("- ", 21);
+    LOG.info(logText);
   }
 }

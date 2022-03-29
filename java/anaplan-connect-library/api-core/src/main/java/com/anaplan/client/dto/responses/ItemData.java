@@ -5,8 +5,8 @@ import java.util.List;
 
 public class ItemData {
 
-  public List<String> names;
-  public List<String> codes;
+  private List<String> names;
+  private List<String> codes;
 
   public List<String> getNames() {
     return names;

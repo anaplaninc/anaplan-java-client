@@ -1,15 +1,16 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:34 PM
  */
-public class TaskParametersData {
+public class TaskParametersData implements Serializable {
 
-  public String localeName;
-  public List<ConnectorParameterData> connectorParameters;
-  public List<MappingParameterData> mappingParameters;
+  private String localeName;
+  private List<ConnectorParameterData> connectorParameters;
+  private List<MappingParameterData> mappingParameters;
 
   public String getLocaleName() {
     return localeName;

@@ -26,6 +26,8 @@ import java.util.function.Supplier;
  */
 public class AnaplanApiProviderImpl implements Supplier<AnaplanAPI> {
 
+  private static final int API_MAJOR = 2;
+  private static final int API_MINOR = 0;
   private final Authenticator authenticator;
   private ConnectionProperties connectionProperties;
   private Supplier<Client> clientSupplier;
@@ -66,8 +68,8 @@ public class AnaplanApiProviderImpl implements Supplier<AnaplanAPI> {
               FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER))
           .errorDecoder(new AnaplanErrorDecoder())
           .target(AnaplanAPIFeign.class,
-              connectionProperties.getApiServicesUri().toString() + "/" + Version.API_MAJOR + "/"
-                  + Version.API_MINOR);
+              connectionProperties.getApiServicesUri().toString() + "/" + API_MAJOR + "/"
+                  + API_MINOR);
     }
     return apiClient;
   }

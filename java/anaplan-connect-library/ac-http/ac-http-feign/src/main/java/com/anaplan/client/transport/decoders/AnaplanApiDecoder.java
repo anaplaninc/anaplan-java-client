@@ -39,37 +39,39 @@ public class AnaplanApiDecoder extends JacksonDecoder {
       if (javaType.isTypeOrSubTypeOf(byte[].class)) {
         return new AnaplanByteArrayDeserializer().deserialize(body.asInputStream());
       } else {
-        Reader reader = body.asReader();
-
-        if (!reader.markSupported()) {
-          reader = new BufferedReader(reader, 1);
-        }
-
-        try {
-          reader.mark(1);
-          if (reader.read() == -1) {
-            return null;
-          } else {
-            reader.reset();
-            if (isCsvStringResponse(response)) {
-              return stringFromReader(reader);
-            } else if(isJsonStringResponse(response)){
-              return stringFromReader(reader);
-            }
-            return this.mapper.readValue(reader, javaType);
-          }
-        } catch (RuntimeJsonMappingException e) {
-          if (e.getCause() != null && e.getCause() instanceof IOException) {
-            throw IOException.class.cast(e.getCause());
-          } else {
-            throw e;
-          }
-        }
+        return decodeFromReader(body, response, javaType);
       }
 
     }
   }
 
+
+  private Object decodeFromReader(final Response.Body body, final Response response, JavaType javaType) throws IOException {
+    Reader reader = body.asReader();
+
+    if (!reader.markSupported()) {
+      reader = new BufferedReader(reader, 1);
+    }
+
+    try {
+      reader.mark(1);
+      if (reader.read() == -1) {
+        return null;
+      } else {
+        reader.reset();
+        if (isCsvStringResponse(response) || isJsonStringResponse(response)) {
+          return stringFromReader(reader);
+        }
+        return this.mapper.readValue(reader, javaType);
+      }
+    } catch (RuntimeJsonMappingException | IOException e) {
+      if (e.getCause() instanceof IOException) {
+        throw (IOException) e.getCause();
+      } else {
+        throw e;
+      }
+    }
+  }
   /**
    * Checks if the response is of csv type based on content-type headers
    *
@@ -81,9 +83,7 @@ public class AnaplanApiDecoder extends JacksonDecoder {
     Collection<String> contentType = response.headers().get("content-type");
     if (contentType != null) {
       isCsv = contentType.stream()
-          .filter(ct -> ct.contains("text/csv"))
-          .findAny()
-          .isPresent();
+          .anyMatch(ct -> ct.contains("text/csv"));
     }
     return isCsv;
   }
@@ -99,9 +99,7 @@ public class AnaplanApiDecoder extends JacksonDecoder {
     Collection<String> contentType = response.request().headers().get("Accept");
     if (contentType != null) {
       isJson = contentType.stream()
-          .filter(ct -> ct.contains("application/json"))
-          .findAny()
-          .isPresent();
+          .anyMatch(ct -> ct.contains("application/json"));
     }
     return isJson;
   }
@@ -111,7 +109,7 @@ public class AnaplanApiDecoder extends JacksonDecoder {
    *
    * @param reader Reader
    * @return Result as a String
-   * @throws IOException
+   * @throws IOException reader error
    */
   private String stringFromReader(Reader reader) throws IOException {
     BufferedReader bufferedReader = new BufferedReader(reader);

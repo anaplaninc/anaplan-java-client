@@ -15,7 +15,7 @@ public interface Authenticator {
   /**
    * Performs authentication for the appropriate authentication mechanism
    *
-   * @return
+   * @return {@link byte[]}
    */
   byte[] authenticate();
 }

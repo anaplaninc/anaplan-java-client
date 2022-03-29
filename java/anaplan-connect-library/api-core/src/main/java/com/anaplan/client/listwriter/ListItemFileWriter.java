@@ -3,10 +3,10 @@ package com.anaplan.client.listwriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +22,10 @@ import org.slf4j.LoggerFactory;
 public class ListItemFileWriter {
 
   private static final Logger LOG = LoggerFactory.getLogger(ListItemFileWriter.class);
+
+  private static final String TO_THE_FILE = " to the file - ";
+
+  private ListItemFileWriter(){}
 
   /**
    * Converts to JSON and writes the result to a file identified by a path
@@ -40,7 +44,7 @@ public class ListItemFileWriter {
     } catch (IOException e) {
       LOG.error("Issue while exporting {} to the file - {}", name, path.getFileName());
       throw new IllegalStateException(
-          "Not able to export - " + name + " to the file - " + path.getFileName(), e);
+          "Not able to export - " + name + TO_THE_FILE + path.getFileName(), e);
     }
   }
 
@@ -52,7 +56,7 @@ public class ListItemFileWriter {
    * @param lines    Stream of strings to write
    */
   public static void listItemToFile(String listName, Path path, String lines) {
-    listItemToFile(listName, path, Arrays.asList(lines));
+    listItemToFile(listName, path, Collections.singletonList(lines));
   }
 
   /**
@@ -70,7 +74,7 @@ public class ListItemFileWriter {
     } catch (IOException e) {
       LOG.error("Issue while exporting list - {} to the file - {}", listName, path.getFileName());
       throw new IllegalStateException(
-          "Not able to export the list - " + listName + " to the file - " + path.getFileName(), e);
+          "Not able to export the list - " + listName + TO_THE_FILE + path.getFileName(), e);
     }
   }
 
@@ -84,12 +88,12 @@ public class ListItemFileWriter {
   public static void linesToFile(String name, Path path, Stream<String> lines) {
     try {
       ensureFileExists(path);
-      Files.write(path, (Iterable<String>) () -> lines.iterator());
+      Files.write(path, (Iterable<String>) lines::iterator);
       LOG.info("{} exported successfully to the file - {}", name, path.getFileName());
     } catch (IOException e) {
       LOG.error("Issue while exporting {} to the file - {}", name, path.getFileName());
       throw new IllegalStateException(
-          "Not able to export - " + name + " to the file - " + path.getFileName(), e);
+          "Not able to export - " + name + TO_THE_FILE + path.getFileName(), e);
     }
   }
 
@@ -103,12 +107,12 @@ public class ListItemFileWriter {
   public static void linesToFile(String name, Path path, String lines) {
     try {
       ensureFileExists(path);
-      Files.write(path, lines.getBytes("utf-8"));
+      Files.write(path, lines.getBytes(StandardCharsets.UTF_8));
       LOG.info("View - {} exported successfully to the file - {}", name, path.getFileName());
     } catch (IOException e) {
       LOG.error("Issue while exporting View - {} to the file - {}", name, path.getFileName());
       throw new IllegalStateException(
-          "Not able to export View - " + name + " to the file - " + path.getFileName(), e);
+          "Not able to export View - " + name + TO_THE_FILE + path.getFileName(), e);
     }
   }
 
@@ -139,7 +143,7 @@ public class ListItemFileWriter {
    * Escape so the CSV can be imported
    */
   public static String escapeCsv(String src) {
-    src = src.replaceAll("\"", "\"\"");
+    src = src.replace("\"", "\"\"");
     if (src.contains(",")) {
       src = "\"" + src + "\"";
     }
@@ -178,7 +182,7 @@ public class ListItemFileWriter {
     }
     return searchKeys.stream()
         .map(key -> Optional.ofNullable(propertyAsMap.get(key))
-            .map(v -> valueSupplier.apply(v))
+            .map(valueSupplier::apply)
             .map(ListItemFileWriter::valueOrEmpty)
             .orElse(""));
   }
@@ -208,7 +212,9 @@ public class ListItemFileWriter {
       if (file.getParentFile() != null) {
         file.getParentFile().mkdirs();
       }
-      file.createNewFile();
+      if (!file.createNewFile()) {
+        throw new IOException(path.toString() +" file cannot be created");
+      }
     }
   }
 

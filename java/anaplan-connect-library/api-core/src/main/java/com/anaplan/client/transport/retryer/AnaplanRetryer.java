@@ -1,9 +1,5 @@
 package com.anaplan.client.transport.retryer;
 
-/**
- * Anaplan retryer that emulates Spring's BackoffExponentialPolicy for setting intervals/periods between attempts.
- */
-
 import com.anaplan.client.Constants;
 
 public interface AnaplanRetryer {

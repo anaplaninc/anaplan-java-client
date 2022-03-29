@@ -1,6 +1,8 @@
 package com.anaplan.client.dto;
 
-public class ListName {
+import java.io.Serializable;
+
+public class ListName implements Serializable {
 
   private String id;
   private String name;

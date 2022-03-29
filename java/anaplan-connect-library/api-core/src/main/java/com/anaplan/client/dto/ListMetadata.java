@@ -1,10 +1,11 @@
 package com.anaplan.client.dto;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
+import java.io.Serializable;
 import java.util.List;
 
 @JsonRootName(value = "metadata")
-public class ListMetadata {
+public class ListMetadata implements Serializable {
 
   private String id;
   private String name;

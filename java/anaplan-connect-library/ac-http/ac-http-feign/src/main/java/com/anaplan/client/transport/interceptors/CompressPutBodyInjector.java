@@ -22,7 +22,7 @@ public class CompressPutBodyInjector implements RequestInterceptor {
   public void apply(RequestTemplate requestTemplate) {
 
     // only for PUT operations (file chunk uploads), set the right mime-type (x-gzip or octet-stream)
-    if (requestTemplate.request().method().equals("PUT")) {
+    if (requestTemplate.request().httpMethod().name().equals("PUT")) {
       Collection<String> contentTypes = requestTemplate.headers().get("Content-Type");
       if (contentTypes != null &&
           ("application/x-gzip".equals(contentTypes.toArray()[0]) || "x-gzip"
@@ -34,7 +34,7 @@ public class CompressPutBodyInjector implements RequestInterceptor {
   }
 
   private byte[] compress(byte[] source) {
-    int head = ((int) source[0] & 0xff) | ((source[1] << 8) & 0xff00);
+    int head = (source[0] & 0xff) | ((source[1] << 8) & 0xff00);
     ByteArrayOutputStream sink = new ByteArrayOutputStream();
     //check if matches standard gzip magic number
     if (GZIPInputStream.GZIP_MAGIC != head) {

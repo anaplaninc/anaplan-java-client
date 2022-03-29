@@ -29,8 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Matchers;
 
-
-public class ActionTest extends BaseTest {
+class ActionTest extends BaseTest {
 
   private static final String createTaskResponseJson = "responses/create_task_response.json";
   private static final String taskSuccessResponseJson = "responses/task_success_response.json";
@@ -48,7 +47,7 @@ public class ActionTest extends BaseTest {
   }
 
   @Test
-  public void testImportAction() throws Exception {
+  void testImportAction() throws Exception {
     // create mock API response for fetching list of imports.
     when(mockModel.getApi().getImports(mockModel.getWorkspace().getId(), mockModel.getId(), 0))
         .thenReturn(createFeignResponse(listOfImportsResponseJson, ImportsResponse.class));
@@ -57,7 +56,7 @@ public class ActionTest extends BaseTest {
 
     // mock out API calls to create Task and monitor it
     ImportData importData = new ImportData() {{
-      this.localeName = "en_UK";
+      this.setLocaleName("en_UK");
     }};
     when(mockModel.getApi()
         .createImportTask(
@@ -77,7 +76,7 @@ public class ActionTest extends BaseTest {
   }
 
   @Test
-  public void testAction() throws Exception {
+  void testAction() throws Exception {
     // create mock API response for fetching list of Actions.
     when(mockModel.getApi().getActions(mockModel.getWorkspace().getId(),
         mockModel.getId(), 0))
@@ -100,7 +99,7 @@ public class ActionTest extends BaseTest {
   }
 
   @Test
-  public void testExport() throws Exception {
+  void testExport() throws Exception {
     // create mock API response for fetching list of Exports
     when(mockModel.getApi().getExports(mockModel.getWorkspace().getId(),
         mockModel.getId(), 0)).thenReturn(
@@ -123,7 +122,7 @@ public class ActionTest extends BaseTest {
   }
 
   @Test
-  public void testProcess() throws Exception {
+  void testProcess() throws Exception {
     // create mock API response for fetching list of processes
     when(mockModel.getApi().getProcesses(mockModel.getWorkspace().getId(),
         mockModel.getId(), 0)).thenReturn(

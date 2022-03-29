@@ -18,10 +18,10 @@ public class AnaplanByteArraySerializer extends StdSerializer<byte[]> {
   /**
    * Writes the raw-value as a UTF-8 encoded string.
    *
-   * @param bytes
-   * @param jsonGenerator
-   * @param serializerProvider
-   * @throws IOException
+   * @param bytes bytes to be serialized
+   * @param jsonGenerator {@link JsonGenerator}
+   * @param serializerProvider {@link SerializerProvider}
+   * @throws IOException the error
    */
   @Override
   public void serialize(byte[] bytes, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)

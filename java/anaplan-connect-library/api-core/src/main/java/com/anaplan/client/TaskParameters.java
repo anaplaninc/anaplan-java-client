@@ -1,6 +1,5 @@
 //   Copyright 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -34,7 +33,7 @@ public class TaskParameters {
    *
    * @since 1.3
    */
-  public static enum SourceType {
+  public enum SourceType {
     /**
      * A file uploaded, initially through the browser, to the server.
      */
@@ -54,7 +53,7 @@ public class TaskParameters {
    *
    * @since 1.3
    */
-  public static enum ConnectorParameter {
+  public enum ConnectorParameter {
     /**
      * Instance of third-party system to connect to.
      */

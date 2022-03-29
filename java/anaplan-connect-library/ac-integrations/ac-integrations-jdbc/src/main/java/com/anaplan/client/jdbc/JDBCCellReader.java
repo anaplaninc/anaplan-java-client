@@ -1,6 +1,5 @@
 //   Copyright 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -15,6 +14,7 @@
 package com.anaplan.client.jdbc;
 
 import com.anaplan.client.CellReader;
+import com.anaplan.client.Utils;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.TooLongQueryError;
 import java.sql.CallableStatement;
@@ -43,14 +43,12 @@ public class JDBCCellReader implements CellReader {
 
   private static final Logger LOG = LoggerFactory.getLogger(JDBCCellReader.class);
   private static final int MAX_ALLOWED_SQL_CHARACTERS = 65535;
-  private static final int MAX_ALLOWED_CONNECTION_STRING_LENGTH = 1500;
   private Connection connection;
   private boolean autoCommit;
   private Statement statement;
   private ResultSet resultSet;
   private int columnCount;
   private String[] headerRow;
-  private int[] columnTypes;
   private JDBCConfig jdbcConfig;
 
   /**
@@ -87,12 +85,7 @@ public class JDBCCellReader implements CellReader {
     if (jdbcConfig.isStoredProcedure()) {
       CallableStatement callableStatement = connection.prepareCall(jdbcConfig.getJdbcQuery(),
           ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-      if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0 && !jdbcConfig.getJdbcParams()[0]
-          .equals("")) {
-        for (int i = 0; i < jdbcConfig.getJdbcParams().length; i++) {
-          callableStatement.setString(i + 1, String.valueOf(jdbcConfig.getJdbcParams()[i]));
-        }
-      }
+      setStringParameterToStatement(callableStatement);
       LOG.debug("Running provided stored-procedure: '{}'", jdbcConfig.getJdbcQuery());
       setJdbcFetchSize(callableStatement);
       resultSet = callableStatement.executeQuery();
@@ -100,12 +93,7 @@ public class JDBCCellReader implements CellReader {
     } else {
       PreparedStatement preparedStatement = connection.prepareStatement(jdbcConfig.getJdbcQuery(),
           ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-      if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0 && !jdbcConfig.getJdbcParams()[0]
-          .equals("")) {
-        for (int i = 0; i < jdbcConfig.getJdbcParams().length; i++) {
-          preparedStatement.setString(i + 1, String.valueOf(jdbcConfig.getJdbcParams()[i]));
-        }
-      }
+      setStringParameterToStatement(preparedStatement);
       LOG.debug("Running provided query: '{}'", jdbcConfig.getJdbcQuery());
       setJdbcFetchSize(preparedStatement);
       resultSet = preparedStatement.executeQuery();
@@ -114,7 +102,7 @@ public class JDBCCellReader implements CellReader {
     ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
     columnCount = resultSetMetaData.getColumnCount();
     headerRow = new String[columnCount];
-    columnTypes = new int[columnCount];
+    int[] columnTypes = new int[columnCount];
     for (int i = 0; i < columnCount; ++i) {
       headerRow[i] = resultSetMetaData.getColumnLabel(i + 1);
       columnTypes[i] = resultSetMetaData.getColumnType(i + 1);
@@ -122,12 +110,23 @@ public class JDBCCellReader implements CellReader {
     return this;
   }
 
+  private void setStringParameterToStatement(final PreparedStatement preparedStatement)
+      throws SQLException {
+    if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0 && !jdbcConfig.getJdbcParams()[0]
+        .equals("")) {
+      for (int i = 0; i < jdbcConfig.getJdbcParams().length; i++) {
+        preparedStatement.setString(i + 1, String.valueOf(jdbcConfig.getJdbcParams()[i]));
+      }
+    }
+  }
+
+
   private void setJdbcFetchSize(Statement statement) {
     if (jdbcConfig.getJdbcFetchSize() != null) {
       try {
         statement.setFetchSize(jdbcConfig.getJdbcFetchSize());
       } catch (SQLException sqle) {
-        LOG.error("Warning: setFetchSize failed(" + sqle + ")");
+        LOG.error("Warning: setFetchSize failed({0})", sqle);
       }
     }
   }
@@ -161,7 +160,7 @@ public class JDBCCellReader implements CellReader {
   public String[] readDataRow() throws AnaplanAPIException {
     try {
       if (resultSet == null || !resultSet.next()) {
-        return null;
+        return new String[0];
       }
       String[] dataRow = new String[columnCount];
       for (int i = 0; i < columnCount; ++i) {
@@ -179,40 +178,27 @@ public class JDBCCellReader implements CellReader {
    */
   @Override
   public void close() {
-    if (resultSet != null) {
-      try {
-        resultSet.close();
-      } catch (SQLException sqle) {
-        LOG.error("Failed to close result set: " + sqle);
-      }
-      resultSet = null;
-    }
-    if (statement != null) {
-      try {
-        statement.close();
-      } catch (SQLException sqle) {
-        LOG.error("Failed to close prepared statement: " + sqle);
-      }
-      statement = null;
-    }
+    Utils.closeJDBC(resultSet, statement);
+    resultSet = null;
+    statement = null;
     boolean closed = false;
     try {
       closed = connection.isClosed();
     } catch (SQLException sqle) {
-      LOG.error("Failed to determine if JDBC connection closed: " + sqle);
+      LOG.error("Failed to determine if JDBC connection closed: {0}", sqle);
     }
-    if (connection != null && !closed) {
+    if (!closed) {
       if (!autoCommit) {
         try {
           connection.commit();
         } catch (SQLException sqle) {
-          LOG.error("Failed to commit JDBC connection: " + sqle);
+          LOG.error("Failed to commit JDBC connection: {0}", sqle);
         }
       }
       try {
         connection.close();
       } catch (SQLException sqle) {
-        LOG.warn("Failed to close JDBC connection: " + sqle);
+        LOG.warn("Failed to close JDBC connection: {0}", sqle);
       }
     }
     connection = null;

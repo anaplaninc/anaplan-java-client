@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-public class ListItemFileWriterTest {
+class ListItemFileWriterTest {
 
   @Test
-  public void escapeCsv(){
+  void escapeCsv(){
     assertEquals("\"abc\"\"def,ghi\"",ListItemFileWriter.escapeCsv("abc\"def,ghi"));
   }
 

@@ -3,7 +3,7 @@ package com.anaplan.client.listwriter;
 import com.anaplan.client.Utils;
 import com.anaplan.client.dto.ViewMetadata;
 import com.anaplan.client.dto.ViewMetadataRow;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,17 +13,21 @@ import java.util.stream.Stream;
 
 public class SingleColumnCsvTransformer {
 
+  private SingleColumnCsvTransformer(){}
   /**
    * Transforms a grid CSV to single column result
    *
    * @param gridSources Source CSV
    * @return The transformed CSV
    */
-  public static String toSingleColumn(ViewMetadata viewMetadata, String... gridSources) {
+  public static String toSingleColumn(ViewMetadata viewMetadata, String... gridSources)
+      throws IOException {
     StringBuilder result = new StringBuilder();
-    List<ViewMetadataValues> allMetadataValues = Arrays.stream(gridSources)
-        .map(ViewMetadataValues::new)
-        .collect(Collectors.toList());
+    List<ViewMetadataValues> allMetadataValues = new ArrayList<>();
+    for (String gridSource : gridSources) {
+      ViewMetadataValues viewMetadataValues = new ViewMetadataValues(gridSource);
+      allMetadataValues.add(viewMetadataValues);
+    }
     result.append(getHeader(viewMetadata));
       for (ViewMetadataValues metadataValues : allMetadataValues) {
         for (String rows: metadataValues.getLineValues()) {
@@ -36,8 +40,8 @@ public class SingleColumnCsvTransformer {
 
   /**
    * Get header data
-   * @param viewMetadata
-   * @return
+   * @param viewMetadata {@link ViewMetadata}
+   * @return the header
    */
   private static String getHeader(ViewMetadata viewMetadata) {
     return Stream.of(
@@ -70,21 +74,6 @@ public class SingleColumnCsvTransformer {
   }
 
   /**
-   * Get all distinct metadata column values
-   *
-   * @param allMetadataValues Metadata
-   * @return List of values
-   */
-  private static List<String> getColumnValues(List<ViewMetadataValues> allMetadataValues) {
-    return allMetadataValues.stream()
-        .map(ViewMetadataValues::getColumnValues)
-        .flatMap(List::stream)
-        .distinct()
-        .collect(Collectors.toList());
-  }
-
-
-  /**
    * Utility to convert from grid CSV to different csv formats like multi column or single column
    * Parses a grid CSV source to in memory values
    */
@@ -101,7 +90,7 @@ public class SingleColumnCsvTransformer {
      *
      * @param gridSource Grid source
      */
-    public ViewMetadataValues(String gridSource) {
+    public ViewMetadataValues(String gridSource) throws IOException {
       String[] lines = gridSource.split("\n");
       int startInd=0;
       if(!lines[0].startsWith(",")) {
@@ -110,8 +99,8 @@ public class SingleColumnCsvTransformer {
       }
       columnValues = Utils.getColumnValues(lines,startInd);
       int lineSize = Utils.splitValues(lines[columnValues.size()+1]).size();
-      for (int i = startInd+columnValues.size(); i < lines.length; i++) {
-        lineValues(lines[i],lineSize);
+      for (int i = startInd + columnValues.size(); i < lines.length; i++) {
+        lineValues(lines[i], lineSize);
       }
     }
 
@@ -119,23 +108,20 @@ public class SingleColumnCsvTransformer {
      * Converting CSV lines to Anaplan Single column format
      * @param line Source line
      */
-    private void lineValues(String line, int lineSize) {
+    private void lineValues(String line, int lineSize) throws IOException {
       int columnValSize = Utils.splitValues(columnValues.get(0)).size();
       int noOfRowDimensions = lineSize -  columnValSize;
       List<String> currenLine = Utils.splitValues(line);
       List<String> rowdata = new ArrayList<>(currenLine.subList(0,noOfRowDimensions));
       List<String> columndata = new ArrayList<>(currenLine.subList(noOfRowDimensions,lineSize));
-      for (int j =0; j<columnValSize;j++){
+      for (int j = 0; j < columnValSize; j++) {
         int columnNameIndex = rowdata.size();
-        for(int k=0;k<this.columnValues.size();k++){
-          rowdata.add(columnNameIndex+k,Utils.splitValues(columnValues.get(k)).get(j));
+        for (int k = 0; k < this.columnValues.size(); k++) {
+          rowdata.add(columnNameIndex + k, Utils.splitValues(columnValues.get(k)).get(j));
         }
-        rowdata.add(rowdata.size(),columndata.get(j));
+        rowdata.add(rowdata.size(), columndata.get(j));
         lineValues.add(join(rowdata));
-        for(int l=0;l<this.columnValues.size();l++){
-          rowdata.remove(columnNameIndex+l);
-        }
-        rowdata.remove(rowdata.size()-1);
+        rowdata = rowdata.subList(0, columnNameIndex);
       }
     }
 

@@ -1,11 +1,12 @@
 package com.anaplan.client.dto;
 
 import com.anaplan.client.DataType;
+import java.io.Serializable;
 
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/22/17 Time: 2:26 AM
  */
-public class ExportMetadata {
+public class ExportMetadata implements Serializable {
 
   private int columnCount;
   private int rowCount;

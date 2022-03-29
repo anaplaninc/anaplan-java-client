@@ -19,7 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class JDBCCellReaderTest {
+class JDBCCellReaderTest {
 
   private static final String testJdbcQueryProperties = "/test-jdbc-query-imports.properties";
   private JDBCCellReader jdbcCellReader;
@@ -65,14 +65,14 @@ public class JDBCCellReaderTest {
   }
 
   @Test
-  public void testDefaultSqlSelectQuery() throws AnaplanAPIException {
+  void testDefaultSqlSelectQuery() throws AnaplanAPIException {
     assertThat(jdbcCellReader.getHeaderRow(), arrayContaining("COLA", "COLB", "COLC"));
     assertThat(jdbcCellReader.readDataRow(), arrayContaining("C$A&,Z(*yV@lue", "123", "W@K!A"));
-    assertThat(jdbcCellReader.readDataRow(), nullValue());
+    assertEquals(0, jdbcCellReader.readDataRow().length);
   }
 
   @Test
-  public void testStoredProcedureCallQuery() throws Exception {
+  void testStoredProcedureCallQuery() throws Exception {
     jdbcConfig.setStoredProcedure(true);
     jdbcConfig.setJdbcQuery("call testreverse(?)");
     jdbcConfig.setJdbcParams(new String[]{"test"});
@@ -84,14 +84,14 @@ public class JDBCCellReaderTest {
   }
 
   @Test
-  public void testGoodSanitizeQuery() throws Exception {
+  void testGoodSanitizeQuery() throws Exception {
     String query = jdbcConfig.getJdbcQuery();
     Method sanitizeQueryMethod = getPrivateMethod("sanitizeQuery", String.class);
     assertEquals(query, sanitizeQueryMethod.invoke(jdbcCellReader, query));
   }
 
   @Test
-  public void testBadSanitizeQuery() throws Throwable {
+  void testBadSanitizeQuery() throws Throwable {
     String veryLongQuery = new String(new char[1000])
         .replace("\0", jdbcConfig.getJdbcQuery() + ";");
     assertTrue(veryLongQuery.length() >= 65535);

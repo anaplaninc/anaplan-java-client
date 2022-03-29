@@ -7,17 +7,17 @@ import java.util.NoSuchElementException;
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/26/17 Time: 11:32 AM
  */
-public abstract class Paginator<ENTITY> implements Iterable<ENTITY> {
+public abstract class Paginator<T> implements Iterable<T> {
 
   private Paging pageInfo;
   private int nextIndex;
-  private ENTITY[] entities;
-  private ENTITY nextEntity;
+  private T[] entities;
+  private T nextEntity;
 
   /*
    * Select the first entity if present and prepare to read from second entity (index 1)
    */
-  public Paginator() {
+  protected Paginator() {
     setEntities(getPage(0));
     selectFirstEntity();
     nextIndex = 1;
@@ -31,7 +31,7 @@ public abstract class Paginator<ENTITY> implements Iterable<ENTITY> {
     }
   }
 
-  public abstract ENTITY[] getPage(int offset);
+  public abstract T[] getPage(int offset);
 
   /**
    * Returns an iterator for ENTITYs
@@ -41,8 +41,8 @@ public abstract class Paginator<ENTITY> implements Iterable<ENTITY> {
    * @return An ENTITY iterator
    */
   @Override
-  public Iterator<ENTITY> iterator() {
-    return new Iterator<ENTITY>() {
+  public Iterator<T> iterator() {
+    return new Iterator<T>() {
 
       @Override
       public boolean hasNext() {
@@ -50,11 +50,11 @@ public abstract class Paginator<ENTITY> implements Iterable<ENTITY> {
       }
 
       @Override
-      public ENTITY next() {
+      public T next() {
         if (nextEntity == null) {
           throw new NoSuchElementException();
         }
-        ENTITY toReturn = nextEntity;
+        T toReturn = nextEntity;
         nextEntity = null;
         if (nextIndex < entities.length) {
           nextEntity = entities[nextIndex++];
@@ -77,7 +77,7 @@ public abstract class Paginator<ENTITY> implements Iterable<ENTITY> {
     this.pageInfo = pageInfo;
   }
 
-  public void setEntities(ENTITY[] entities) {
+  public void setEntities(T[] entities) {
     this.entities = entities;
   }
 }

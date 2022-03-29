@@ -1,6 +1,5 @@
 //   Copyright 2011, 2013 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -14,10 +13,12 @@
 
 package com.anaplan.client;
 
+import com.anaplan.client.CellWriter.DataRow;
 import com.anaplan.client.ListImpl.ListAction;
 import com.anaplan.client.ListImpl.MetaContent;
 import com.anaplan.client.auth.Credentials;
 import com.anaplan.client.auth.KeyStoreManager;
+import com.anaplan.client.auth.UnknownAuthenticationException;
 import com.anaplan.client.dto.ChunkData;
 import com.anaplan.client.dto.ExportMetadata;
 import com.anaplan.client.dto.FileType;
@@ -31,7 +32,6 @@ import com.anaplan.client.dto.ViewData;
 import com.anaplan.client.dto.WorkspaceData;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.BadSystemPropertyError;
-import com.anaplan.client.exceptions.NoChunkError;
 import com.anaplan.client.exceptions.PrivateKeyException;
 import com.anaplan.client.exceptions.WorkspaceNotFoundException;
 import com.anaplan.client.jdbc.AnaplanJdbcRetryer;
@@ -48,30 +48,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVWriter;
-import java.io.FileWriter;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Iterator;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
-import org.bouncycastle.operator.InputDecryptorProvider;
-import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
-import org.bouncycastle.pkcs.PKCSException;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import java.io.ByteArrayInputStream;
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -82,6 +65,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -96,12 +80,16 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Scanner;
@@ -109,6 +97,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.pkcs.PKCSException;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * A command-line interface to the Anaplan Connect API library. Running the program with no arguments will display the
@@ -123,7 +124,6 @@ public abstract class Program {
   private static final int MAX_CHUNK_SIZE = MIN_CHUNK_SIZE * 50;
   private static final Logger LOG = LoggerFactory.getLogger(Program.class);
   private static int debugLevel = 0;
-  private static boolean quiet = false;
   private static Service service = null;
   private static URI serviceLocation = null;
   private static URI authServiceUrl;
@@ -164,6 +164,10 @@ public abstract class Program {
   private static int httpConnectionTimeout = Constants.MIN_HTTP_CONNECTION_TIMEOUT_SECS;
   private static final String[] CSV_LOG_HEADER =
       new String[] {"Name", "Code", "failureType", "failureMessageDetails"};
+  private static final String GET_JSON = "-get:json";
+  private static final String OUTPUT = "-output:";
+  private static final String DUMP_FILE_WRITTEN = "Dump file written to {}";
+  private static final String ITEMS_IGNORED = "{} items ignored";
 
   /**
    * Parse and process the command line. The process will exit with status 1 if a serious error occurs; the exit status
@@ -171,7 +175,6 @@ public abstract class Program {
    *
    * @param args the list of command-line arguments
    */
-  //TODO: Modularize main()
   public static void main(String... args) {
 
     System.setProperty("file.encoding", StandardCharsets.UTF_8.name());
@@ -193,23 +196,21 @@ public abstract class Program {
         // Options that are not followed by additional parameters
         // come first.
         JDBCConfig jdbcConfig = new JDBCConfig();
-        if (arg == "-h" || arg == "-help") {
+        if (Objects.equals(arg, "-h") || Objects.equals(arg, "-help")) {
           displayHelp();
           somethingDone = true;
-        } else if (arg == "-version") {
+        } else if (Objects.equals(arg, "-version")) {
           displayVersion();
           somethingDone = true;
-        } else if (arg == "-d" || arg == "-debug") {
+        } else if (Objects.equals(arg, "-d") || Objects.equals(arg, "-debug")) {
           if (debugLevel++ == 0) {
             LogDebugUtils.enableDebugLogging();
             displayVersion();
           }
-        } else if (arg == "-q" || arg == "-quiet") {
-          quiet = true;
-        } else if (arg == "-MO" || arg == "-modules") {
+        } else if (Objects.equals(arg, "-MO") || Objects.equals(arg, "-modules")) {
           somethingDone = true;
           logModules();
-        } else if (arg == "-V" || arg == "-views") {
+        } else if (Objects.equals(arg, "-V") || Objects.equals(arg, "-views")) {
           somethingDone = true;
           Stream<ModelData> modelsStream =
               StreamSupport.stream(getService().getModels().spliterator(), false);
@@ -235,90 +236,109 @@ public abstract class Program {
           // If the current user is a visitor user, they may not get data about the used workspace/model so we'll
           // just try with the provided input
           if (models.isEmpty()) {
-            models = Collections.singletonList(getModel(workspaceId, modelId).getData());
+            Model model = getModel(workspaceId, modelId);
+            if (model != null) {
+              models = Collections.singletonList(model.getData());
+            }
           }
-          models.forEach(Program::logModuleViews);
-        } else if (arg == "-W" || arg == "-workspaces") {
+          for (ModelData model : models) {
+            logModuleViews(model);
+          }
+        } else if (Objects.equals(arg, "-W") || Objects.equals(arg, "-workspaces")) {
           somethingDone = true;
           Iterable<Workspace> workspaces = getService().getWorkspaces();
-          LOG.info(Utils.formatTSV("WS_ID", "WS_NAME", "WS_ALLOCATED_SIZE", "WS_SIZE"));
+          String log = Utils.formatTSV("WS_ID", "WS_NAME", "WS_ALLOCATED_SIZE", "WS_SIZE");
+          LOG.info(log);
           for (Workspace workspace : workspaces) {
-            LOG.info(Utils
+            log = Utils
                 .formatTSV(workspace.getId(), workspace.getName(), workspace.getSizeAllowance(),
-                    workspace.getCurrentSize()));
+                    workspace.getCurrentSize());
+            LOG.info(log);
           }
-        } else if (arg == "-M" || arg == "-models") {
+        } else if (Objects.equals(arg, "-M") || Objects.equals(arg, "-models")) {
           somethingDone = true;
           Map<String, String> workspaceNames = StreamSupport
               .stream(getService().getWorkspaces().spliterator(), false)
               .collect(Collectors.toMap(Workspace::getId, Workspace::getName));
           Iterable<ModelData> models = getService().getModels();
-          LOG.info(Utils.formatTSV("WS_ID", "WS_NAME", "MODEL_ID", "MODEL_NAME", "MODEL_SIZE"));
+          String log = Utils.formatTSV("WS_ID", "WS_NAME", "MODEL_ID", "MODEL_NAME", "MODEL_SIZE");
+          LOG.info(log);
           for (ModelData model : models) {
             String workspaceId = model.getCurrentWorkspaceId();
             String workspaceName = Optional.ofNullable(workspaceNames.get(workspaceId))
                 .orElse("");
-            LOG.info(Utils.formatTSV(workspaceId, workspaceName, model.getId(), model.getName(),
-                model.getMemoryUsage()));
+            log = Utils.formatTSV(workspaceId, workspaceName, model.getId(), model.getName(),
+                model.getMemoryUsage());
+            LOG.info(log);
           }
-        } else if (arg == "-F" || arg == "-files") {
+        } else if (Objects.equals(arg, "-F") || Objects.equals(arg, "-files")) {
           somethingDone = true;
           Model model = getModel(workspaceId, modelId);
           if (model != null) {
+            String log;
             for (ServerFile serverFile : model.getServerFiles()) {
-              LOG.info(Utils.formatTSV(
+              log = Utils.formatTSV(
                   serverFile.getId(),
                   serverFile.getCode(),
-                  serverFile.getName()));
+                  serverFile.getName());
+              LOG.info(log);
             }
           }
-        } else if (arg == "-I" || arg == "-imports") {
+        } else if (Objects.equals(arg, "-I") || Objects.equals(arg, "-imports")) {
           somethingDone = true;
           Model model = getModel(workspaceId, modelId);
           if (model != null) {
+            String log;
             for (Import serverImport : model.getImports()) {
-              LOG.info(Utils.formatTSV(
+              log = Utils.formatTSV(
                   serverImport.getId(),
                   serverImport.getCode(),
                   serverImport.getName(),
                   serverImport.getImportType(),
-                  serverImport.getSourceFileId()));
+                  serverImport.getSourceFileId());
+              LOG.info(log);
             }
           }
-        } else if (arg == "-A" || arg == "-actions") {
+        } else if (Objects.equals(arg, "-A") || Objects.equals(arg, "-actions")) {
           somethingDone = true;
           Model model = getModel(workspaceId, modelId);
           if (model != null) {
+            String log;
             for (Action serverAction : model.getActions()) {
-              LOG.info(Utils.formatTSV(
+              log = Utils.formatTSV(
                   serverAction.getId(),
                   serverAction.getCode(),
-                  serverAction.getName()));
+                  serverAction.getName());
+              LOG.info(log);
             }
           }
-        } else if (arg == "-E" || arg == "-exports") {
+        } else if (Objects.equals(arg, "-E") || Objects.equals(arg, "-exports")) {
           somethingDone = true;
           Model model = getModel(workspaceId, modelId);
           if (model != null) {
+            String log;
             for (Export serverExport : model.getExports()) {
-              LOG.info(Utils.formatTSV(
+              log = Utils.formatTSV(
                   serverExport.getId(),
                   serverExport.getCode(),
-                  serverExport.getName()));
+                  serverExport.getName());
+              LOG.info(log);
             }
           }
-        } else if (arg == "-P" || arg == "-processes") {
+        } else if (Objects.equals(arg, "-P") || Objects.equals(arg, "-processes")) {
           somethingDone = true;
           Model model = getModel(workspaceId, modelId);
           if (model != null) {
+            String log;
             for (Process serverProcess : model.getProcesses()) {
-              LOG.info(Utils.formatTSV(
+              log = Utils.formatTSV(
                   serverProcess.getId(),
                   serverProcess.getCode(),
-                  serverProcess.getName()));
+                  serverProcess.getName());
+              LOG.info(log);
             }
           }
-        } else if (arg == "-L" || "-lists" == arg) {
+        } else if (Objects.equals(arg, "-L") || "-lists".equals(arg)) {
           if (argi == args.length) {
             somethingDone = true;
             Service service = getService();
@@ -328,7 +348,7 @@ public abstract class Program {
                   .exportListNames(fileType, fileId, model.getCurrentWorkspaceId(), model.getId());
             }
           }
-        } else if (arg == "-l" || arg == "-list") {
+        } else if (Objects.equals(arg, "-l") || Objects.equals(arg, "-list")) {
           listId = args[argi++];
           if (argi >= args.length) {
             somethingDone = true;
@@ -339,11 +359,14 @@ public abstract class Program {
                   model.getId(), listId);
             }
           }
-        } else if (arg == "-get:json" || arg == "-get:csv" || arg == "-get:csv_sc" ||
-            arg == "-get:csv_mc") {
-          boolean supportedListTypes = arg == "-get:json" || arg == "-get:csv";
+        } else if (Objects.equals(arg, GET_JSON) || Objects.equals(arg, "-get:csv") || Objects
+            .equals(arg, "-get:csv_sc") ||
+            Objects.equals(arg, "-get:csv_mc")) {
+          boolean supportedListTypes = Objects.equals(arg, GET_JSON) || Objects
+              .equals(arg, "-get:csv");
           boolean supportedModuleTypes =
-              arg == "-get:json" || arg == "-get:csv_sc" || arg == "-get:csv_mc";
+              Objects.equals(arg, GET_JSON) || Objects.equals(arg, "-get:csv_sc") || Objects
+                  .equals(arg, "-get:csv_mc");
           fileType = arg.substring("-get:".length());
           if (argi < args.length) {
             fileId = args[argi];
@@ -377,7 +400,7 @@ public abstract class Program {
               }
             }
           }
-        } else if (arg == "-emd") {
+        } else if (Objects.equals(arg, "-emd")) {
           somethingDone = true;
           Export export = getExport(workspaceId, modelId, exportId);
           ExportMetadata emd = export.getExportMetadata();
@@ -385,29 +408,30 @@ public abstract class Program {
           if ("\t".equals(delimiter)) {
             delimiter = "\\t";
           }
-          LOG.info("Export: " + export.getName()
-              + "\ncolumns: "
-              + emd.getColumnCount() + "\nrows: "
-              + emd.getRowCount() + "\nformat: "
-              + emd.getExportFormat() + "\ndelimiter: "
-              + delimiter + "\nencoding: " + emd.getEncoding()
-              + "\nseparator: " + emd.getSeparator());
+          String exportName = export.getName();
+          int columnCount = emd.getColumnCount();
+          int rowCount = emd.getRowCount();
+          String exportFormat = emd.getExportFormat();
+          String encoding = emd.getEncoding();
+          String separator = emd.getSeparator();
+          LOG.info(
+              "Export: {}\ncolumns: {}\nrows: {}\nformat: {}\ndelimiter: {}\nencoding: {}\nseparator: {}"
+              , exportName, columnCount, rowCount, exportFormat, delimiter, encoding, separator);
 
           String[] headerNames = emd.getHeaderNames();
           DataType[] dataTypes = emd.getDataTypes();
           String[] listNames = emd.getListNames();
 
+          String dataType;
           for (int i = 0; i < headerNames.length; i++) {
-            LOG.info(" col " + i
-                + ":\n  name: " + headerNames[i] + "\n  type: "
-                + dataTypes[i].toString() + "\n  list: "
-                + listNames[i]);
+            dataType = dataTypes[i].toString();
+            LOG.info(" col {}:\n  name: {}\n  type: {}\n  list: {}", i, headerNames[i], dataType, listNames[i]);
           }
-        } else if (arg == "-x:all" || arg == "-execute:all") {
+        } else if (Objects.equals(arg, "-x:all") || Objects.equals(arg, "-execute:all")) {
           somethingDone = true;
           executeParamPresent = true;
           includeAll = true;
-        } else if (arg == "-x" || arg == "-execute") {
+        } else if (Objects.equals(arg, "-x") || Objects.equals(arg, "-execute")) {
           executeParamPresent = true;
           TaskFactory taskFactory = null;
           if (importId != null) {
@@ -433,10 +457,10 @@ public abstract class Program {
             // Performing module operations, like retrieving module view data
           } else {
             LOG.error("An import, export, action or "
-                + "process must be specified before " + arg);
+                + "process must be specified before {}", arg);
           }
 
-        } else if (arg == "-gets" || arg == "-getc") {
+        } else if (Objects.equals(arg, "-gets") || Objects.equals(arg, "-getc")) {
           somethingDone = true;
           String sourceId = null;
           if (fileId != null) {
@@ -452,17 +476,18 @@ public abstract class Program {
             ServerFile serverFile = getServerFile(workspaceId,
                 modelId, sourceId, false);
             if (serverFile != null) {
-              if (arg == "-gets") {
+              if (Objects.equals(arg, "-gets")) {
                 InputStream inputStream = serverFile
                     .getDownloadStream();
                 byte[] buffer = new byte[4096];
                 int read;
+                String stringBuilder = "";
                 do {
                   if (0 < (read = inputStream.read(buffer))) {
-                    System.out.write(buffer, 0, read);
+                    stringBuilder = stringBuilder.concat(new String(buffer));
                   }
                 } while (-1 != read);
-                System.out.flush();
+                LOG.info(stringBuilder);
                 inputStream.close();
               } else {
                 CellReader cellReader = serverFile
@@ -476,28 +501,29 @@ public abstract class Program {
                     }
                     line.append(row[i]);
                   }
-                  LOG.info(line.toString());
+                  String log = line.toString();
+                  LOG.info(log);
                   row = cellReader.readDataRow();
                 } while (null != row);
               }
             }
           }
 
-        } else if (arg == "-ch" || arg == "-chunksize") {
+        } else if (Objects.equals(arg, "-ch") || Objects.equals(arg, "-chunksize")) {
           fetchChunkSize(args[argi++]);
-        } else if (arg == "-pages") {
+        } else if (Objects.equals(arg, "-pages")) {
           String delim = ",";
           String regex = "(?<!\\\\)" + Pattern.quote(delim);
           String pages = args[argi++];
           pagesSplit = pages.split(regex);
-        } else if (arg == "-auth" || arg == "-authserviceurl") {
+        } else if (Objects.equals(arg, "-auth") || Objects.equals(arg, "-authserviceurl")) {
           authServiceUrl = new URI(args[argi++]);
-        } else if (arg == "-puts" || arg == "-putc") {
+        } else if (Objects.equals(arg, "-puts") || Objects.equals(arg, "-putc")) {
           somethingDone = true;
           ServerFile serverFile = getServerFile(workspaceId, modelId,
               fileId, true);
           if (serverFile != null) {
-            if (arg == "-puts") {
+            if (Objects.equals(arg, "-puts")) {
               OutputStream uploadStream = serverFile.getUploadStream(chunkSize);
               byte[] buf = new byte[4096];
               int read;
@@ -521,16 +547,15 @@ public abstract class Program {
               }
               cellWriter.close();
             }
-            LOG.info("Upload to " + fileId + " completed.");
+            LOG.info("Upload to {} completed.", fileId);
           }
           // Now check the additional parameter is present before
           // processing consuming options
         } else if (argi >= args.length) {
-          displayHelp();
-          return;
-        } else if (arg == "-s" || arg == "-service") {
+          break;
+        } else if (Objects.equals(arg, "-s") || Objects.equals(arg, "-service")) {
           serviceLocation = new URI(args[argi++]);
-        } else if (arg == "-u" || arg == "-user") {
+        } else if (Objects.equals(arg, "-u") || Objects.equals(arg, "-user")) {
           String auth = args[argi++];
           int colonPosition = auth.indexOf(':');
           if (colonPosition != -1) {
@@ -540,11 +565,11 @@ public abstract class Program {
             setUsername(auth);
             setPassphrase("?");
           }
-        } else if (arg == "-v" || arg == "-via") {
+        } else if (Objects.equals(arg, "-v") || Objects.equals(arg, "-via")) {
           URI uri = new URI(args[argi++]);
           setProxyLocation(
               new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), null, null, null));
-        } else if (arg == "-vu" || arg == "-viauser") {
+        } else if (Objects.equals(arg, "-vu") || Objects.equals(arg, "-viauser")) {
           String auth = args[argi++];
           int colonPosition = auth.indexOf(':');
           if (colonPosition != -1) {
@@ -554,16 +579,16 @@ public abstract class Program {
             setProxyUsername(auth);
             setProxyPassphrase("?");
           }
-        } else if (arg == "-mrc" || arg == "-maxretrycount") {
+        } else if (Objects.equals(arg, "-mrc") || Objects.equals(arg, "-maxretrycount")) {
           maxRetryCount = fetchMaxRetryCount(args[argi++]);
-        } else if (arg == "-rt" || arg == "-retrytimeout") {
+        } else if (Objects.equals(arg, "-rt") || Objects.equals(arg, "-retrytimeout")) {
           retryTimeout = fetchRetryTimeout(args[argi++]);
-        } else if (arg == "-ct" || arg == "-httptimeout") {
+        } else if (Objects.equals(arg, "-ct") || Objects.equals(arg, "-httptimeout")) {
           httpConnectionTimeout = fetchHttpTimeout(args[argi++]);
-        } else if (arg == "-c" || arg == "-certificate") {
+        } else if (Objects.equals(arg, "-c") || Objects.equals(arg, "-certificate")) {
           String certificatePath = args[argi++];
           setCertificatePath(certificatePath);
-        } else if (arg == "-pkey" || arg == "-privatekey") {
+        } else if (Objects.equals(arg, "-pkey") || Objects.equals(arg, "-privatekey")) {
           if (keyStorePath != null) {
             throw new IllegalArgumentException(
                 "expected either the privatekey or the keystore arguments");
@@ -577,30 +602,30 @@ public abstract class Program {
             setUsername(auth);
             setPassphrase("?");
           }
-        } else if (arg == "-k" || arg == "-keystore") {
+        } else if (Objects.equals(arg, "-k") || Objects.equals(arg, "-keystore")) {
           if (passphrase != null || privateKeyPath != null) {
             throw new IllegalArgumentException(
                 "expected either the privatekey or keystore arguments");
           }
           String keyStorePath = args[argi++];
           setKeyStorePath(keyStorePath);
-        } else if (arg == "-ka" || arg == "-keystorealias") {
+        } else if (Objects.equals(arg, "-ka") || Objects.equals(arg, "-keystorealias")) {
           String keyStoreAlias = args[argi++];
           setKeyStoreAlias(keyStoreAlias);
-        } else if (arg == "-kp" || arg == "-keystorepass") {
+        } else if (Objects.equals(arg, "-kp") || Objects.equals(arg, "-keystorepass")) {
           String keyStorePassword = args[argi++];
           setKeyStorePassword(keyStorePassword);
-        } else if (arg == "-w" || arg == "-workspace") {
+        } else if (Objects.equals(arg, "-w") || Objects.equals(arg, "-workspace")) {
           workspaceId = args[argi++];
-        } else if (arg == "-m" || arg == "-model") {
+        } else if (Objects.equals(arg, "-m") || Objects.equals(arg, "-model")) {
           modelId = args[argi++];
-        } else if (arg == "-mo" || arg == "-module") {
+        } else if (Objects.equals(arg, "-mo") || Objects.equals(arg, "-module")) {
           moduleId = args[argi++];
-        } else if (arg == "-vi" || arg == "-view") {
+        } else if (Objects.equals(arg, "-vi") || Objects.equals(arg, "-view")) {
           viewId = args[argi++];
-        } else if (arg == "-f" || arg == "-file") {
+        } else if (Objects.equals(arg, "-f") || Objects.equals(arg, "-file")) {
           fileId = args[argi++];
-        } else if (arg == "-g" || arg == "-get") {
+        } else if (Objects.equals(arg, "-g") || Objects.equals(arg, "-get")) {
           somethingDone = true;
           File targetFile = new File(args[argi++]);
           String sourceId;
@@ -624,8 +649,10 @@ public abstract class Program {
                   targetFile.getAbsolutePath());
             }
           }
-        } else if (arg == "-putItems:json" || arg == "-putItems:csv" || arg == "-putItems:jdbc" ||
-            arg == "-upsertItems:jdbc" || arg == "-upsertItems:json" || arg == "-upsertItems:csv") {
+        } else if (Objects.equals(arg, "-putItems:json") || Objects.equals(arg, "-putItems:csv")
+            || Objects.equals(arg, "-putItems:jdbc") ||
+            Objects.equals(arg, "-upsertItems:jdbc") || Objects.equals(arg, "-upsertItems:json") || Objects
+            .equals(arg, "-upsertItems:csv")) {
           somethingDone = true;
           boolean upsert = arg.startsWith("-upsertItems:");
           String type = arg.startsWith("-putItems") ? arg.substring("-putItems:".length()) :
@@ -633,7 +660,7 @@ public abstract class Program {
           final Path outputPath = getOutput(args, argi);
           String outputType = null;
           if (outputPath != null) {
-            outputType = args[argi + 1].substring("-output:".length());
+            outputType = args[argi + 1].substring(OUTPUT.length());
           }
           ListItemResultData result = new ListItemResultData();
           result.setFailures(new ArrayList<>(0));
@@ -642,19 +669,15 @@ public abstract class Program {
               null : new File(itemPropertiesPath).toPath();
           if ("jdbc".equalsIgnoreCase(type)) {
             final Map<String, String> headerMap = getHeader(jdbcConfig, itemMapFile, args[argi++]);
-            try {
-              listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
-              result = JDBCUtils.doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap,
-                  ListImpl.ListAction.ADD, (itemPropertiesPath != null));
-            } catch (final Exception throwables) {
-              throw throwables;
-            }
+            listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
+            result = JDBCUtils.doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap,
+                ListAction.ADD, (itemPropertiesPath != null));
           } else {
             final File sourceFile = new File(args[argi++]);
             listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
 
             result = listImpl.doActionToItems(sourceFile.toPath(), itemMapFile, FileType
-                .valueOf(type.toUpperCase()), ListImpl.ListAction.ADD);
+                .valueOf(type.toUpperCase()), ListAction.ADD);
           }
 
           if (result != null) {
@@ -662,18 +685,20 @@ public abstract class Program {
             manageItemLog(upsert, outputPath, outputType, result, listImpl);
           }
           if (outputPath != null) {
-            LOG.info("Dump file written to {}", outputPath.toString());
+            String log = outputPath.toString();
+            LOG.info(DUMP_FILE_WRITTEN, log);
             argi += 2;
           }
 
-        } else if (arg == "-updateItems:json" || arg == "-updateItems:csv" ||
-            arg == "-updateItems:jdbc") {
+        } else if (Objects.equals(arg, "-updateItems:json") || Objects
+            .equals(arg, "-updateItems:csv") ||
+            Objects.equals(arg, "-updateItems:jdbc")) {
           somethingDone = true;
           String type = arg.substring("-updateItems:".length());
           final Path outputPath = getOutput(args, argi);
           String outputType = null;
           if (outputPath != null) {
-            outputType = args[argi + 1].substring("-output:".length());
+            outputType = args[argi + 1].substring(OUTPUT.length());
           }
           final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
           ListItemResultData result = new ListItemResultData();
@@ -682,39 +707,38 @@ public abstract class Program {
               ? null : new File(itemPropertiesPath).toPath();
           if ("jdbc".equalsIgnoreCase(type)) {
             final Map<String, String> headerMap = getHeader(jdbcConfig, itemMapFile, args[argi++]);
-            try {
-              result = JDBCUtils
-                  .doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap, ListAction.UPDATE,
-                      (itemPropertiesPath != null));
-            } catch (final Exception throwables) {
-              throw throwables;
-            }
+            result = JDBCUtils
+                .doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap, ListAction.UPDATE,
+                    (itemPropertiesPath != null));
           } else {
             final File sourceFile = new File(args[argi++]);
 
             result = listImpl
                 .doActionToItems(sourceFile.toPath(), itemMapFile,
-                    FileType.valueOf(type.toUpperCase()), ListImpl.ListAction.UPDATE);
+                    FileType.valueOf(type.toUpperCase()), ListAction.UPDATE);
           }
           if (result != null) {
-            LOG.info(String.format("%d items updated in the list", result.getUpdated()));
+            String log = String.format("%d items updated in the list", result.getUpdated());
+            LOG.info(log);
             if (result.getIgnored() > 0) {
-              LOG.info("{} items ignored", result.getIgnored());
+              int ignored = result.getIgnored();
+              LOG.info(ITEMS_IGNORED, ignored);
             }
           }
           if (outputPath != null) {
             addLogItemToOutput(result, outputPath, outputType, listImpl.getContent());
             argi += 2;
-            LOG.info("Dump file written to {}", outputPath.toString());
+            String log = outputPath.toString();
+            LOG.info(DUMP_FILE_WRITTEN, log);
           }
-        } else if (arg == "-deleteItems:json" || arg == "-deleteItems:csv" ||
-            arg == "-deleteItems:jdbc") {
+        } else if (Objects.equals(arg, "-deleteItems:json") || Objects.equals(arg, "-deleteItems:csv") ||
+            Objects.equals(arg, "-deleteItems:jdbc")) {
           somethingDone = true;
           String type = arg.substring("-deleteItems:".length());
           final Path outputPath = getOutput(args, argi);
           String outputType = null;
           if (outputPath != null) {
-            outputType = args[argi + 1].substring("-output:".length());
+            outputType = args[argi + 1].substring(OUTPUT.length());
           }
           final Path itemMapFile = ("".equals(itemPropertiesPath) || itemPropertiesPath == null) ?
               null : new File(itemPropertiesPath).toPath();
@@ -726,10 +750,8 @@ public abstract class Program {
             try {
               final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
               result = JDBCUtils.doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap,
-                  ListImpl.ListAction.DELETE, (itemPropertiesPath != null));
+                  ListAction.DELETE, (itemPropertiesPath != null));
               argi = handleDeleteLog(result, outputPath, outputType, listImpl.getContent(), argi);
-            } catch (final Exception throwables) {
-              throw throwables;
             } finally {
               if (cellReader != null) {
                 cellReader.close();
@@ -739,10 +761,10 @@ public abstract class Program {
             final File sourceFile = new File(args[argi++]);
             final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
             result = listImpl.doActionToItems(sourceFile.toPath(), itemMapFile, FileType
-                .valueOf(type.toUpperCase()), ListImpl.ListAction.DELETE);
+                .valueOf(type.toUpperCase()), ListAction.DELETE);
             argi = handleDeleteLog(result, outputPath, outputType, listImpl.getContent(), argi);
           }
-        } else if (arg == "-p" || arg == "-put") {
+        } else if (Objects.equals(arg, "-p") || Objects.equals(arg, "-put")) {
           somethingDone = true;
           File sourceFile = new File(args[argi++]);
           String destId = fileId == null ? sourceFile.getName() : fileId;
@@ -750,33 +772,32 @@ public abstract class Program {
               destId, true);
           if (serverFile != null) {
             serverFile.upLoad(sourceFile, true, chunkSize);
-            LOG.info("The file \"" + sourceFile
-                + "\" has been uploaded as " + destId + ".");
+            LOG.info("The file \"{}\" has been uploaded as {}.", sourceFile, destId);
           }
-        } else if (arg == "-i" || arg == "-import") {
+        } else if (Objects.equals(arg, "-i") || Objects.equals(arg, "-import")) {
           importId = args[argi++];
           exportId = null;
           actionId = null;
           processId = null;
-        } else if (arg == "-e" || arg == "-export") {
+        } else if (Objects.equals(arg, "-e") || Objects.equals(arg, "-export")) {
           importId = null;
           exportId = args[argi++];
           actionId = null;
           processId = null;
-        } else if (arg == "-a" || arg == "-action") {
+        } else if (Objects.equals(arg, "-a") || Objects.equals(arg, "-action")) {
           importId = null;
           exportId = null;
           actionId = args[argi++];
           processId = null;
-        } else if (arg == "-pr" || arg == "-process") {
+        } else if (Objects.equals(arg, "-pr") || Objects.equals(arg, "-process")) {
           importId = null;
           exportId = null;
           actionId = null;
           processId = args[argi++];
-        } else if (arg == "-xl" || arg == "-locale") {
+        } else if (Objects.equals(arg, "-xl") || Objects.equals(arg, "-locale")) {
           String[] localeName = args[argi++].split("_");
           taskParameters.setLocale(localeName[0], localeName.length > 0 ? localeName[1] : null);
-        } else if (arg == "-xc" || arg == "-connectorproperty") {
+        } else if (Objects.equals(arg, "-xc") || Objects.equals(arg, "-connectorproperty")) {
           String[] propEntry = args[argi++].split(":", 2);
           if (propEntry.length != 2) {
             throw new IllegalArgumentException(
@@ -798,9 +819,9 @@ public abstract class Program {
             taskParameters.addConnectorParameter(propKey[0],
                 propValue);
           }
-        } else if (arg == "-im" || arg == "-itemmappingproperty") {
+        } else if (Objects.equals(arg, "-im") || Objects.equals(arg, "-itemmappingproperty")) {
           itemPropertiesPath = Optional.ofNullable(args[argi++]).orElse("");
-        } else if (arg == "-xm" || arg == "-mappingproperty") {
+        } else if (Objects.equals(arg, "-xm") || Objects.equals(arg, "-mappingproperty")) {
           String[] propEntry = args[argi++].split(":", 2);
           if (propEntry.length != 2) {
             throw new IllegalArgumentException("expected " + arg
@@ -817,13 +838,13 @@ public abstract class Program {
             taskParameters.addMappingParameter(propKey[0],
                 propValue);
           }
-        } else if (arg == "-o" || arg == "-output") {
+        } else if (Objects.equals(arg, "-o") || Objects.equals(arg, "-output")) {
           File outputFile = new File(args[argi++]);
           retrieveOutput(lastResult, outputFile);
-        } else if (arg == "-loadclass") {
-          String className = args[argi++];
+        } else if (Objects.equals(arg, "-loadclass")) {
+          argi++;
           //Removing the usage of loadclass parameter
-          System.err.println(
+          LOG.error(
               "Warning : Loadclass parameter is deprecated starting in Anaplan Connect v1.4.4. Anaplan Connect will automatically load the right driver. This parameter will be removed in a future Anaplan Connect version.");
         } else if (arg.equals("-jdbcproperties")) {
           String propertiesFilePath = args[argi++];
@@ -846,7 +867,7 @@ public abstract class Program {
                   ++rowCount;
                 }
                 somethingDone = true; // TBD
-              } while (null != row);
+              } while (null != row && row.length > 0);
               cellWriter.close();
               cellWriter = null;
               LOG.info("Transferred {} records to {}", rowCount, fileId);
@@ -865,99 +886,29 @@ public abstract class Program {
               CellWriter cellWriter = null;
               somethingDone = true;
               Export export = getExport(workspaceId, modelId, exportId);
+              if (export == null) {
+                continue;
+              }
               ExportMetadata emd = export.getExportMetadata();
-              InputStream inputStream = null;
               int columnCount = emd.getColumnCount();
-              int transferredrows = 0;
-              int[] mapcols = new int[columnCount];
               String separator = emd.getSeparator();
               //build map for metadata for exports
-              HashMap<String, Integer> headerName = new HashMap();
+              HashMap<String, Integer> headerName = new HashMap<>();
               for (int i = 0; i < emd.getHeaderNames().length; i++) {
                 headerName.put(emd.getHeaderNames()[i], i);
               }
-              for (int k = 0; k < maxRetryCount; k++) {
-                try {
-                  List<ChunkData> chunkList = serverFile.getChunks();
-                  //jdbc params exists
-                  if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0
-                      && !jdbcConfig.getJdbcParams()[0].equals("")) {
-                    mapcols = new int[jdbcConfig.getJdbcParams().length];
-                    //extract matching anaplan columns
-                    for (int i = 0; i < jdbcConfig.getJdbcParams().length; i++) {
-                      String paramName = ((String) jdbcConfig.getJdbcParams()[i]).trim();
-                      if (headerName.containsKey(paramName)) {
-                        mapcols[i] = headerName.get(paramName);
-                      } else {
-                        LOG.debug("{} from JDBC properties file is not a valid column in Anaplan",
-                            jdbcConfig.getJdbcParams()[i]);
-                        throw new AnaplanAPIException(
-                            "Please make sure column names in jdbcproperties file match with the exported columns on Anaplan");
-                      }
-                    }
-                  }
-                  //Retry Fix
-                  cellWriter = new JDBCCellWriter(jdbcConfig);
-                  for (ChunkData chunk : chunkList) {
-                    byte[] chunkContent = serverFile.getChunkContent(chunk.getId());
-                    if (chunkContent == null) {
-                      throw new NoChunkError(chunk.getId());
-                    }
-                    inputStream = new ByteArrayInputStream(chunkContent);
-                    transferredrows = cellWriter
-                        .writeDataRow(exportId, maxRetryCount, retryTimeout, inputStream,
-                            chunkList.size(),
-                            chunk.getId(), mapcols, columnCount, separator);
-                  }
-                  if (transferredrows != 0) {
-                    LOG.info("Transferred {} records to {}", transferredrows,
-                        jdbcConfig.getJdbcConnectionUrl());
-                  } else if (transferredrows == 0) {
-                    LOG.info("No records were transferred to {}",
-                        jdbcConfig.getJdbcConnectionUrl());
-                  }
-                  k = maxRetryCount;
-                } catch (AnaplanAPIException ape) {
-                  LOG.error(ape.getMessage());
-                  k = maxRetryCount;
-                } catch (Exception e) {
-                  AnaplanJdbcRetryer anaplanJdbcRetryer = new AnaplanJdbcRetryer(
-                      (long) (retryTimeout * 1000),
-                      (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
-                      FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER);
-                  Long interval = anaplanJdbcRetryer.nextMaxInterval(k);
-                  try {
-                    LOG.debug("Could not connect to the database! Will retry in {} seconds ",
-                        interval / 1000);
-                    // do not retry if we get any other error
-                    Thread.sleep(interval);
-                  } catch (InterruptedException e1) {
-                    // we still want to retry, even though sleep was interrupted
-                    LOG.debug("Sleep was interrupted.");
-                  }
-                } finally {
-                  if (inputStream != null) {
-                    inputStream.close();
-                  }
-                  if (cellWriter != null) {
-                    cellWriter.close();
-                  }
-                }
-              }
+              doTransfer(serverFile, jdbcConfig, cellWriter, headerName, separator, columnCount);
             }
-
           }
         } else {
-          displayHelp();
-          return;
+          break;
         }
       }
       if (!somethingDone) {
         displayHelp();
       }
       closeDown();
-    } catch (Throwable thrown) {
-      //LOG.debug("{}", Throwables.getStackTraceAsString(thrown));
+    } catch (Exception thrown) {
       if (!(thrown instanceof InterruptedException)) {
         // Some brevity for those who don't
         LOG.error(Utils.formatThrowable(thrown));
@@ -965,31 +916,131 @@ public abstract class Program {
       // System.exit causes abrupt termination, but the status is useful
       // when run from an automated script.
       closeDown();
+      Thread.currentThread().interrupt();
       System.exit(1);
     }
+  }
+
+  private static void doTransfer(final ServerFile serverFile, final JDBCConfig jdbcConfig,
+      CellWriter cellWriter, final Map<String, Integer> headerName, final String separator,
+      int columnCount)
+      throws IOException {
+    int transferredrows;
+    int[] mapcols = new int[0];
+    for (int k = 0; k < maxRetryCount; k++) {
+      List<ChunkData> chunkList = serverFile.getChunks();
+      try {
+        //jdbc params exists
+        if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0
+            && !jdbcConfig.getJdbcParams()[0].equals("")) {
+          mapcols = checkJDBCParams(jdbcConfig, headerName, jdbcConfig.getJdbcParams().length);
+        }
+        //Retry Fix
+        cellWriter = new JDBCCellWriter(jdbcConfig);
+        transferredrows = transferRow(chunkList, cellWriter, serverFile, separator, columnCount, mapcols);
+        if (transferredrows != 0) {
+          LOG.info("Transferred {} records to {}", transferredrows,
+              jdbcConfig.getJdbcConnectionUrl());
+        } else {
+          LOG.info("No records were transferred to {}",
+              jdbcConfig.getJdbcConnectionUrl());
+        }
+        break;
+      } catch (AnaplanAPIException ape) {
+        LOG.error(ape.getMessage());
+        break;
+      } catch (Exception e) {
+        AnaplanJdbcRetryer anaplanJdbcRetryer = new AnaplanJdbcRetryer(
+            (long) (retryTimeout * 1000),
+            (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
+            FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER);
+        long interval = anaplanJdbcRetryer.nextMaxInterval(k);
+        waitFor(interval);
+      } finally {
+        if (cellWriter != null) {
+          cellWriter.close();
+        }
+      }
+    }
+  }
+
+  private static int[] checkJDBCParams(final JDBCConfig jdbcConfig, Map<String, Integer> headerName, int len) {
+    int[] mapcols = new int[len];
+    for (int i = 0; i < jdbcConfig.getJdbcParams().length; i++) {
+      String paramName = ((String) jdbcConfig.getJdbcParams()[i]).trim();
+      if (headerName.containsKey(paramName)) {
+        mapcols[i] = headerName.get(paramName);
+      } else {
+        LOG.debug("{} from JDBC properties file is not a valid column in Anaplan",
+            jdbcConfig.getJdbcParams()[i]);
+        throw new AnaplanAPIException(
+            "Please make sure column names in jdbcproperties file match with the exported columns on Anaplan");
+      }
+    }
+    return mapcols;
+  }
+
+  private static void waitFor(long interval) {
+    try {
+      LOG.debug("Could not connect to the database! Will retry in {} seconds ",
+          interval / 1000);
+      // do not retry if we get any other error
+      Thread.sleep(interval);
+    } catch (InterruptedException e1) {
+      // we still want to retry, even though sleep was interrupted
+      LOG.debug("Sleep was interrupted.");
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private static int transferRow(final List<ChunkData> chunkList, final CellWriter cellWriter,
+      final ServerFile serverFile, final String separator, final int columnCount,
+      final int[] mapcols)
+      throws IOException, SQLException {
+    int transferredrows = 0;
+    for (ChunkData chunk : chunkList) {
+      byte[] chunkContent = serverFile.getChunkContent(chunk.getId());
+      try (InputStream inputStream = new ByteArrayInputStream(chunkContent);) {
+        final DataRow dataRow = new DataRow();
+        dataRow.setInputStream(inputStream);
+        dataRow.setChunkId(chunk.getId());
+        dataRow.setSeparator(separator);
+        dataRow.setColumnCount(columnCount);
+        dataRow.setChunks(chunkList.size());
+        dataRow.setRetryTimeout(retryTimeout);
+        dataRow.setMaxRetryCount(maxRetryCount);
+        dataRow.setExportId(exportId);
+        dataRow.setMapcols(mapcols);
+        transferredrows = cellWriter
+            .writeDataRow(dataRow);
+      }
+    }
+    return transferredrows;
   }
 
   private static Map<String, String> getHeader(final JDBCConfig jdbcConfig, final Path itemMapFile,
                                                final String propertiesFilePath)
       throws IOException {
-    final Properties properties = new Properties();
-    properties.load(new FileReader(propertiesFilePath));
-    final JDBCConfig config = getJDBCConfig(properties);
-    jdbcConfig.setJdbcQuery(config.getJdbcQuery());
-    jdbcConfig.setJdbcPassword(config.getJdbcPassword());
-    jdbcConfig.setJdbcUsername(config.getJdbcUsername());
-    jdbcConfig.setJdbcFetchSize(config.getJdbcFetchSize());
-    jdbcConfig.setJdbcParams(config.getJdbcParams());
-    jdbcConfig.setStoredProcedure(config.isStoredProcedure());
-    jdbcConfig.setJdbcConnectionUrl(config.getJdbcConnectionUrl());
-    properties.clear();
-    Map<String, String> mapValues = new HashMap<>();
-    if (itemMapFile != null) {
-      mapValues = Utils
-          .getPropertyFile(new FileInputStream(itemMapFile.toFile()));
+    try (FileReader fileReader = new FileReader(propertiesFilePath)) {
+      final Properties properties = new Properties();
+      properties.load(fileReader);
+      final JDBCConfig config = getJDBCConfig(properties);
+      jdbcConfig.setJdbcQuery(config.getJdbcQuery());
+      jdbcConfig.setJdbcPassword(config.getJdbcPassword());
+      jdbcConfig.setJdbcUsername(config.getJdbcUsername());
+      jdbcConfig.setJdbcFetchSize(config.getJdbcFetchSize());
+      jdbcConfig.setJdbcParams(config.getJdbcParams());
+      jdbcConfig.setStoredProcedure(config.isStoredProcedure());
+      jdbcConfig.setJdbcConnectionUrl(config.getJdbcConnectionUrl());
+      properties.clear();
+      Map<String, String> mapValues = new HashMap<>();
+      if (itemMapFile != null) {
+        mapValues = Utils
+            .getPropertyFile(new FileInputStream(itemMapFile.toFile()));
+      }
+      properties.putAll(mapValues);
+      return getHeaderMap(properties);
     }
-    properties.putAll(mapValues);
-    return getHeaderMap(properties);
   }
 
   private static int handleDeleteLog(final ListItemResultData result, final Path outputPath,
@@ -998,13 +1049,14 @@ public abstract class Program {
       throws IOException {
     if (result != null) {
       LOG.info("{} items deleted from the list", result.getDeleted());
-      if (result.getFailures() != null && result.getFailures().size() > 0) {
-        LOG.info("{} items ignored", result.getFailures().size());
+      if (result.getFailures() != null && !result.getFailures().isEmpty()) {
+        LOG.info(ITEMS_IGNORED, result.getFailures().size());
       }
       if (outputPath != null) {
         addLogItemToOutput(result, outputPath, outputType, metaContent);
         argi += 2;
-        LOG.info("Dump file written to {}", outputPath.toString());
+        String log = outputPath.toString();
+        LOG.info(DUMP_FILE_WRITTEN, log);
       }
     }
     return argi;
@@ -1014,7 +1066,7 @@ public abstract class Program {
                                     final ListItemResultData result, final ListImpl listImpl)
       throws IOException {
     if (!upsert && result.getIgnored() > 0) {
-      LOG.info("{} items ignored", result.getIgnored());
+      LOG.info(ITEMS_IGNORED, result.getIgnored());
     }
     if (upsert) {
       updateFailureItemResult(result, listImpl, outputPath, outputType);
@@ -1025,27 +1077,32 @@ public abstract class Program {
     }
   }
 
-  public static void logModules() {
+  public static void logModules() throws UnknownAuthenticationException {
     Model model = getModel(workspaceId, modelId);
+    if (model == null) {
+      return;
+    }
     workspaceId = model.getCurrentWorkspaceId();
     modelId = model.getId();
 
     if (workspaceId != null && modelId != null) {
       Iterable<ModuleData> moduleIterator = getService()
           .getModules(workspaceId, modelId);
-      if ((((Paginator) moduleIterator).getPageInfo().getTotalSize()).equals(0)) {
+      if ((((Paginator<ModuleData>) moduleIterator).getPageInfo().getTotalSize()).equals(0)) {
         LOG.info("Model - {} has no modules.", modelId);
       } else {
-        LOG.info(Utils.formatTSV("Module_ID", "Module_Name"));
+        String log = Utils.formatTSV("Module_ID", "Module_Name");
+        LOG.info(log);
         StreamSupport.stream(moduleIterator.spliterator(), false)
             .forEach(module -> {
-              LOG.info(Utils.formatTSV(module.getId(), module.getName()));
+              String logInfo = Utils.formatTSV(module.getId(), module.getName());
+              LOG.info(logInfo);
             });
       }
     }
   }
 
-  private static void logModuleViews(ModelData model) {
+  private static void logModuleViews(ModelData model) throws UnknownAuthenticationException {
     String currentWorkspaceId = model.getCurrentWorkspaceId();
     String currentModelId = model.getId();
     Iterable<ModuleData> moduleIterator = getService()
@@ -1057,11 +1114,17 @@ public abstract class Program {
           || moduleId.equals(module.getName())
           || moduleId.equals(module.getCode()));
     }
-    LOG.info(Utils.formatTSV("Module_ID", "Module_Name", "View_ID", "View_Name"));
+    String log = Utils.formatTSV("Module_ID", "Module_Name", "View_ID", "View_Name");
+    LOG.info(log);
     moduleDataStream
         .forEach(module -> {
-          Iterable<ViewData> viewIterator = getService()
-              .getViews(currentWorkspaceId, currentModelId, module.getId());
+          Iterable<ViewData> viewIterator = null;
+          try {
+            viewIterator = getService()
+                .getViews(currentModelId, module.getId());
+          } catch (UnknownAuthenticationException e) {
+            return;
+          }
           StreamSupport.stream(viewIterator.spliterator(), false)
               .forEach(view -> LOG.info(Utils.formatTSV(
                   module.getId(), module.getName(), view.getId(), view.getName())));
@@ -1095,7 +1158,7 @@ public abstract class Program {
   }
 
   private static int fetchMaxRetryCount(String value) {
-    Integer maxRetryCount;
+    int maxRetryCount;
     try {
       maxRetryCount = Integer.parseInt(value);
     } catch (NumberFormatException e) {
@@ -1109,7 +1172,7 @@ public abstract class Program {
   }
 
   private static int fetchHttpTimeout(String value) {
-    Integer httpTimeout;
+    int httpTimeout;
     try {
       httpTimeout = Integer.parseInt(value);
     } catch (NumberFormatException e) {
@@ -1150,47 +1213,49 @@ public abstract class Program {
   protected static void retrieveOutput(TaskResult taskResult,
                                        File outputLocation)
       throws AnaplanAPIException, IOException {
-    if (taskResult != null) {
-      if (!taskResult.getNestedResults().isEmpty()) {
-        if (outputLocation.exists() && !outputLocation.isDirectory()) {
-          throw new IllegalArgumentException(
-              "Process dumps require a directory, but path \""
-                  + outputLocation.getPath() + " is not a directory");
-        }
-        if (!outputLocation.exists() && !outputLocation.mkdirs()) {
-          throw new AnaplanAPIException("Failed to create directory "
-              + outputLocation.getPath());
-        }
-        int index = 0;
-        for (TaskResult nestedResult : taskResult.getNestedResults()) {
-          ServerFile nestedDumpServerFile = nestedResult
-              .getFailureDump();
-          if (nestedDumpServerFile != null) {
-            String fileName = "" + index;
-            if (nestedResult.getObjectId() != null) {
-              fileName += "-" + nestedResult.getObjectId();
-            }
-            if (nestedResult.getObjectName() != null) {
-              fileName += "-" + nestedResult.getObjectName();
-            }
-            File nestedFile = new File(outputLocation, fileName);
-            nestedDumpServerFile.downLoad(nestedFile, true);
-            LOG.info("Dump file written to \"{}\"", nestedFile);
-          }
-          ++index;
-        }
-
-      } else if (taskResult.isFailureDumpAvailable()) {
-        ServerFile failureDump = taskResult.getFailureDump();
-        failureDump.downLoad(outputLocation, true);
-        LOG.info("Dump file written to \"" + outputLocation
-            + "\"");
-      }
-    } else {
+    if (taskResult == null) {
       LOG.info("No dump file is available.");
       if (outputLocation.exists() && !outputLocation.isDirectory()) {
-        outputLocation.delete();
+        Files.delete(outputLocation.toPath());
       }
+      return;
+    }
+    if (!taskResult.getNestedResults().isEmpty()) {
+      if (outputLocation.exists() && !outputLocation.isDirectory()) {
+        throw new IllegalArgumentException(
+            "Process dumps require a directory, but path \""
+                + outputLocation.getPath() + " is not a directory");
+      }
+      if (!outputLocation.exists() && !outputLocation.mkdirs()) {
+        throw new AnaplanAPIException("Failed to create directory "
+            + outputLocation.getPath());
+      }
+      parseNestedFile(taskResult, outputLocation);
+    } else if (taskResult.isFailureDumpAvailable()) {
+      ServerFile failureDump = taskResult.getFailureDump();
+      failureDump.downLoad(outputLocation, true);
+      LOG.info(DUMP_FILE_WRITTEN, outputLocation);
+    }
+  }
+
+  private static void parseNestedFile(TaskResult taskResult, File outputLocation) throws IOException {
+    int index = 0;
+    for (TaskResult nestedResult : taskResult.getNestedResults()) {
+      ServerFile nestedDumpServerFile = nestedResult
+          .getFailureDump();
+      if (nestedDumpServerFile != null) {
+        String fileName = "" + index;
+        if (nestedResult.getObjectId() != null) {
+          fileName += "-" + nestedResult.getObjectId();
+        }
+        if (nestedResult.getObjectName() != null) {
+          fileName += "-" + nestedResult.getObjectName();
+        }
+        File nestedFile = new File(outputLocation, fileName);
+        nestedDumpServerFile.downLoad(nestedFile, true);
+        LOG.info(DUMP_FILE_WRITTEN, nestedFile);
+      }
+      ++index;
     }
   }
 
@@ -1222,9 +1287,7 @@ public abstract class Program {
         serverFile = model.createServerFileImportDataSource(fileId,
             "Anaplan Connect");
       } else {
-        LOG.error("File \"" + fileId
-            + "\" not found in workspace " + workspaceId
-            + ", model " + modelId);
+        LOG.error("File \"{}\" not found in workspace {}, model {}", fileId, workspaceId, modelId);
       }
     }
     // Set proper encoding based on what server sends back
@@ -1256,9 +1319,7 @@ public abstract class Program {
     }
     Import serverImport = model.getImport(importId);
     if (serverImport == null) {
-      LOG.error("Import \"" + importId
-          + "\" not found in workspace " + workspaceId + ", model "
-          + modelId);
+      LOG.error("Import \"{}\" not found in workspace {}, model {}", importId, workspaceId, modelId);
     }
     return serverImport;
   }
@@ -1284,9 +1345,7 @@ public abstract class Program {
     }
     Export serverExport = model.getExport(exportId);
     if (serverExport == null) {
-      LOG.error("Export \"" + exportId
-          + "\" not found in workspace " + workspaceId + ", model "
-          + modelId);
+      LOG.error("Export \"{}\" not found in workspace {}, model {}", exportId, workspaceId, modelId);
     }
     return serverExport;
   }
@@ -1312,9 +1371,7 @@ public abstract class Program {
     }
     Action serverAction = model.getAction(actionId);
     if (serverAction == null) {
-      LOG.error("Action \"" + actionId
-          + "\" not found in workspace " + workspaceId + ", model "
-          + modelId);
+      LOG.error("Action \"{}\" not found in workspace {}, model {}", actionId, workspaceId, modelId);
     }
     return serverAction;
   }
@@ -1340,9 +1397,8 @@ public abstract class Program {
     }
     Process serverProcess = model.getProcess(processId);
     if (serverProcess == null) {
-      LOG.error("Process \"" + processId
-          + "\" not found in workspace " + workspaceId + ", model "
-          + modelId);
+      LOG.error("Process \"{}\" not found in workspace {}, model {}",
+          processId, workspaceId, modelId);
     }
     return serverProcess;
   }
@@ -1371,10 +1427,8 @@ public abstract class Program {
     }
     View view = module.getView(viewId);
     if (view == null) {
-      LOG.error("View \"" + viewId
-          + "\" not found in workspace \"" + workspaceId
-          + "\", model \"" + modelId + "\", module \"" + moduleId
-          + "\"");
+      LOG.error("View \"{}\" not found in workspace \"{}\", model \"{}\", module \"{}\"",
+          viewId, workspaceId, modelId, moduleId);
     }
     return view;
   }
@@ -1402,9 +1456,7 @@ public abstract class Program {
     }
     Module module = model.getModule(moduleId);
     if (module == null) {
-      LOG.error("Module \"" + moduleId
-          + "\" not found in workspace \"" + workspaceId
-          + "\", model \"" + modelId + "\"");
+      LOG.error("Module \"{}\" not found in workspace \"{}\", model \"{}\"", moduleId, workspaceId, modelId);
     }
     return module;
   }
@@ -1458,7 +1510,7 @@ public abstract class Program {
     Workspace result;
     try {
       result = getService().getWorkspace(workspaceId);
-    } catch (WorkspaceNotFoundException wnfe) {
+    } catch(WorkspaceNotFoundException | UnknownAuthenticationException wnfe) {
       WorkspaceData data = new WorkspaceData();
       data.setId(workspaceId);
       result = new Workspace(service, data);
@@ -1473,7 +1525,7 @@ public abstract class Program {
    * @return the service instance
    * @since 1.3
    */
-  protected static Service getService() throws AnaplanAPIException {
+  protected static Service getService() throws AnaplanAPIException, UnknownAuthenticationException {
     if (service == null) {
       ConnectionProperties props = new ConnectionProperties();
       props.setApiServicesUri(serviceLocation);
@@ -1574,7 +1626,7 @@ public abstract class Program {
    * @since 1.3
    */
   protected static String getPassphrase() {
-    if (passphrase == null || passphrase.isEmpty() || passphrase == "?") {
+    if (passphrase == null || passphrase.isEmpty() || Objects.equals(passphrase, "?")) {
       Console console = System.console();
       if (console != null) {
         passphrase = new String(console.readPassword("Password:"));
@@ -1728,7 +1780,7 @@ public abstract class Program {
         // load certificate from file
         return loadCertificateFromFile(certificateFile);
       } else {
-        throw new RuntimeException(
+        throw new IllegalArgumentException(
             "The specified certificate path '" + certificatePath + "' is invalid");
       }
     } else if (keyStorePath != null) {
@@ -1736,7 +1788,7 @@ public abstract class Program {
           .getKeyStoreCertificate(keyStorePath, getKeyStorePassword(), getKeyStoreAlias());
     } else {
       // should not happen
-      throw new RuntimeException("Could not load a certificate for authentication");
+      throw new IllegalArgumentException("Could not load a certificate for authentication");
     }
   }
 
@@ -1753,14 +1805,14 @@ public abstract class Program {
         //load privateKey from file
         return loadPrivateKeyFromFile(privateKeyPath, passphrase);
       } else {
-        throw new RuntimeException(
+        throw new IllegalArgumentException(
             "The specified privateKey path '" + privateKeyPath + "' is invalid");
       }
     } else if (keyStorePath != null && keyStorePrivateKeyAlias != null) {
       return new KeyStoreManager()
           .getKeyStorePrivateKey(keyStorePath, getKeyStorePassword(), keyStorePrivateKeyAlias);
     } else {
-      throw new RuntimeException(
+      throw new IllegalArgumentException(
           "Could not load the privateKey for authentication. Please check the privateKey parameters in your input.");
     }
   }
@@ -1865,10 +1917,8 @@ public abstract class Program {
         try {
           String rawPassword = readFileContents(pwFile);
           return EncodingUtils.decodeAndXor(rawPassword);
-        } catch (FileNotFoundException e) {
-          throw new RuntimeException("Password file could not be read");
-        } catch (UnsupportedEncodingException e) {
-          throw new RuntimeException("Password file could not be read");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+          throw new IllegalArgumentException("Password file could not be read");
         }
       } else {
         promptForKeystorePassword();
@@ -1928,14 +1978,12 @@ public abstract class Program {
    */
   private static String readFileContents(File file) throws FileNotFoundException {
     StringBuilder fileContents = new StringBuilder((int) file.length());
-    Scanner scanner = new Scanner(file);
-    try {
+
+    try (Scanner scanner = new Scanner(file)) {
       while (scanner.hasNext()) {
         fileContents.append(scanner.next());
       }
       return fileContents.toString();
-    } finally {
-      scanner.close();
     }
   }
 
@@ -1956,7 +2004,7 @@ public abstract class Program {
     if (c.size() == 1) {
       return (X509Certificate) c.iterator().next();
     } else {
-      throw new RuntimeException(
+      throw new IllegalArgumentException(
           "Certificate file must contain only one certificate (chain length was " + certs.length
               + ")");
     }
@@ -1969,7 +2017,7 @@ public abstract class Program {
    */
 
   private static RSAPrivateKey loadPrivateKeyFromFile(String privateKeyPath, String passphrase) {
-    try {
+    try(FileReader fileReader = new FileReader(privateKeyPath)) {
       if (passphrase.isEmpty()) {
         PemReader pemReader = new PemReader(new FileReader(privateKeyPath));
         PemObject pemObject = pemReader.readPemObject();
@@ -1980,7 +2028,7 @@ public abstract class Program {
         return (RSAPrivateKey) kf.generatePrivate(encodedKeySpec);
       }
       Security.addProvider(new BouncyCastleProvider());
-      PEMParser pemParser = new PEMParser(new FileReader(privateKeyPath));
+      PEMParser pemParser = new PEMParser(fileReader);
       PKCS8EncryptedPrivateKeyInfo encryptedKeyPair = (PKCS8EncryptedPrivateKeyInfo) pemParser
           .readObject();
       InputDecryptorProvider pkcs8Prov = new JceOpenSSLPKCS8DecryptorProviderBuilder()
@@ -2031,10 +2079,10 @@ public abstract class Program {
   private static JDBCConfig loadJdbcProperties(String jdbcPropertiesPath) {
 
     Properties jdbcProps = new Properties();
-    try {
-      jdbcProps.load(new FileInputStream(jdbcPropertiesPath));
+    try (FileInputStream fileInputStream = new FileInputStream(jdbcPropertiesPath)) {
+      jdbcProps.load(fileInputStream);
     } catch (IOException e) {
-      throw new RuntimeException("Error reading JDBC Properties file", e);
+      throw new IllegalArgumentException("Error reading JDBC Properties file", e);
     }
 
     return getJDBCConfig(jdbcProps);
@@ -2050,7 +2098,7 @@ public abstract class Program {
       try {
         jdbcConfig.setJdbcFetchSize(Integer.parseInt(jdbcProps.getProperty("jdbc.fetch.size")));
       } catch (NumberFormatException e) {
-        throw new RuntimeException("Invalid JDBC Fetch-size provided in properties.");
+        throw new IllegalArgumentException("Invalid JDBC Fetch-size provided in properties.");
       }
     }
     jdbcConfig.setStoredProcedure(
@@ -2061,7 +2109,7 @@ public abstract class Program {
     try {
       jdbcConfig.setJdbcParams(new CSVParser().parseLine(paramsCsv));
     } catch (IOException e) {
-      throw new RuntimeException("Invalid params, unable to parse.", e);
+      throw new IllegalArgumentException("Invalid params, unable to parse.", e);
     }
 
     return jdbcConfig;
@@ -2076,7 +2124,7 @@ public abstract class Program {
   }
 
   private static void displayHelp() {
-    Path userDirectory = null;
+    Path userDirectory;
     try {
       userDirectory = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
     } catch (InvalidPathException e) {
@@ -2084,7 +2132,7 @@ public abstract class Program {
     }
     File passwordFile = new File(userDirectory.toString(), Constants.PW_FILE_PATH_SEGMENT);
 
-    LOG.error("Options are:\n"
+    String error = "Options are:\n"
         + "\n"
         + "General:\n"
         + "--------\n"
@@ -2193,12 +2241,13 @@ public abstract class Program {
         +
         "(-im|-itemmappingproperty) <local path>: Path to file mapping file for putItems/updateItems/upsertItems/deleteItems actions\n"
         +
-        "-output:(csv|json) <local path>: Write potential errors to file in <local path> in given format"
-    );
+        "-output:(csv|json) <local path>: Write potential errors to file in <local path> in given format";
+    LOG.error(error);
   }
 
   private static void displayVersion() {
-    LOG.debug(Strings.repeat("=", 70));
+    String log = Strings.repeat("=", 70);
+    LOG.debug(log);
     LOG.debug("Anaplan Connect {}.{}.{}", Constants.AC_MAJOR, Constants.AC_MINOR,
         Constants.AC_REVISION);
     LOG.debug("{} ({})/ ({})/ {}", System.getProperty("java.vm.name"),
@@ -2206,7 +2255,8 @@ public abstract class Program {
         System.getProperty("java.vm.version"), System.getProperty("java.version"));
     LOG.debug("({}{})/{}", System.getProperty("os.name"), System.getProperty("os.arch"),
         System.getProperty("os.version"));
-    LOG.debug(Strings.repeat("=", 70));
+    log = Strings.repeat("=", 70);
+    LOG.debug(log);
   }
 
   private static void updateFailureItemResult(final ListItemResultData result,
@@ -2214,48 +2264,54 @@ public abstract class Program {
                                               final Path outputPath, final String outputType)
       throws IOException {
     final List<ListFailure> failures = result.getFailures();
-    if (result.getFailures() != null && failures.size() > 0) {
-      final ListItemParametersData listItemParametersDataUpdate = new ListItemParametersData();
-      listItemParametersDataUpdate.setItems(new ArrayList<>(0));
-      final List<ListItem> listItem = new ArrayList<>();
-      final Iterator failuresIterator = failures.iterator();
-      int extraFailure = 0;
-      while (failuresIterator.hasNext()) {
-        final ListFailure failure = (ListFailure) failuresIterator.next();
-        if ("DUPLICATE".equalsIgnoreCase(failure.getFailureType())) {
-          listItem.add(failure.getListItem());
-          failuresIterator.remove();
-          result.setIgnored(result.getIgnored() - 1);
-        } else {
-          extraFailure++;
-        }
-      }
-      if (listItem.size() > 0) {
-        listItemParametersDataUpdate.setItems(listItem);
-        final ListItemResultData updateResult =
-            listImpl.updateItemsList(listItemParametersDataUpdate);
-        if (updateResult.getFailures() != null) {
-          for (final ListFailure upResult : updateResult.getFailures()) {
-            upResult.setListItem(listItem.get(upResult.getRequestIndex()));
-            result.getFailures().add(upResult);
-          }
-        }
-        if (outputPath != null) {
-          addLogItemToOutput(result, outputPath, outputType, listImpl.getContent());
-        }
-        LOG.info(
-            String.format("%d items updated", updateResult.getTotal() - updateResult.getIgnored()));
-        if (updateResult.getIgnored() > 0 || extraFailure > 0) {
-          LOG.info("{} items ignored", (updateResult.getIgnored() + extraFailure));
-        }
-      } else {
-        if (outputPath != null && result.getFailures() != null) {
-          addLogItemToOutput(result, outputPath, outputType, listImpl.getContent());
-          LOG.info("{} items ignored", result.getIgnored());
-        }
-      }
-    } else if (outputPath != null) {
+    if ((result.getFailures() == null || failures.isEmpty()) && outputPath != null) {
       addLogItemToOutput(result, outputPath, outputType, listImpl.getContent());
+    }
+
+    final List<ListItem> listItem = new ArrayList<>();
+    final Iterator<ListFailure> failuresIterator = failures.iterator();
+    int extraFailure = 0;
+    while (failuresIterator.hasNext()) {
+      final ListFailure failure = failuresIterator.next();
+      if ("DUPLICATE".equalsIgnoreCase(failure.getFailureType())) {
+        listItem.add(failure.getListItem());
+        failuresIterator.remove();
+        result.setIgnored(result.getIgnored() - 1);
+      } else {
+        extraFailure++;
+      }
+    }
+    addItems(listItem, listImpl, result, outputPath, outputType, extraFailure);
+  }
+
+  private static void addItems(final List<ListItem> listItem, final ListImpl listImpl,
+      final ListItemResultData result, final Path outputPath, final String outputType, int extraFailure)
+      throws IOException {
+    final ListItemParametersData listItemParametersDataUpdate = new ListItemParametersData();
+    listItemParametersDataUpdate.setItems(new ArrayList<>(0));
+    if (!listItem.isEmpty()) {
+      listItemParametersDataUpdate.setItems(listItem);
+      final ListItemResultData updateResult =
+          listImpl.updateItemsList(listItemParametersDataUpdate);
+      if (updateResult.getFailures() != null) {
+        for (final ListFailure upResult : updateResult.getFailures()) {
+          upResult.setListItem(listItem.get(upResult.getRequestIndex()));
+          result.getFailures().add(upResult);
+        }
+      }
+      if (outputPath != null) {
+        addLogItemToOutput(result, outputPath, outputType, listImpl.getContent());
+      }
+      String log = String.format("%d items updated", updateResult.getTotal() - updateResult.getIgnored());
+      LOG.info(log);
+      if (updateResult.getIgnored() > 0 || extraFailure > 0) {
+        LOG.info(ITEMS_IGNORED, (updateResult.getIgnored() + extraFailure));
+      }
+    } else {
+      if (outputPath != null && result.getFailures() != null) {
+        addLogItemToOutput(result, outputPath, outputType, listImpl.getContent());
+        LOG.info(ITEMS_IGNORED, result.getIgnored());
+      }
     }
   }
 
@@ -2269,12 +2325,10 @@ public abstract class Program {
   private static void addLogItemToOutput(final ListItemResultData result, final Path outputPath,
                                          final String type, final MetaContent metaContent)
       throws IOException {
-    switch (type.toUpperCase()) {
-      case "CSV":
-        addLogItemToOutputCSV(result, outputPath, metaContent);
-        break;
-      case "JSON":
-        addLogItemToOutputJSON(result, outputPath);
+    if ("CSV".equalsIgnoreCase(type)) {
+      addLogItemToOutputCSV(result, outputPath, metaContent);
+    } else if ("JSON".equalsIgnoreCase(type)) {
+      addLogItemToOutputJSON(result, outputPath);
     }
   }
 
@@ -2286,7 +2340,7 @@ public abstract class Program {
     final String[] header = getLogHeaderCSV(result, metaContent);
     if (output == null) {
       return;
-    } else if (result.getFailures() == null || result.getFailures().size() < 1) {
+    } else if (result.getFailures() == null || result.getFailures().isEmpty()) {
       try (final CSVWriter csvWriter = new CSVWriter(new FileWriter(output))) {
         csvWriter.writeNext(header);
       }
@@ -2343,7 +2397,7 @@ public abstract class Program {
     final List<String> header = new ArrayList<>();
     header.add(CSV_LOG_HEADER[0]);
     header.add(CSV_LOG_HEADER[1]);
-    if (result.getFailures() != null && result.getFailures().size() > 0) {
+    if (result.getFailures() != null && !result.getFailures().isEmpty()) {
       final Map<String, String> properties = result
           .getFailures().get(0).getListItem().getProperties();
       if (properties != null && properties.size() > 0) {
@@ -2376,7 +2430,7 @@ public abstract class Program {
 
     if (output == null) {
       return;
-    } else if (result.getFailures() == null || result.getFailures().size() < 1) {
+    } else if (result.getFailures() == null || result.getFailures().isEmpty()) {
       Files.write(output.toPath(),
           jsonObject.writerWithDefaultPrettyPrinter().writeValueAsBytes(arrayNode));
       return;

@@ -1,9 +1,10 @@
 package com.anaplan.client.dto;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
+import java.io.Serializable;
 
 @JsonRootName(value = "subsets")
-public class ListSubset {
+public class ListSubset implements Serializable {
 
   private String id;
   private String name;

@@ -5,13 +5,13 @@ package com.anaplan.client.exceptions;
  */
 public class WorkspaceNotFoundException extends RuntimeException {
 
-  private static final String msg = "Workspace not found for Workspace-ID: ";
+  private static final String MSG = "Workspace not found for Workspace-ID: ";
 
   public WorkspaceNotFoundException(String workspaceId) {
-    super(msg + workspaceId);
+    super(MSG + workspaceId);
   }
 
   public WorkspaceNotFoundException(String workspaceId, Throwable t) {
-    super(msg + workspaceId, t);
+    super(MSG + workspaceId, t);
   }
 }

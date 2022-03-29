@@ -1,12 +1,20 @@
 package com.anaplan.client;
 
 import com.anaplan.client.exceptions.AnaplanAPIException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,13 +25,18 @@ import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by Spondon Saha Date: 5/5/18 Time: 3:48 PM
  */
 public class Utils {
 
+  private Utils(){}
   private static final CSVFormat.Builder PROPERTY_FORMAT_BUILDER = CSVFormat.newFormat('=').builder().setQuote('"');
+  private static final CSVFormat.Builder LINE_FORMAT_BUILDER = CSVFormat.newFormat(',').builder().setQuote('"');
+  private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
 
   /**
    * Provide a suitable error message from an exception.
@@ -39,27 +52,30 @@ public class Utils {
     if (message.length() > 9 && message.toString().endsWith("Exception")) {
       message.delete(message.length() - 9, message.length());
     }
+    final StringBuilder messageResult = new StringBuilder(message.toString());
+    int j = 0;
     for (int i = 1; i < message.length() - 1; ++i) {
       char pc = message.charAt(i - 1);
       char ch = message.charAt(i);
       char nc = message.charAt(i + 1);
       if (Character.isUpperCase(ch)) {
         if (!Character.isUpperCase(nc)) {
-          message.setCharAt(i, Character.toLowerCase(ch));
+          messageResult.setCharAt(i + j, Character.toLowerCase(ch));
         }
         if (!Character.isUpperCase(pc) || !Character.isUpperCase(nc)) {
-          message.insert(i++, ' ');
+          messageResult.insert(i + j, ' ');
+          j++;
         }
       }
     }
     if (null != thrown.getMessage()) {
-      message.append(": ").append(thrown.getMessage());
+      messageResult.append(": ").append(thrown.getMessage());
     }
     if (null != thrown.getCause()) {
-      message.append(" (").append(formatThrowable(thrown.getCause()))
+      messageResult.append(" (").append(formatThrowable(thrown.getCause()))
           .append(')');
     }
-    return message.toString();
+    return messageResult.toString();
   }
 
   /**
@@ -87,18 +103,29 @@ public class Utils {
    * @param line Source line
    * @return A list of parsed values
    */
-  public static List<String> splitValues(String line) {
-    String regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-    return Arrays.stream(line.split(regex))
-        .filter(s1 -> s1 != null && !"".equals(s1))
-        .collect(Collectors.toList());
+  public static List<String> splitValues(String line) throws IOException {
+    final CSVFormat format = LINE_FORMAT_BUILDER.build();
+    CSVParser keyParsed = CSVParser.parse(line, format);
+    List<String> list = new ArrayList<>();
+    for (CSVRecord s1 : keyParsed.getRecords()) {
+      for (String str : s1.toList()) {
+        if (str != null && !"".equals(str)) {
+          if (str.contains(format.getDelimiterString()) || str.contains(format.getQuoteCharacter().toString())) {
+            list.add("\""+ str+"\"");
+          } else {
+            list.add(str);
+          }
+        }
+      }
+    }
+    return list;
   }
 
   /**
    * Extract and return the list of column values
-   * @param lines
-   * @param startIndex
-   * @return
+   * @param lines the lines
+   * @param startIndex index limit
+   * @return column values
    */
   public static List<String> getColumnValues(String[] lines, int startIndex) {
     //Regex - ,(?=(?:[^"]*"[^"]*")*[^"]*$) - matches the character , that's not inside the double quotes
@@ -106,7 +133,7 @@ public class Utils {
             .mapToObj(index -> {
                       String regex;
                       regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-                      return Arrays.stream(lines[index].split(regex)).filter((s1) -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
+                      return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
                     }
             ).collect(Collectors.toList());
   }
@@ -114,7 +141,7 @@ public class Utils {
   /**
    * If source not exist and is not a file an Exception is throw
    * @param source source to check
-   * @throws FileNotFoundException
+   * @throws FileNotFoundException if file is not found
    */
   public static void isFileAndReadable(final Path source) throws FileNotFoundException {
     if (source == null || !source.toFile().exists()) {
@@ -148,28 +175,28 @@ public class Utils {
   }
 
   /**
-   *
-   * @param collection
-   * @return
+   * Check if a collection is empty
+   * @param collection collection to be check
+   * @return true if is empty
    */
-  public static boolean collectionIsEmpty(final Collection collection) {
-    return collection == null || collection.size() == 0;
+  public static boolean collectionIsEmpty(final Collection<String[]> collection) {
+    return collection.isEmpty();
   }
 
   /**
-   *
-   * @param map
-   * @return
+   * Check if a map is empty
+   * @param map the map to be check
+   * @return true is is empty
    */
-  public static boolean mapIsEmpty(final Map map) {
-    return map == null || map.size() == 0;
+  public static boolean mapIsEmpty(final Map<String, String> map) {
+    return map.isEmpty();
   }
 
   /**
-   *
-   * @param value
-   * @return
-   * @throws IOException
+   * CSV parse
+   * @param value value to be parsed
+   * @return csv parsed value
+   * @throws IOException parser error
    */
   public static String getParsedValue(final String value) throws IOException {
     if (value == null) {
@@ -178,7 +205,7 @@ public class Utils {
     final CSVFormat format = PROPERTY_FORMAT_BUILDER.build();
     List<CSVRecord> keyParsed = CSVParser.parse(value, format)
         .getRecords();
-    if (keyParsed.size() > 0) {
+    if (!keyParsed.isEmpty()) {
       return keyParsed.get(0).get(0);
     }
     return value;
@@ -195,10 +222,87 @@ public class Utils {
     final CSVFormat format = PROPERTY_FORMAT_BUILDER.build();
     while (null != (line = lnr.readLine())) {
       final List<CSVRecord> records = CSVParser.parse(line, format).getRecords();
-        if (records.size() > 0) {
+        if (!records.isEmpty()) {
           result.put(records.get(0).get(0), records.get(0).get(1));
         }
     }
     return result;
   }
+
+  /**
+   * Safe close a random file
+   * @param sourceFile {@link RandomAccessFile}
+   * @param source the source name
+   */
+  public static void closeDataInput(final RandomAccessFile sourceFile, final String source) {
+    if (sourceFile != null) {
+      try {
+        sourceFile.close();
+      } catch (IOException ioException) {
+        LOG.warn("Warning: failed to close file {}: {}", source, ioException.getMessage());
+      }
+    }
+  }
+
+  /**
+   * Safe close result set and statement
+   * @param resultSet {@link ResultSet}
+   * @param statement {@link Statement}
+   */
+  public static void closeJDBC(final ResultSet resultSet, final Statement statement) {
+    if (resultSet != null) {
+      try {
+        resultSet.close();
+      } catch (SQLException sqle) {
+        LOG.error("Failed to close result set: {0}", sqle);
+      }
+    }
+    if (statement != null) {
+      try {
+        statement.close();
+      } catch (SQLException sqle) {
+        LOG.error("Failed to close prepared statement: {0}", sqle);
+      }
+    }
+  }
+
+  /**
+   * Safe close statement
+   * @param preparedStatement {@link PreparedStatement}
+   * @throws SQLException jdbc error
+   */
+  public static void closeStatement(final PreparedStatement preparedStatement) throws SQLException {
+    if (preparedStatement != null && !preparedStatement.isClosed()) {
+      preparedStatement.close();
+    }
+  }
+
+  /**
+   * Check line separator
+   * @param separator the column separator
+   */
+  public static void checkSeparator(final String separator) {
+    if (separator == null || "".equals(separator) || separator.length() > 1) {
+      throw new AnaplanAPIException("Separator \"" + separator + "\" is not valid");
+    }
+  }
+
+  public static void checkTarget(final File target, String path, String file, boolean deleteExisting) throws IOException {
+    if (target.exists()) {
+      if (!target.isFile()) {
+        throw new FileNotFoundException(path + target
+            + "\" exists but is not a file");
+      } else if (!deleteExisting) {
+        throw new IllegalStateException(file + target
+            + "\" already exists");
+      } else if (!target.canWrite()) {
+        throw new FileNotFoundException(
+            file
+                + target
+                + "\" cannot be written to - check ownership and/or permissions");
+      }
+      Files.delete(target.toPath());
+    }
+  }
+
 }

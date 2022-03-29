@@ -1,8 +1,9 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
 import java.util.SortedMap;
 
-public class ListMetadataProperty {
+public class ListMetadataProperty implements Serializable {
 
   private String name;
   private String format;

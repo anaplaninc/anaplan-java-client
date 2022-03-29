@@ -11,13 +11,13 @@ public class AuthenticationResp extends AuthObjectResponse<TokenInfo> {
   private TokenInfo tokenInfo;
 
   @Override
-  @JsonProperty("tokenInfo")//TODO: remove annotation
+  @JsonProperty("tokenInfo")
   public TokenInfo getItem() {
     return tokenInfo;
   }
 
   @Override
-  @JsonProperty("tokenInfo")//TODO: remove annotation
+  @JsonProperty("tokenInfo")
   public void setItem(TokenInfo item) {
     this.tokenInfo = item;
   }

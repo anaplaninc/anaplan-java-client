@@ -37,13 +37,13 @@ public class NtlmAuthenticator implements Authenticator {
 
   @Override
   public Request authenticate(Route route, Response response) throws IOException {
-    final List<String> WWWAuthenticate = response.headers().values("WWW-Authenticate");
-    if (WWWAuthenticate.contains("NTLM")) {
+    final List<String> wwwAuth = response.headers().values("WWW-Authenticate");
+    if (wwwAuth.contains("NTLM")) {
       return response.request().newBuilder().header("Authorization", "NTLM " + ntlmMsg1).build();
     }
     String ntlmMsg3 = null;
     try {
-      ntlmMsg3 = engine.generateType3Msg(username, password, domain, workstation, WWWAuthenticate.get(0).substring(5));
+      ntlmMsg3 = engine.generateType3Msg(username, password, domain, workstation, wwwAuth.get(0).substring(5));
     } catch (Exception e) {
       throw new IllegalArgumentException(
           "Failed to set up JCIFS NTLM proxy authentication, Please check your NTLM parameters and provide the correct value of domain, workstation, username and password");

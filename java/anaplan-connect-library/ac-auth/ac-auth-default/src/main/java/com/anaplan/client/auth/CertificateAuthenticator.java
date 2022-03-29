@@ -69,7 +69,7 @@ public class CertificateAuthenticator extends AbstractAuthenticator {
     SecureRandom random = new SecureRandom();
     random.setSeed(System.currentTimeMillis());
 
-    byte bytes[] = new byte[count];
+    byte[] bytes = new byte[count];
     random.nextBytes(bytes);
 
     return bytes;
@@ -113,8 +113,7 @@ public class CertificateAuthenticator extends AbstractAuthenticator {
     }
 
     // now base-64 encode the pem string as that is how auth-service expects it to be
-    String certHash = Base64.getEncoder().encodeToString(stringWriter.toString().getBytes());
-    return certHash;
+    return Base64.getEncoder().encodeToString(stringWriter.toString().getBytes());
   }
 
   public String toJson(CACertNonceVerificationData caCertNonceVerificationData) throws JsonProcessingException {

@@ -2,6 +2,8 @@ package com.anaplan.client;
 
 public class Constants {
 
+  private Constants(){}
+
   /**
    * Part of the path for the password file
    */
@@ -10,7 +12,7 @@ public class Constants {
   public static final int AC_MAJOR = 3;
   public static final int AC_MINOR = 0;
   public static final int AC_REVISION = 0;
-  public static final String AC_Release = "-Snapshot";
+  public static final String AC_RELEASE = "-Snapshot";
 
   public static final boolean AUTH_CLIENT_CACHE_ENABLED = false;
 
