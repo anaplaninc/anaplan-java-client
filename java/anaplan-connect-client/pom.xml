@@ -142,22 +142,6 @@
           </altDeploymentRepository>
         </configuration>
       </plugin>
-      <!--
-       Maven Github plugin:
-       1. To setup authentication, create ~/.m2/settings.xml with these
-          contents, with a new Github access token
-          (https://github.com/settings/tokens):
-          <settings>
-            <servers>
-              <server>
-                <id>github</id>
-                <password><GITHUB PERSONAL ACCESS TOKEN></password>
-              </server>
-            </servers>
-          </settings>
-       2. Run "mvn clean deploy" to push maven artifacts to Github repo
-          at anaplaninc.github.io.
-      -->
       <plugin>
         <groupId>com.github.github</groupId>
         <artifactId>site-maven-plugin</artifactId>
@@ -222,7 +206,6 @@
 
     </plugins>
   </build>
-
   <repositories>
     <repository>
       <id>anaplan-snapshots</id>
