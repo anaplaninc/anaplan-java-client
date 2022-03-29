@@ -1,6 +1,5 @@
 //   Copyright 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -26,12 +25,14 @@ public class EncodingUtils {
 
   private static final String CHARSET = "UTF-8";
 
+  private EncodingUtils(){}
+
   /**
    * URL Encodes the <code>value</code> and applies the XOR algorithm.
    *
    * @param value The value to be encoded.
    * @return The encoded value.
-   * @throws UnsupportedEncodingException
+   * @throws UnsupportedEncodingException encoding fail
    */
   public static String encodeAndXor(String value) throws UnsupportedEncodingException {
     String xored = convertViaXOR(value);
@@ -43,7 +44,7 @@ public class EncodingUtils {
    *
    * @param value The value to be decoded.
    * @return The decoded value.
-   * @throws UnsupportedEncodingException
+   * @throws UnsupportedEncodingException decode fail
    */
   public static String decodeAndXor(String value) throws UnsupportedEncodingException {
     String urlDecoded = URLDecoder.decode(value, CHARSET);

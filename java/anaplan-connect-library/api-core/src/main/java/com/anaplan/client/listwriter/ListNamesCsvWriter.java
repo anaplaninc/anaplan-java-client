@@ -11,8 +11,10 @@ import java.util.stream.Stream;
  */
 public class ListNamesCsvWriter {
 
-  public static int PARALLEL_THRESHOLD = 10000;
-  public static String[] FIXED_COLUMN_NAMES = new String[]{"id", "name"};
+  private ListNamesCsvWriter(){}
+
+  public static final int PARALLEL_THRESHOLD = 10000;
+  protected static final String[] FIXED_COLUMN_NAMES = new String[]{"id", "name"};
 
   /**
    * For a list of list names retrieve a stream of csv export lines
@@ -44,7 +46,7 @@ public class ListNamesCsvWriter {
    */
   public static Stream<String> getColumnValues(List<ListName> items) {
     return (items.size() > PARALLEL_THRESHOLD ? items.parallelStream() : items.stream())
-        .map(listItem -> getColumnValuesAsString(listItem));
+        .map(ListNamesCsvWriter::getColumnValuesAsString);
   }
 
   /**

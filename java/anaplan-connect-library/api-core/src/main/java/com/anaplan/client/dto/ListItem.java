@@ -1,10 +1,11 @@
 package com.anaplan.client.dto;
 
 import com.anaplan.client.ListImpl;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ListItem extends NamedObjectData{
+public class ListItem extends NamedObjectData implements Serializable {
 
   private String parent;
   private String parentId;
@@ -97,9 +98,12 @@ public class ListItem extends NamedObjectData{
     final Integer nameIndex = parentMap.get(ListImpl.NAME);
     final Integer codeIndex = parentMap.get(ListImpl.CODE);
     final Integer idIndex = parentMap.get(ListImpl.ID);
-    itemData.setName(numberedList ? null : columns[nameIndex == null ? 0 : nameIndex]);
+    final int index = nameIndex == null ? 0 : nameIndex;
+    final String name = Boolean.TRUE.equals(numberedList) ? null : columns[index];
+    itemData.setName(name);
     itemData.setCode(columns[codeIndex == null ? 2 : codeIndex]);
-    itemData.setParent(parentIndex == null ? null : "".equals(columns[parentIndex]) ? null : columns[parentIndex]);
+    final String parent = parentIndex == null || "".equals(columns[parentIndex]) ? null : columns[parentIndex];
+    itemData.setParent(parent);
     itemData.setId(idIndex == null ? null : columns[idIndex]);
 
     if (prop !=null) {

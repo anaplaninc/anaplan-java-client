@@ -1,6 +1,5 @@
 //   Copyright 2011 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -35,38 +34,44 @@ public class Task extends AnaplanApiClientObject {
   private TaskFactory subject;
   private TaskData data;
 
-  static {
-    try {
-      Thread cancelThread = new Thread(() -> {
-        closingDown = true;
-        Thread runner = runningThread;
-        if (runner != null) {
-          try {
-            runner.interrupt();
-          } catch (Throwable thrown) {
-            LOG.debug("{}", thrown);
-          }
-        }
-        cancelRunningTask(runningTask);
-      });
-      cancelThread.setDaemon(true);
-      Runtime.getRuntime().addShutdownHook(cancelThread);
-    } catch (Throwable thrown) {
-      thrown.printStackTrace();
-    }
+  private Task(){
+    super(null);
   }
-
   Task(TaskFactory subject, TaskData data) {
     super(subject.getModel().getWorkspace().getService());
     this.subject = subject;
     this.data = data;
+    init();
   }
 
   /**
    * Fetches the running task if any
    *
-   * @return
+   * @return {@link Task}
    */
+
+  private void init() {
+    {
+      try {
+        Thread cancelThread = new Thread(() -> {
+          closingDown = true;
+          Thread runner = runningThread;
+          if (runner != null) {
+            try {
+              runner.interrupt();
+            } catch (Exception thrown) {
+              LOG.debug("{0}", thrown);
+            }
+          }
+          cancelRunningTask(runningTask);
+        });
+        cancelThread.setDaemon(true);
+        Runtime.getRuntime().addShutdownHook(cancelThread);
+      } catch (Exception thrown) {
+        thrown.printStackTrace();
+      }
+    }
+  }
   public static Task getRunningTask() {
     return runningTask;
   }
@@ -124,7 +129,7 @@ public class Task extends AnaplanApiClientObject {
   /**
    * Cancels the running task, called only when the client is terminated.
    */
-  private static synchronized void cancelRunningTask(Task runningTask) {
+  private  synchronized void cancelRunningTask(Task runningTask) {
     if (runningTask != null) {
       try {
         if (System.console() != null) {
@@ -133,10 +138,10 @@ public class Task extends AnaplanApiClientObject {
         LOG.info("Cancelling task. Task ID - {}.", runningTask.getId());
         runningTask.cancel();
         trackRunningTask(runningTask, true);
-        if (runningTask != null && TaskStatus.State.CANCELLED == runningTask.getStatus().getTaskState()) {
+        if (TaskStatus.State.CANCELLED == runningTask.getStatus().getTaskState()) {
           LOG.info("Task successfully cancelled. Task ID - {}.", runningTask.getId());
         }
-      } catch (Throwable thrown) {
+      } catch (Exception thrown) {
         LOG.debug("{}", Throwables.getStackTraceAsString(thrown));
         LOG.error(Utils.formatThrowable(thrown));
       } finally {
@@ -144,7 +149,8 @@ public class Task extends AnaplanApiClientObject {
         try {
           Thread.currentThread().join();
         } catch (InterruptedException e) {
-          throw new RuntimeException("Could not cancel running task!", e);
+          LOG.error("Could not cancel running task!", e);
+          Thread.currentThread().interrupt();
         }
       }
     }
@@ -153,12 +159,12 @@ public class Task extends AnaplanApiClientObject {
   /**
    * Thread safe method to run the task and keep checking the run-status intermittently.
    *
-   * @param wasClosingDown
-   * @return
-   * @throws AnaplanAPIException
-   * @throws InterruptedException
+   * @param wasClosingDown if false the error is thrown
+   * @return {@link TaskResult}
+   * @throws AnaplanAPIException api error
+   * @throws InterruptedException interrupted exception
    */
-  private static synchronized TaskResult trackRunningTask(Task runningTask, boolean wasClosingDown)
+  private synchronized TaskResult trackRunningTask(Task runningTask, boolean wasClosingDown)
       throws AnaplanAPIException, InterruptedException {
     TaskStatus status = null;
     int interval = 1000;
@@ -169,18 +175,11 @@ public class Task extends AnaplanApiClientObject {
         if (!wasClosingDown && closingDown) {
           throw new InterruptedException();
         }
-        Thread.sleep(interval);
+        this.wait(interval);
         totalTime += interval;
 
-        if (wasClosingDown) {
-          interval = 500;
-        } else if (totalTime > 60000) {
-          interval = 60000;
-        } else if (totalTime > 10000) {
-          interval = 10000;
-        } else {
-          interval = 1000;
-        }
+        interval = getInterval(wasClosingDown, totalTime);
+
         try {
           status = runningTask.getStatus();
           failCount = 0;
@@ -195,49 +194,75 @@ public class Task extends AnaplanApiClientObject {
           LOG.debug("Failed to get status ({}); retrying in {}s\n", Utils.formatThrowable(thrown), interval / 1000);
           LOG.info("Checking in {}s", interval / 1000);
         }
-        if (status != null) {
-          StringBuilder message = new StringBuilder();
-          if (status.getCurrentStep() != null) {
-            message.append(status.getCurrentStep());
-          } else if (status.getTaskState() == null) {
-            message.append(status.getTaskState().toString());
-          } else {
-            message.append(status.getTaskState().getValue());
-          }
-          if (status.getProgress() > 0) {
-            message.append(" (").append(Math.floor(status.getProgress() * 1000) / 10).append("%)");
-          }
-          LOG.info("Run status: {}", message.toString());
-        }
+        LOG.info("Run status: {}", getLogText(status));
+
       } while (!(wasClosingDown && totalTime > 1000) && (status == null || !(
           status.getTaskState() == TaskStatus.State.COMPLETE ||
               status.getTaskState() == TaskStatus.State.CANCELLED)));
     } finally {
-      if (status == null || status.getResult() == null) {
-        LOG.info("No result was provided.");
-      } else if (status.getTaskState() == TaskStatus.State.CANCELLED) {
-        StringBuilder message = new StringBuilder();
-        message.append("The operation was cancelled");
-        if (status.getCancelledBy() != null) {
-          message.append(" by ").append(status.getCancelledBy());
-        }
-        if (status.getResult() != null) {
-          message.append("; some actions may have completed.");
-        } else {
-          message.append(".");
-        }
-        LOG.info(message.toString());
-      } else {
-        LogUtils.logSeparatorOperationResponses();
-        if (status.getResult() != null) {
-          LOG.info(status.getResult().isSuccessful() ?
-              "<<< The operation was successful >>>  =)" :
-              "!!! The operation failed !!!  =(");
-        }
-        LogUtils.logSeparatorOperationStatus();
-        Arrays.asList(status.getResult().toString().split("\n")).forEach(LOG::info);
-      }
+        solveFinal(status);
     }
     return (status != null) ? status.getResult() : null;
+  }
+
+  private static String getLogText(final TaskStatus status) {
+    if (status == null) {
+      return "";
+    }
+    StringBuilder message = new StringBuilder();
+    if (status.getCurrentStep() != null) {
+      message.append(status.getCurrentStep());
+    } else if (status.getTaskState() == null) {
+      message.append(status.getTaskState().toString());
+    } else {
+      message.append(status.getTaskState().getValue());
+    }
+    if (status.getProgress() > 0) {
+      message.append(" (").append(Math.floor(status.getProgress() * 1000) / 10).append("%)");
+    }
+    return message.toString();
+  }
+
+
+  private static int getInterval(boolean wasClosingDown, int totalTime){
+    int interval;
+    if (wasClosingDown) {
+      interval = 500;
+    } else if (totalTime > 60000) {
+      interval = 60000;
+    } else if (totalTime > 10000) {
+      interval = 10000;
+    } else {
+      interval = 1000;
+    }
+    return interval;
+  }
+
+  private static void solveFinal(TaskStatus status) {
+    if (status == null || status.getResult() == null) {
+      LOG.info("No result was provided.");
+    } else if (status.getTaskState() == TaskStatus.State.CANCELLED) {
+      StringBuilder message = new StringBuilder();
+      message.append("The operation was cancelled");
+      if (status.getCancelledBy() != null) {
+        message.append(" by ").append(status.getCancelledBy());
+      }
+      if (status.getResult() != null) {
+        message.append("; some actions may have completed.");
+      } else {
+        message.append(".");
+      }
+      final String messageToLog = message.toString();
+      LOG.info(messageToLog);
+    } else {
+      LogUtils.logSeparatorOperationResponses();
+      if (status.getResult() != null) {
+        LOG.info(status.getResult().isSuccessful() ?
+            "<<< The operation was successful >>>  =)" :
+            "!!! The operation failed !!!  =(");
+      }
+      LogUtils.logSeparatorOperationStatus();
+      Arrays.asList(status.getResult().toString().split("\n")).forEach(LOG::info);
+    }
   }
 }

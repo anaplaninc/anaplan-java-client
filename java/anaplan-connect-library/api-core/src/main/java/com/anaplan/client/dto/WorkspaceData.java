@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:41 PM
  */
-public class WorkspaceData {
+public class WorkspaceData implements Serializable {
 
   private String id;
   private boolean active;
@@ -52,7 +54,7 @@ public class WorkspaceData {
   }
 
   public boolean equals(Object other) {
-    if (!(other != null && other instanceof WorkspaceData)) {
+    if (!(other instanceof WorkspaceData)) {
       return false;
     }
     WorkspaceData data = (WorkspaceData) other;

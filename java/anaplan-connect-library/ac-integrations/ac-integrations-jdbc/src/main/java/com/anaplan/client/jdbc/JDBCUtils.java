@@ -25,9 +25,10 @@ import org.apache.commons.csv.CSVRecord;
  */
 public class JDBCUtils {
 
-  private final static Pattern QUERY_INTERCEPTOR = Pattern
+  private JDBCUtils(){}
+  private static final Pattern QUERY_INTERCEPTOR = Pattern
       .compile("QUERYINTERCEPTOR=", Pattern.CASE_INSENSITIVE);
-  private final static Pattern AUTO_DESERIALIZE = Pattern
+  private static final Pattern AUTO_DESERIALIZE = Pattern
       .compile("AUTODESERIALIZE=TRUE", Pattern.CASE_INSENSITIVE);
   //Anaplan export special characters inside ""
   public static final Pattern QUOTE_REGEX_PATTERN = Pattern.compile("[^\"]*\"");
@@ -135,10 +136,10 @@ public class JDBCUtils {
     ListItemResultData result = new ListItemResultData();
     result.setFailures(new ArrayList<>(0));
     String query = jdbcConfig.getJdbcQuery();
-    ListItemParametersData listItemParametersData;
     int index = 0;
     JDBCCellReader cellReader = null;
     final MetaContent metaContent = listImpl.getContent();
+    boolean doBreak = false;
     try {
       while (true) {
         String queryToAdd = query.concat(
@@ -155,44 +156,29 @@ public class JDBCUtils {
               metaContent.getSubsets());
         }
         final List<String[]> items = new ArrayList<>();
-        while (null != (row = cellReader.readDataRow())) {
+        while (null != (row = cellReader.readDataRow()) && row.length > 0) {
           items.add(row);
         }
         if (items.isEmpty()) {
-          break;
-        }
-        ListItemResultData resultAction;
-        switch (action){
-          case ADD:
-            listItemParametersData = listImpl.getListItemFromJDBC(header, headerMap, items);
-            resultAction = listImpl.addItemsToList(listItemParametersData);
-            break;
-          case UPDATE:
-            listItemParametersData = listImpl.getListItemFromJDBC(header, headerMap, items);
-            resultAction = listImpl.updateItemsList(listItemParametersData);
-            break;
-          case DELETE:
-            listItemParametersData = listImpl.getDeleteItems(items, header, headerMap);
-            resultAction = listImpl.deleteItemsList(listItemParametersData);
-            break;
-          default:
-            throw new IllegalStateException("Unexpected value: " + action);
-        }
+          doBreak = true;
+        } else {
+          final ListItemData listItemData = getResultAction(action, listImpl, header, headerMap,
+              items);
+          final ListItemResultData resultAction = listItemData.getResultAction();
 
-        if (resultAction.getFailures() != null) {
-          for (final ListFailure listFailure : resultAction.getFailures()) {
-            listFailure.setListItem(listItemParametersData.getItems().get(listFailure.getRequestIndex()));
-            result.getFailures().add(listFailure);
+          getFailures(listItemData, result);
+          result.setIgnored(result.getIgnored() + resultAction.getIgnored());
+          result.setDeleted(result.getDeleted() + resultAction.getDeleted());
+          result.setAdded(result.getAdded() + resultAction.getAdded());
+          result.setUpdated(result.getUpdated() + resultAction.getUpdated());
+          if (items.size() < batchSize) {
+            doBreak = true;
           }
+          index++;
         }
-        result.setIgnored(result.getIgnored() + resultAction.getIgnored());
-        result.setDeleted(result.getDeleted() + resultAction.getDeleted());
-        result.setAdded(result.getAdded() + resultAction.getAdded());
-        result.setUpdated(result.getUpdated() + resultAction.getUpdated());
-        if (items.size() < batchSize) {
+        if (doBreak) {
           break;
         }
-        index++;
       }
     } finally {
       if (cellReader != null) {
@@ -200,5 +186,55 @@ public class JDBCUtils {
       }
     }
     return result;
+  }
+
+  static void getFailures(final ListItemData listItemData, final ListItemResultData result ) {
+    if (listItemData.getResultAction().getFailures() != null && listItemData.getListItemParametersData() != null) {
+      for (final ListFailure listFailure : listItemData.getResultAction().getFailures()) {
+        listFailure.setListItem(listItemData.getListItemParametersData().getItems().get(listFailure.getRequestIndex()));
+        result.getFailures().add(listFailure);
+      }
+    }
+  }
+
+  static ListItemData getResultAction(final ListImpl.ListAction action, final ListImpl listImpl,
+      final String[] header, final Map<String, String> headerMap, final List<String[]> items)
+      throws IOException {
+    ListItemResultData resultAction;
+    ListItemParametersData listItemParametersData;
+    switch (action){
+      case ADD:
+        listItemParametersData = listImpl.getListItemFromJDBC(header, headerMap, items);
+        resultAction = listImpl.addItemsToList(listItemParametersData);
+        break;
+      case UPDATE:
+        listItemParametersData = listImpl.getListItemFromJDBC(header, headerMap, items);
+        resultAction = listImpl.updateItemsList(listItemParametersData);
+        break;
+      case DELETE:
+        listItemParametersData = listImpl.getDeleteItems(items, header, headerMap);
+        resultAction = listImpl.deleteItemsList(listItemParametersData);
+        break;
+      default:
+        throw new IllegalStateException("Unexpected value: " + action);
+    }
+    return new ListItemData(listItemParametersData, resultAction);
+  }
+
+  static class ListItemData {
+    ListItemParametersData listItemParametersData;
+    ListItemResultData resultAction;
+
+    public ListItemData (ListItemParametersData listItemParametersData, ListItemResultData resultAction) {
+      this.listItemParametersData = listItemParametersData;
+      this.resultAction = resultAction;
+    }
+    public ListItemParametersData getListItemParametersData() {
+      return listItemParametersData;
+    }
+
+    public ListItemResultData getResultAction() {
+      return resultAction;
+    }
   }
 }

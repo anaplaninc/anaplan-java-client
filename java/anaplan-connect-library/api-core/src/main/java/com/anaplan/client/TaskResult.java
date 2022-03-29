@@ -1,6 +1,5 @@
 //   Copyright 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -19,6 +18,7 @@ import com.anaplan.client.dto.ServerFileData;
 import com.anaplan.client.dto.TaskResultData;
 import com.anaplan.client.dto.TaskResultDetailData;
 import com.anaplan.client.exceptions.AnaplanAPIException;
+import com.anaplan.client.exceptions.AnaplanIOException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,20 +50,20 @@ public class TaskResult {
     this.dumpFileId = dumpFileId;
     this.data = data;
     this.isNestedResult = isNestedResult;
-    List<TaskResultDetail> details = new ArrayList<>();
+    List<TaskResultDetail> detailsList = new ArrayList<>();
     if (null != data.getDetails()) {
       for (TaskResultDetailData detailData : data.getDetails()) {
-        details.add(new TaskResultDetail(detailData));
+        detailsList.add(new TaskResultDetail(detailData));
       }
     }
-    this.details = Collections.unmodifiableList(details);
-    List<TaskResult> nestedResults = new ArrayList<>();
+    this.details = Collections.unmodifiableList(detailsList);
+    List<TaskResult> nestedResultsList = new ArrayList<>();
     if (null != data.getNestedResults()) {
       for (TaskResultData nestedData : data.getNestedResults()) {
-        nestedResults.add(new TaskResult(task, nestedData.getObjectId(), nestedData, true));
+        nestedResultsList.add(new TaskResult(task, nestedData.getObjectId(), nestedData, true));
       }
     }
-    this.nestedResults = Collections.unmodifiableList(nestedResults);
+    this.nestedResults = Collections.unmodifiableList(nestedResultsList);
   }
 
   /**
@@ -187,7 +187,7 @@ public class TaskResult {
     try {
       return appendTo(new StringBuilder()).toString();
     } catch (IOException ioException) {
-      throw new RuntimeException(ioException);
+      throw new AnaplanIOException(ioException);
     }
   }
 }

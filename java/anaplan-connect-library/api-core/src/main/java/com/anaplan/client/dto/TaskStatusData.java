@@ -1,13 +1,13 @@
 package com.anaplan.client.dto;
 
 import com.anaplan.client.TaskStatus;
+import java.io.Serializable;
 
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:39 PM
  */
-public class TaskStatusData {
+public class TaskStatusData implements Serializable {
 
-  private String type;
   private String taskId;
   private double progress;
   private String currentStep;

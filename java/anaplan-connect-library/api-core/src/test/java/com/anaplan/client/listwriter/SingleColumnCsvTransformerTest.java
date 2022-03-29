@@ -4,15 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.anaplan.client.dto.ViewMetadata;
 import com.anaplan.client.dto.ViewMetadataRow;
+import java.io.IOException;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
-public class SingleColumnCsvTransformerTest {
+class SingleColumnCsvTransformerTest {
 
 
 
   @Test
-  public void toSingleColumnOnePage() {
+  void toSingleColumnOnePage() throws IOException {
     assertEquals(
         "view-data-test-dimension,Line Items,view-data-test-columns,Value\n"
             + "a,l1,c1,1\n"
@@ -28,7 +29,7 @@ public class SingleColumnCsvTransformerTest {
   }
 
   @Test
-  public void toSingleColumnMultiplePagesMultipleDimension(){
+  void toSingleColumnMultiplePagesMultipleDimension() throws IOException {
     assertEquals("view-data-test-row1,view-data-test-dimension,Line Items,Time,view-data-test-column-2,view-data-test-columns,Value\n" +
             "\"r,1\",\"a,b\",l1,Jan 17,col1,c1,1\n" +
             "\"r,1\",\"a,b\",l1,Jan 17,col1,\"c,2,\",11\n" +
@@ -47,7 +48,7 @@ public class SingleColumnCsvTransformerTest {
   }
 
   @Test
-  public void toSingleColumnTwoPage() {
+  void toSingleColumnTwoPage() throws IOException {
     assertEquals(
         "view-data-test-dimension,Line Items,view-data-test-columns,Value\n"
             + "r\\3,\"c,2,\",Jan 17,\"l, 1\",\"a,b\",0\n"
@@ -63,7 +64,7 @@ public class SingleColumnCsvTransformerTest {
   }
 
   @Test
-  public void toSingleColumnNoPage() {
+  void toSingleColumnNoPage() throws IOException {
     assertEquals(
         "Line Items,view-data-test-columns,Value\n"
             + "l1,c1,1\n"
@@ -79,24 +80,24 @@ public class SingleColumnCsvTransformerTest {
 
   private static ViewMetadata getViewMetadataOnePage() {
     ViewMetadata viewMetadata = new ViewMetadata();
-    viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000114", "view-data-test-columns","abc")));
-    viewMetadata.setRows(Arrays.asList(new ViewMetadataRow("20000000012", "Line Items","abc")));
-    viewMetadata.setPages(Arrays.asList(new ViewMetadataRow("101000000113", "view-data-test-dimension","abcs")));
+    viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000114", "view-data-test-columns")));
+    viewMetadata.setRows(Arrays.asList(new ViewMetadataRow("20000000012", "Line Items")));
+    viewMetadata.setPages(Arrays.asList(new ViewMetadataRow("101000000113", "view-data-test-dimension")));
     return viewMetadata;
   }
 
   private static ViewMetadata getViewMetadataNoPage() {
     ViewMetadata viewMetadata = new ViewMetadata();
-    viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000114", "view-data-test-columns","abc")));
-    viewMetadata.setRows(Arrays.asList(new ViewMetadataRow("20000000012", "Line Items","abc")));
+    viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000114", "view-data-test-columns")));
+    viewMetadata.setRows(Arrays.asList(new ViewMetadataRow("20000000012", "Line Items")));
     return viewMetadata;
   }
 
   private static ViewMetadata getViewMetadataMultiplePages() {
     ViewMetadata viewMetadata = new ViewMetadata();
-    viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000116", "view-data-test-column-2","abc"),new ViewMetadataRow("101000000114", "view-data-test-columns","abc")));
-    viewMetadata.setRows(Arrays.asList(new ViewMetadataRow("20000000012", "Line Items","abc"),new ViewMetadataRow("20000000003", "Time","abc")));
-    viewMetadata.setPages(Arrays.asList(new ViewMetadataRow("101000000117", "view-data-test-row1","abcs"),new ViewMetadataRow("101000000113", "view-data-test-dimension","abcs")));
+    viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000116", "view-data-test-column-2"),new ViewMetadataRow("101000000114", "view-data-test-columns")));
+    viewMetadata.setRows(Arrays.asList(new ViewMetadataRow("20000000012", "Line Items"),new ViewMetadataRow("20000000003", "Time")));
+    viewMetadata.setPages(Arrays.asList(new ViewMetadataRow("101000000117", "view-data-test-row1"),new ViewMetadataRow("101000000113", "view-data-test-dimension")));
     return viewMetadata;
   }
 

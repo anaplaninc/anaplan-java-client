@@ -18,7 +18,7 @@ public class AuthTokenInjector implements RequestInterceptor {
   /**
    * Injects the Auth-Token from the Auth APIs for every request made to the API services
    *
-   * @param template
+   * @param template {@link RequestTemplate}
    */
   @Override
   public void apply(RequestTemplate template) {

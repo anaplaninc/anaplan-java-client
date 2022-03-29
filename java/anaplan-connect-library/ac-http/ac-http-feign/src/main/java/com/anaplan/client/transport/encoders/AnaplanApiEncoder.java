@@ -10,10 +10,11 @@ import feign.codec.EncodeException;
 import feign.jackson.JacksonEncoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A brute extension of the default JacksonEncoder to use the Server Encoding and remove the
- * enforced UTF-8 encoding {@link com.anaplan.client.transport.serialization.ByteArraySerializer}.
+ * enforced UTF-8 encoding {@link com.anaplan.client.transport.serialization.AnaplanByteArraySerializer}.
  */
 
 public class AnaplanApiEncoder extends JacksonEncoder {
@@ -40,13 +41,13 @@ public class AnaplanApiEncoder extends JacksonEncoder {
   /**
    * Uses system property to get the charset with the exception of a configured url
    *
-   * @param template
+   * @param template {@link RequestTemplate}
    * @return The charset
    */
   private Charset getCharset(RequestTemplate template) {
     Charset charset;
     if (URL_IMPORT_TASKS.equals(template.url())) {
-      charset = Charset.forName("UTF-8");
+      charset = StandardCharsets.UTF_8;
     } else {
       charset = Charset.forName(System.getProperty("file.encoding"));
     }

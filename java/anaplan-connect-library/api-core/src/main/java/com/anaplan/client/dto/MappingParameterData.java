@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:35 PM
  */
-public class MappingParameterData {
+public class MappingParameterData implements Serializable {
 
   private String importId;
   private String entityType;

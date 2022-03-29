@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
-public class AuthenticationTest extends BaseTest {
+class AuthenticationTest extends BaseTest {
 
   private Service mockService;
 
@@ -21,7 +21,7 @@ public class AuthenticationTest extends BaseTest {
   }
 
   @Test
-  public void testGoodAuth() throws Exception {
+  void testGoodAuth() throws Exception {
     recordActionsFetchMockWorkspaces();
     checkWorkspace();
   }

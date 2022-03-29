@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 
 public class MultiColumnCsvTransformer {
 
+  private MultiColumnCsvTransformer(){}
+
   /**
    * CSV join an array of strings
    * @param values Values to join
@@ -60,9 +62,9 @@ public class MultiColumnCsvTransformer {
 
   /**
    * Get header data
-   * @param viewMetadata
-   * @param allMetadataValues
-   * @return
+   * @param viewMetadata  {@link ViewMetadata} the view metadata
+   * @param allMetadataValues {@link List<ViewMetadataValues>} the metadata values
+   * @return csv header
    */
   private static String getHeader(ViewMetadata viewMetadata, List<ViewMetadataValues> allMetadataValues) {
     List<String> columnHeaders = getColumnValues(allMetadataValues);
@@ -113,10 +115,8 @@ public class MultiColumnCsvTransformer {
         pageValues = lines[0];
         ++startInd;
       }
-      columnValues = Utils.getColumnValues(lines,startInd);
-      for (int i = startInd+columnValues.size(); i < lines.length; i++) {
-        lineValues.add(lines[i]);
-      }
+      columnValues = Utils.getColumnValues(lines, startInd);
+      lineValues.addAll(Arrays.asList(lines).subList(startInd + columnValues.size(), lines.length));
     }
 
 

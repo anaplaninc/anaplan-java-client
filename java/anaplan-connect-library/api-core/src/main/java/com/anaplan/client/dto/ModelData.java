@@ -1,11 +1,12 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 3:28 PM
  */
-public class ModelData {
+public class ModelData implements Serializable {
 
     private String id;
     private String name;

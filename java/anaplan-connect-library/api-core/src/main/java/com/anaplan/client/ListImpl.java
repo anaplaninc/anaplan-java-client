@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A list item object within an Anaplan model.
  */
-public class ListImpl extends ListFactory {
+public class ListImpl implements ListFactory {
 
 
   public enum ListAction {
@@ -92,11 +93,11 @@ public class ListImpl extends ListFactory {
   /**
    * Get data from file
    *
-   * @param source
-   * @param itemMapPath
-   * @param fileType
-   * @return listItemResultData
-   * @throws IOException
+   * @param source the item source path
+   * @param itemMapPath the item names path
+   * @param fileType {@link FileType}
+   * @return listItemResultData {@link ListItemResultData}
+   * @throws IOException io errors
    */
   public ListItemResultData doActionToItems(final Path source, final Path itemMapPath,
                                             final FileType fileType, final ListAction action)
@@ -106,13 +107,10 @@ public class ListImpl extends ListFactory {
       Utils.isFileAndReadable(itemMapPath);
     }
 
-    switch (fileType) {
-      case CSV: {
-        return getDataFromCSV(source, itemMapPath, getContent(), action);
-      }
-      case JSON: {
-        return parseBatchJSON(source, itemMapPath, getContent(), action);
-      }
+    if (fileType == FileType.CSV) {
+      return getDataFromCSV(source, itemMapPath, getContent(), action);
+    } else if (fileType == FileType.JSON) {
+      return parseBatchJSON(source, itemMapPath, getContent(), action);
     }
     return new ListItemResultData();
   }
@@ -129,11 +127,11 @@ public class ListImpl extends ListFactory {
   /**
    * Parse CSV file item source
    *
-   * @param source
-   * @param itemFile
-   * @param metaContent
-   * @return
-   * @throws IOException
+   * @param source the items path file
+   * @param itemFile the item names path
+   * @param metaContent {@link MetaContent}
+   * @return {@link ListItemResultData}
+   * @throws IOException input-output exception
    */
   public ListItemResultData getDataFromCSV(final Path source,
                                            @Nullable final Path itemFile,
@@ -190,7 +188,7 @@ public class ListImpl extends ListFactory {
             || Objects.nonNull(Utils.findInList(v, propertiesModel))
             || Objects.nonNull(Utils.findInList(v, subsetModel))))
         .collect(Collectors.toSet());
-    if (invalidSourceHeaders.size() > 0 || invalidTargetHeaders.size() > 0) {
+    if (!invalidSourceHeaders.isEmpty() || !invalidTargetHeaders.isEmpty()) {
       LOG.warn("The provided mapping file has invalid mappings which will be ignored:");
       invalidSourceHeaders.forEach(k-> LOG.info("Source mapping: {}", k));
       invalidTargetHeaders.forEach(v-> LOG.info("Target mapping: {}", v));
@@ -307,9 +305,9 @@ public class ListImpl extends ListFactory {
     if (properties == null || key == null) {
       return null;
     }
-    for (final String keyProp : properties.keySet()) {
-      final String keyPoperty = keyProp.trim();
-      final String valueProperty = properties.get(keyProp).trim();
+    for (Entry<String, String> keyProp : properties.entrySet()) {
+      final String keyPoperty = keyProp.getKey().trim();
+      final String valueProperty = keyProp.getValue().trim();
       if (keyPoperty.equalsIgnoreCase(key)) {
         return new KeyValue(keyPoperty, valueProperty);
       }
@@ -335,16 +333,17 @@ public class ListImpl extends ListFactory {
   }
 
   /**
-   * @param header
-   * @param headerMap
-   * @param rows
-   * @return
+   * Return items from jdbc
+   * @param header the jdbc columns
+   * @param headerMap names mapped
+   * @param rows content
+   * @return {@link ListItemParametersData}
    */
   public ListItemParametersData getListItemFromJDBC(final String[] header,
                                                     final Map<String, String> headerMap,
                                                     final List<String[]> rows) throws IOException {
 
-    if (header == null || header.length == 0 || rows == null || rows.size() == 0) {
+    if (header == null || header.length == 0 || rows.isEmpty()) {
       return new ListItemParametersData();
     }
 
@@ -376,10 +375,11 @@ public class ListImpl extends ListFactory {
   }
 
   /**
-   * @param rows
-   * @param header
-   * @param headerMap
-   * @return
+   * Return items to be deleted
+   * @param rows the content
+   * @param header columns
+   * @param headerMap names mapped
+   * @return {@link ListItemParametersData}
    */
   public ListItemParametersData getDeleteItems(final List<String[]> rows, final String[] header,
                                                final Map<String, String> headerMap) {
@@ -392,12 +392,12 @@ public class ListImpl extends ListFactory {
     String id = ID;
     String code = CODE;
     if (!Utils.mapIsEmpty(headerMap)) {
-      for (final String key : headerMap.keySet()) {
-        final String value = headerMap.get(key);
+      for (final Entry<String, String> key : headerMap.entrySet()) {
+        final String value = key.getValue();
         if (ID.equalsIgnoreCase(value)) {
-          id = key;
+          id = key.getKey();
         } else if (CODE.equalsIgnoreCase(value)) {
-          code = key;
+          code = key.getKey();
         }
       }
     }
@@ -427,12 +427,13 @@ public class ListImpl extends ListFactory {
   }
 
   /**
-   * @param file
-   * @param itemFile
-   * @param metaContent
-   * @param action
-   * @return
-   * @throws IOException
+   *
+   * @param file the file json content
+   * @param itemFile the names map path
+   * @param metaContent {@link MetaContent} list metadata
+   * @param action {@link ListAction}
+   * @return {link ListItemResultData}
+   * @throws IOException parsing error
    */
   public ListItemResultData parseBatchJSON(final Path file, final Path itemFile,
                                            final MetaContent metaContent, final ListAction action)
@@ -451,8 +452,8 @@ public class ListImpl extends ListFactory {
         mapProperties = new HashMap<>();
       }
       List<ListItem> listItems;
-      while ((listItems = getItemsFromJson(jsonParser, itemFile, mapProperties, properties,
-          metaContent)).size() > 0) {
+      while (!(listItems = getItemsFromJson(jsonParser, itemFile, mapProperties, properties,
+          metaContent)).isEmpty()) {
         addJSONBatch(overallItemResultData, listItems, action);
         listItems.clear();
       }
@@ -461,13 +462,14 @@ public class ListImpl extends ListFactory {
   }
 
   /**
-   * @param jsonParser
-   * @param itemFile
-   * @param mapProperties
-   * @param properties
-   * @param metaContent
-   * @return
-   * @throws IOException
+   * Return items from json content
+   * @param jsonParser {@link JsonParser}
+   * @param itemFile path to names
+   * @param mapProperties names mapped
+   * @param properties item names
+   * @param metaContent {@link MetaContent} list metadata
+   * @return {@link List<ListItem>}
+   * @throws IOException parsing error
    */
   public List<ListItem> getItemsFromJson(final JsonParser jsonParser, final Path itemFile,
                                          final Map<String, String> mapProperties,
@@ -480,29 +482,7 @@ public class ListImpl extends ListFactory {
         final ListItem item = new ListItem();
         item.setSubsets(new HashMap<>(0));
         item.setProperties(new HashMap<>(0));
-        List<String> header = new ArrayList<>();
-        while ((jsonParser.nextToken()) != JsonToken.END_OBJECT) {
-          String name = jsonParser.getCurrentName();
-          if (name == null) {
-            continue;
-          }
-          jsonParser.nextToken();
-          final String value = jsonParser.getValueAsString();
-          header.add(name);
-          if (!"".equalsIgnoreCase(name) && itemFile != null) {
-            final String mapValue = mapProperties.get(name);
-            if (mapValue != null) {
-              name = mapValue;
-            } else {
-              final KeyValue key = getPropertyValue(properties, name);
-              if (key != null) {
-                name = key.getValue();
-              }
-              mapProperties.put(key.getKey(), key.getValue());
-            }
-          }
-          getItemFromJson(metaContent, jsonParser, item, name, value);
-        }
+        List<String> header = getHeader(item, jsonParser, itemFile, mapProperties, metaContent, properties);
         if (properties != null) {
           verifyHeaderMapping(header.toArray(new String[0]), properties, metaContent.getPropNames(),
               metaContent.getSubsets());
@@ -516,6 +496,35 @@ public class ListImpl extends ListFactory {
       }
     }
     return listItems;
+  }
+
+  private List<String> getHeader(final ListItem item, final JsonParser jsonParser,
+      final Path itemFile, final Map<String, String> mapProperties, final MetaContent metaContent, final Map<String, String> properties)
+      throws IOException {
+    List<String> header = new ArrayList<>();
+    while ((jsonParser.nextToken()) != JsonToken.END_OBJECT) {
+      String name = jsonParser.getCurrentName();
+      if (name == null) {
+        continue;
+      }
+      jsonParser.nextToken();
+      final String value = jsonParser.getValueAsString();
+      header.add(name);
+      if (!"".equalsIgnoreCase(name) && itemFile != null) {
+        final String mapValue = mapProperties.get(name);
+        if (mapValue != null) {
+          name = mapValue;
+        } else {
+          final KeyValue key = getPropertyValue(properties, name);
+          if (key != null) {
+            name = key.getValue();
+            mapProperties.put(key.getKey(), key.getValue());
+          }
+        }
+      }
+      getItemFromJson(metaContent, jsonParser, item, name, value);
+    }
+    return header;
   }
 
   private void getItemFromJson(final MetaContent metaContent, final JsonParser jp,

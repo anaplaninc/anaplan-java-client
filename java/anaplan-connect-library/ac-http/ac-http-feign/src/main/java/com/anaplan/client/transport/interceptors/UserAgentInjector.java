@@ -14,9 +14,6 @@ public class UserAgentInjector implements RequestInterceptor {
   private static final int MINOR_VERSION = Constants.AC_MINOR;
   private static final int REVISION_VERSION = Constants.AC_REVISION;
 
-  // commenting it for the Anaplan Connect 1.4.2 release
-  //private static final String RELEASE_VERSION = Constants.AC_Release;
-
   @Override
   public void apply(RequestTemplate template) {
     template.header("User-Agent", buildUserAgentIdentifier());

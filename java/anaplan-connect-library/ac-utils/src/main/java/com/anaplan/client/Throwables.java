@@ -5,6 +5,8 @@ import java.io.StringWriter;
 
 public class Throwables {
 
+  private Throwables(){}
+
   /**
    * Returns a string containing the result of {@link Throwable#toString() toString()}, followed by
    * the full, recursive stack trace of {@code throwable}. Note that you probably should not be

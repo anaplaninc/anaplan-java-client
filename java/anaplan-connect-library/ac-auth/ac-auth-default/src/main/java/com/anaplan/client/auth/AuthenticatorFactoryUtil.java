@@ -8,8 +8,10 @@ import com.anaplan.client.transport.ConnectionProperties;
  */
 public class AuthenticatorFactoryUtil {
 
+  private AuthenticatorFactoryUtil() {}
+
   public static Authenticator getAuthenticator(ConnectionProperties properties,
-      AnaplanAuthenticationAPI authClient) {
+      AnaplanAuthenticationAPI authClient) throws UnknownAuthenticationException {
     switch (properties.getApiCredentials().getScheme()) {
       case BASIC:
       case NTLM:
@@ -17,7 +19,7 @@ public class AuthenticatorFactoryUtil {
       case CA_CERTIFICATE:
         return new CertificateAuthenticator(properties, authClient);
       default:
-        throw new RuntimeException(
+        throw new UnknownAuthenticationException(
             "Unknown authentication scheme: " + properties.getApiCredentials().getScheme());
     }
   }

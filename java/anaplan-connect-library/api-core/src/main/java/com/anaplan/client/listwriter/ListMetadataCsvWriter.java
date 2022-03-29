@@ -15,7 +15,9 @@ import java.util.stream.Stream;
  */
 public class ListMetadataCsvWriter {
 
-  public static String[] FIXED_COLUMN_NAMES_LIST_METADATA = new String[]{
+  private ListMetadataCsvWriter(){}
+
+  protected static final String[] FIXED_COLUMN_NAMES_LIST_METADATA = new String[]{
       "id", "name", "hasSelectiveAccess", "productionData", "managedBy", "numberedList",
       "useTopLevelAsPageDefault", "itemCount", "workflowEnabled", "permittedItems",
       "usedInAppliesTo"};

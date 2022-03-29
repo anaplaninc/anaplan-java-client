@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
-public class WorkspaceTest extends BaseTest {
+class WorkspaceTest extends BaseTest {
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -16,7 +16,7 @@ public class WorkspaceTest extends BaseTest {
   }
 
   @Test
-  public void testWorkspace() throws Exception {
+  void testWorkspace() throws Exception {
     Workspace testWorkspace = getTestWorkspacebyId();
     assertEquals("testWorkspaceNameOrId", testWorkspace.getId());
     assertEquals("Workspace A", testWorkspace.getName());

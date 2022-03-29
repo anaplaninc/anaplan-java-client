@@ -115,10 +115,6 @@ public abstract class BaseTest {
     Task task = taskFactory.createTask(taskParameters);
     TaskStatus taskStatus;
     do {
-      try {
-        Thread.sleep(250);
-      } catch (InterruptedException interruptedException) {
-      }
       taskStatus = task.getStatus();
     } while (!(taskStatus.getTaskState() == TaskStatus.State.COMPLETE
         || taskStatus.getTaskState() == TaskStatus.State.CANCELLED));

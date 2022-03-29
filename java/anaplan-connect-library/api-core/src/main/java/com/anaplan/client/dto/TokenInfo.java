@@ -12,9 +12,6 @@ public class TokenInfo implements Serializable {
   private String refreshTokenId;
   private long expiresAt;
 
-  public TokenInfo() {
-  }
-
   public String getTokenId() {
     return this.tokenId;
   }

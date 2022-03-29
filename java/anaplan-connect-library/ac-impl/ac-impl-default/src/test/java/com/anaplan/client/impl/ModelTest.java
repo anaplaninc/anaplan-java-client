@@ -24,7 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
-public class ModelTest extends BaseTest {
+class ModelTest extends BaseTest {
 
   private Model mockModel;
 
@@ -35,7 +35,7 @@ public class ModelTest extends BaseTest {
 
 
   @Test
-  public void testModelFetchModules() throws Exception {
+  void testModelFetchModules() throws Exception {
     assertNotNull(mockModel);
     when(mockModel.getApi().getModules(
         mockModel.getWorkspace().getId(), mockModel.getId(), 0))
@@ -56,7 +56,7 @@ public class ModelTest extends BaseTest {
   }
 
   @Test
-  public void testModelFetchFiles() throws Exception {
+  void testModelFetchFiles() throws Exception {
     assertNotNull(mockModel);
     when(mockModel.getApi().getServerFiles(
         mockModel.getWorkspace().getId(), mockModel.getId(), 0))
@@ -78,7 +78,7 @@ public class ModelTest extends BaseTest {
   }
 
   @Test
-  public void testModelFetchImports() throws Exception {
+  void testModelFetchImports() throws Exception {
     assertNotNull(mockModel);
     when(mockModel.getApi().getImports(
         mockModel.getWorkspace().getId(), mockModel.getId(), 0))
@@ -99,7 +99,7 @@ public class ModelTest extends BaseTest {
   }
 
   @Test
-  public void testModelFetchExports() throws Exception {
+  void testModelFetchExports() throws Exception {
     assertNotNull(mockModel);
     when(mockModel.getApi().getExports(
         mockModel.getWorkspace().getId(), mockModel.getId(), 0))
@@ -120,7 +120,7 @@ public class ModelTest extends BaseTest {
   }
 
   @Test
-  public void testModelFetchActions() throws Exception {
+  void testModelFetchActions() throws Exception {
     assertNotNull(mockModel);
     when(mockModel.getApi().getActions(
         mockModel.getWorkspace().getId(), mockModel.getId(), 0))
@@ -141,7 +141,7 @@ public class ModelTest extends BaseTest {
   }
 
   @Test
-  public void testModelFetchProcesses() throws Exception {
+  void testModelFetchProcesses() throws Exception {
     assertNotNull(mockModel);
     when(mockModel.getApi().getProcesses(
         mockModel.getWorkspace().getId(), mockModel.getId(), 0))

@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/21/17 Time: 7:19 PM
  */
-public class Meta {
+public class Meta implements Serializable {
 
   private String schema;
   private Paging paging;

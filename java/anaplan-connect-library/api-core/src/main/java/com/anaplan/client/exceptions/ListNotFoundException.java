@@ -2,13 +2,13 @@ package com.anaplan.client.exceptions;
 
 public class ListNotFoundException  extends RuntimeException {
 
-  private static final String msg = "List not found for Model-ID: ";
+  private static final String MSG = "List not found for Model-ID: ";
 
   public ListNotFoundException(String modelId) {
-    super(msg + modelId);
+    super(MSG + modelId);
   }
 
   public ListNotFoundException(String modelId, Throwable t) {
-    super(msg + modelId, t);
+    super(MSG + modelId, t);
   }
 }

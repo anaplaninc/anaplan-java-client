@@ -1,6 +1,8 @@
 package com.anaplan.client.dto;
 
-public class ViewMetadataRow {
+import java.io.Serializable;
+
+public class ViewMetadataRow implements Serializable {
 
   private String id;
   private String name;
@@ -10,7 +12,7 @@ public class ViewMetadataRow {
     //
   }
 
-  public ViewMetadataRow(String id, String name, String code) {
+  public ViewMetadataRow(String id, String name) {
     this.id = id;
     this.name = name;
   }

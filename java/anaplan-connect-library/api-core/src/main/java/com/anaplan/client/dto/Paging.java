@@ -1,9 +1,11 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
+
 /**
  * Created by Spondon Saha User: spondonsaha Date: 6/22/17 Time: 1:13 AM
  */
-public class Paging {
+public class Paging implements Serializable {
 
   private String next;
   private Integer currentPageSize;

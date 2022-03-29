@@ -21,7 +21,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
   protected Long authTokenExpiresAt;
   protected byte[] authToken;
 
-  public AbstractAuthenticator(ConnectionProperties connectionProperties,
+  protected AbstractAuthenticator(ConnectionProperties connectionProperties,
       AnaplanAuthenticationAPI authClient) {
     this.connectionProperties = connectionProperties;
     this.authClient = authClient;

@@ -40,7 +40,7 @@ public class OkHttpFeignClientProvider implements FeignClientProvider {
   /**
    * Sets up an NTLM proxy or a regular proxy based on credential types.
    *
-   * @param okHttpBuilder
+   * @param okHttpBuilder {@link okhttp3.OkHttpClient.Builder}
    */
   private void setupProxy(okhttp3.OkHttpClient.Builder okHttpBuilder,
       ConnectionProperties properties) {

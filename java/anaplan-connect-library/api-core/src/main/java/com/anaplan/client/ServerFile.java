@@ -1,6 +1,5 @@
 //   Copyright 2011, 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -19,13 +18,13 @@ import com.anaplan.client.dto.ServerFileData;
 import com.anaplan.client.dto.responses.ChunksResponse;
 import com.anaplan.client.dto.responses.ServerFileResponse;
 import com.anaplan.client.exceptions.AnaplanAPIException;
+import com.anaplan.client.exceptions.AnaplanChunkException;
 import com.anaplan.client.exceptions.CreateImportDatasourceError;
 import com.anaplan.client.exceptions.NoChunkError;
 import com.anaplan.client.logging.LogUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +34,6 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -56,14 +54,17 @@ public class ServerFile extends NamedObject {
   private static final Logger LOG = LoggerFactory.getLogger(ServerFile.class);
   private ServerFileData data;
 
-  public static final char[] ONE_CHAR_SUPPORTED_SEPARATORS = new char[]{'\t', ',', ';'};
+  protected static final char[] ONE_CHAR_SUPPORTED_SEPARATORS = new char[]{'\t', ',', ';'};
   public static final String ERROR_MULTIPLE_SEPPARATORS = "Error: Multiple column separators found in file ";
+  private static final String PATH = "Path \"";
+  private static final String FILE = "File \"";
 
   ServerFile(Model model, ServerFileData data) {
     super(model, data);
     this.data = data;
   }
 
+  @Override
   public ServerFileData getData() {
     return data;
   }
@@ -75,7 +76,7 @@ public class ServerFile extends NamedObject {
   /**
    * Gets the list of File chunks from the server
    *
-   * @return
+   * @return {@link ChunkData}
    */
   public List<ChunkData> getChunks() {
     return getApi().getChunks(
@@ -88,8 +89,8 @@ public class ServerFile extends NamedObject {
   /**
    * Fetches the Chunk content as a byte array
    *
-   * @param chunkId
-   * @return
+   * @param chunkId the chunk identifier
+   * @return content in bytes
    */
   public byte[] getChunkContent(String chunkId) {
     return getApi().getChunkContent(
@@ -106,31 +107,20 @@ public class ServerFile extends NamedObject {
    * @param deleteExisting If true, the target file will automatically be deleted if it already exists; otherwise an
    *                       Exception will be thrown
    */
-  public void downLoad(File target, boolean deleteExisting) throws IOException {
+  public void downLoad(final File target, boolean deleteExisting) throws IOException {
     LogUtils.logSeparatorDownload();
     LOG.info("Downloading file {}", target.getAbsolutePath());
-    if (target.exists()) {
-      if (!target.isFile()) {
-        throw new FileNotFoundException("Path \"" + target
-            + "\" exists but is not a file");
-      } else if (!deleteExisting) {
-        throw new IllegalStateException("File \"" + target
-            + "\" already exists");
-      } else if (!target.canWrite()) {
-        throw new FileNotFoundException(
-            "File \""
-                + target
-                + "\" cannot be written to - check ownership and/or permissions");
-      }
-      target.delete();
-    }
+    Utils.checkTarget(target, PATH, FILE, deleteExisting);
+
     // We will write to a temporary location first and move it to its final
     // destination only when complete.
     File partial = new File(target.getParentFile(), ".partial."
         + target.getName());
     if(!partial.exists()){
       partial.getParentFile().mkdirs();
-      partial.createNewFile();
+      if (!partial.createNewFile()) {
+        LOG.warn("Warning: failed to create file {}", partial);
+      }
     }
     RandomAccessFile partialFile = new RandomAccessFile(partial, "rw");
     try {
@@ -150,7 +140,9 @@ public class ServerFile extends NamedObject {
       }
       partialFile.close();
       partialFile = null;
-      partial.renameTo(target);
+      if (!partial.renameTo(target)) {
+        LOG.warn("Warning: failed to rename file {} to {}", partial, target);
+      }
     } finally {
       if (partialFile != null) {
         try {
@@ -187,7 +179,7 @@ public class ServerFile extends NamedObject {
           byte[] chunkContent = getChunkContent(chunkList.get(index++).getId());
           return new ByteArrayInputStream(chunkContent);
         } catch (Exception thrown) {
-          throw new RuntimeException(
+          throw new AnaplanChunkException(
               "Failed to read chunk from server", thrown);
         }
       }
@@ -195,16 +187,16 @@ public class ServerFile extends NamedObject {
   }
 
   /**
-   * Create a {@link com.anaplan.client.CellReader} implementation which will download the content from the server. The
+   * Create a {@link CellReader} implementation which will download the content from the server. The
    * content is assumed to be in the same format as written to by getUploadCellWriter.
    *
-   * @return a {@link com.anaplan.client.CellReader} which will read the content stored on the server
+   * @return a {@link CellReader} which will read the content stored on the server
    * @since 1.2
    */
   public CellReader getDownloadCellReader() throws IOException {
     LogUtils.logSeparatorDownload();
     final LineNumberReader lnr = new LineNumberReader(
-        new InputStreamReader(getDownloadStream(), "UTF-8"));
+        new InputStreamReader(getDownloadStream(), StandardCharsets.UTF_8));
     String headerLine = lnr.readLine();
     final String[] headerRow = headerLine == null ? new String[0]
         : headerLine.split("\\t");
@@ -222,8 +214,12 @@ public class ServerFile extends NamedObject {
         return dataLine == null ? null : dataLine.split("\\t");
       }
 
+      /**
+       * Nothing to do
+       */
       @Override
       public void close() {
+        //Nothing to do
       }
     };
   }
@@ -238,25 +234,13 @@ public class ServerFile extends NamedObject {
   public void upLoad(File source, boolean deleteExisting, int chunkSize) throws IOException {
     LogUtils.logSeparatorUpload();
     LOG.info("Uploading file: {}", source.getAbsolutePath());
-    if (!source.exists()) {
-      throw new FileNotFoundException("Path \"" + source
-          + "\" does not exist");
-    }
-    if (!source.isFile()) {
-      throw new FileNotFoundException("Path \"" + source
-          + "\" does not refer to a file");
-    }
-    if (!source.canRead()) {
-      throw new FileNotFoundException("File \"" + source
-          + "\" cannot be read - check ownership and/or permissions");
-    }
+    Utils.isFileAndReadable(source.toPath());
     // split the separators string from the server to be able to count them, multiple separators are not supported atm
     List<String> separators = splitSeparators(data.getSeparator());
     if (separators.size() > 1) {
       throw new IllegalStateException(ERROR_MULTIPLE_SEPPARATORS + source.getName());
     }
-    RandomAccessFile sourceFile = null;
-    try {
+    try (RandomAccessFile sourceFile = new RandomAccessFile(source, "r")) {
       long length = source.length();
       data.setChunkCount((int) ((length - 1) / chunkSize) + 1);
       ServerFileResponse response = getApi()
@@ -264,9 +248,7 @@ public class ServerFile extends NamedObject {
       if (response == null || response.getItem() == null) {
         throw new CreateImportDatasourceError(getName());
       }
-      data = response.getItem();
-      data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
-      data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
+      data = setServerFile(response, data);
       // Get list of chunks from server
       ChunksResponse chunks = getApi().getChunks(getWorkspace().getId(), getModel().getId(), getId());
       if (chunks == null || chunks.getItem() == null) {
@@ -275,7 +257,7 @@ public class ServerFile extends NamedObject {
       List<ChunkData> chunkList = chunks.getItem();
       Iterator<ChunkData> chunkIterator = chunkList.iterator();
       byte[] buffer = new byte[chunkSize];
-      sourceFile = new RandomAccessFile(source, "r");
+
       long totalReadSoFar = 0;
       while (chunkIterator.hasNext()) {
         ChunkData chunk = chunkIterator.next();
@@ -301,24 +283,31 @@ public class ServerFile extends NamedObject {
         totalReadSoFar += finalSize;
         //checking if there is another chunk to decide if to upload the newly created buffer or existing buffer.
         //existing buffer will be uploaded in case of last chunk
-        if (chunkIterator.hasNext()) {
-          getApi()
-              .uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), finalBuffer);
-        } else {
-          getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunk.getId(), buffer);
-        }
+        uploadChunk(chunkIterator, finalBuffer, buffer, chunk.getId());
         sourceFile.seek(totalReadSoFar);
         LOG.debug("Uploaded chunk: {} (size={}MB)", chunk.getId(), chunkSize / 1000000);
       }
-    } finally {
-      if (sourceFile != null) {
-        try {
-          sourceFile.close();
-        } catch (IOException ioException) {
-          LOG.warn("Warning: failed to close file {}: {}", source, ioException.getMessage());
-        }
-      }
     }
+  }
+
+  private void uploadChunk(final Iterator<ChunkData> chunkIterator, final byte[] finalBuffer, byte[] buffer, String chunkId){
+    if (chunkIterator.hasNext()) {
+      getApi()
+          .uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunkId, finalBuffer);
+    } else {
+      getApi().uploadChunkCompressed(getWorkspace().getId(), getModel().getId(), getId(), chunkId, buffer);
+    }
+  }
+
+  private ServerFileData setServerFile(final ServerFileResponse response, final ServerFileData data) {
+    ServerFileData dataResponse = response.getItem();
+    if (data.getHeaderRow() != null && data.getHeaderRow() == -1) {
+      dataResponse.setHeaderRow(1);
+    }
+    if (data.getFirstDataRow() != null && data.getFirstDataRow() == -1) {
+      dataResponse.setFirstDataRow(2);
+    }
+    return dataResponse;
   }
 
   /*
@@ -351,8 +340,8 @@ public class ServerFile extends NamedObject {
   /**
    * returns the last index of single byte separator from a byte array
    *
-   * @param outerArray
-   * @param separator
+   * @param outerArray bytes array to be check
+   * @param separator the separator
    * @return last index of a single byte separator
    */
   public int lastIndexOf(byte[] outerArray, String separator) {
@@ -456,7 +445,7 @@ public class ServerFile extends NamedObject {
   }
 
   /**
-   * Return a {@link com.anaplan.client.CellWriter} implementation which will upload written content to the server,
+   * Return a {@link CellWriter} implementation which will upload written content to the server,
    * writing it to the specified target file. The file will have the following format:
    * <ul>
    * <li>Encoding: UTF-8</li>
@@ -467,7 +456,7 @@ public class ServerFile extends NamedObject {
    * <li>First data row: 2</li>
    * </ul>
    *
-   * @return a {@link com.anaplan.client.CellWriter} implementation
+   * @return a {@link CellWriter} implementation
    * @since 1.2
    */
   public CellWriter getUploadCellWriter(final int chunkSize) {
@@ -496,35 +485,30 @@ public class ServerFile extends NamedObject {
             buf.append(separator);
           }
           String text = item.toString();
-          if (text.indexOf(separator) != -1) {
+          if (text.contains(separator)) {
             throw new AnaplanAPIException(
                 "Cell text cannot contain separator " + separator);
           }
           buf.append(text);
         }
-        output.write(buf.append('\n').toString().getBytes("UTF-8"));
+        output.write(buf.append('\n').toString().getBytes(StandardCharsets.UTF_8));
       }
 
       @Override
-      public int writeDataRow(String exportId, int maxRetryCount, int retryTimeout, InputStream inputStream,
-          int noOfChunks, String chunkId, int[] mapcols, int columnCount, String separator)
-          throws AnaplanAPIException, IOException, SQLException {
+      public int writeDataRow(final DataRow dataRow)
+          throws AnaplanAPIException {
         //dummy value as the implementation is done in JdbcCellWriter
         return 1;
       }
 
       @Override
       public void close() throws IOException {
-        if (output != null) {
-          data.setFormat(data.getFormat() == null ? "txt" : data.getFormat());
-          data.setEncoding(data.getEncoding() == null ? StandardCharsets.UTF_8.toString() : data.getEncoding());
-          data.setSeparator(getSeparator());
-          data.setDelimiter(data.getDelimiter() == null ? "\"" : data.getDelimiter());
-          data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
-          data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
-          output.close();
-          output = null;
+        if (output == null) {
+          return;
         }
+        createServerFile(data);
+        output.close();
+        output = null;
       }
 
       @Override
@@ -534,16 +518,23 @@ public class ServerFile extends NamedObject {
     };
   }
 
+  private void createServerFile(final ServerFileData data) {
+    data.setFormat(data.getFormat() == null ? "txt" : data.getFormat());
+    data.setEncoding(data.getEncoding() == null ? StandardCharsets.UTF_8.toString() : data.getEncoding());
+    data.setSeparator(getSeparator());
+    data.setDelimiter(data.getDelimiter() == null ? "\"" : data.getDelimiter());
+    data.setHeaderRow(data.getHeaderRow() == -1 ? 1 : data.getHeaderRow());
+    data.setFirstDataRow(data.getFirstDataRow() == -1 ? 2 : data.getFirstDataRow());
+  }
   /*
    * Retrieve the current separator: use the one from the server file data if present, or else use "\t" as default
    *
    * @return The separator as string
    */
   private String getSeparator() {
-    String separator = Optional.ofNullable(getData())
+    return Optional.ofNullable(getData())
         .map(ServerFileData::getSeparator)
         .orElse("\t");
-    return separator;
   }
 
 }

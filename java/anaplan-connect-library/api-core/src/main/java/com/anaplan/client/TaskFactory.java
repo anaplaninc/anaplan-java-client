@@ -1,6 +1,5 @@
 //   Copyright 2011, 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -41,68 +40,68 @@ public abstract class TaskFactory extends NamedObject {
   /**
    * Creates a task for an Import, Export, Process or Delete action
    *
-   * @param taskParametersData
-   * @return
+   * @param taskParametersData {@link TaskParametersData}
+   * @return {@link TaskResponse}
    */
   abstract TaskResponse createActionTask(TaskParametersData taskParametersData);
 
   /**
    * Fetches list of tasks for the action specified by ID.
    *
-   * @param offset
-   * @return
+   * @param offset the offset
+   * @return {@link TaskResponse}
    */
   abstract TasksResponse getTasks(int offset);
 
   /**
    * Cancels the running task with the task-ID
    *
-   * @param taskId
-   * @return
+   * @param taskId the task id
+   * @return {@link TaskStatusResponse}
    */
   abstract TaskStatusResponse cancelTask(String taskId);
 
   /**
    * Fetches the current task status on the server
    *
-   * @param taskId
-   * @return
+   * @param taskId the task id
+   * @return {@link TaskStatusResponse}
    */
   abstract TaskStatusResponse getTaskStatus(String taskId);
 
   /**
    * Fetches the list of Dump-file chunks for running the action
    *
-   * @param taskId
-   * @return
+   * @param taskId the task id
+   * @return {@link ChunksResponse}
    */
   abstract ChunksResponse getDumpFileChunks(String taskId);
 
   /**
    * Fetches the dump file chunk content in bytes for the specified chunk-ID
    *
-   * @param taskId
-   * @param chunkId
-   * @return
+   * @param taskId the task id
+   * @param chunkId the chunk id
+   * @return the content in bytes
    */
   abstract byte[] getDumpFileChunkContent(String taskId, String chunkId);
 
   /**
    * Fetches the list of nested dump-file chunks, if any
    *
-   * @param taskId
-   * @param nestedObjectId
-   * @return
+   * @param taskId the task id
+   * @param nestedObjectId the nested object id
+   * @return {@link ChunksResponse}
    */
   abstract ChunksResponse getNestedDumpFileChunks(String taskId, String nestedObjectId);
 
   /**
    * Fetches the nested dump-file chunk content
    *
-   * @param taskId
-   * @param nestedObjectId
-   * @param chunkId
-   * @return
+   * @param taskId the task id
+   * @param nestedObjectId the nested object id
+   * @param chunkId the chunk id
+   * @return content in bytes
    */
   abstract byte[] getNestedDumpFileChunkContent(String taskId, String nestedObjectId, String chunkId);
 

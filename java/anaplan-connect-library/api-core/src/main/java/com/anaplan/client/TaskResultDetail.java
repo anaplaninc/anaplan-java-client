@@ -1,6 +1,5 @@
 //   Copyright 2011, 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -15,21 +14,19 @@
 package com.anaplan.client;
 
 import com.anaplan.client.dto.TaskResultDetailData;
+import com.anaplan.client.exceptions.AnaplanIOException;
 import com.anaplan.client.exceptions.InvalidTaskResultDetail;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Detail part of result of a task completing.
  */
 public class TaskResultDetail {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TaskResultDetail.class);
   private TaskResultDetailData data;
   private Map<String, String> values;
 
@@ -45,7 +42,7 @@ public class TaskResultDetail {
     try {
       return appendTo(new StringBuilder()).toString();
     } catch (IOException ioException) {
-      throw new RuntimeException(ioException);
+      throw new AnaplanIOException(ioException);
     }
   }
 
@@ -63,20 +60,18 @@ public class TaskResultDetail {
     if (data.getOccurrences() != 0) {
       out.append(": ").append(Integer.toString(data.getOccurrences()));
     }
-    if (getValues() != null) {
-      if (getValues().size() != 0) {
-        out.append("\n");
-        getValues().forEach((k, v) -> {
-          try {
-            if (("serverAlert".equals(k)) && v == null) {
-              v = "Completed successfully!";
-            }
-            out.append(k).append(" - ").append(v).append("\n");
-          } catch (IOException e) {
-            throw new InvalidTaskResultDetail(e);
+    if (getValues() != null && getValues().size() != 0) {
+      out.append("\n");
+      getValues().forEach((k, v) -> {
+        try {
+          if (("serverAlert".equals(k)) && v == null) {
+            v = "Completed successfully!";
           }
-        });
-      }
+          out.append(k).append(" - ").append(v).append("\n");
+        } catch (IOException e) {
+          throw new InvalidTaskResultDetail(e);
+        }
+      });
     }
     return out;
   }
@@ -94,7 +89,7 @@ public class TaskResultDetail {
    */
   public Map<String, String> getValues() {
     if (data.getValues() != null && values == null) {
-      Map<String, String> newValues = new LinkedHashMap<String, String>();
+      Map<String, String> newValues = new LinkedHashMap<>();
       Iterator<String> i = data.getValues().iterator();
       while (i.hasNext()) {
         String key = i.next();

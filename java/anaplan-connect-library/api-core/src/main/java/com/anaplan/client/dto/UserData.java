@@ -1,12 +1,13 @@
 package com.anaplan.client.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
 
 /**
  * Logged in User response
  */
-public class UserData {
+public class UserData implements Serializable {
 
   private String id;
   private boolean active;

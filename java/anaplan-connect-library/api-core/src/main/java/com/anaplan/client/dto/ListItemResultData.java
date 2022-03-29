@@ -2,12 +2,13 @@ package com.anaplan.client.dto;
 
 import com.anaplan.client.dto.responses.BaseListResponse;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * List items response
  */
-public class ListItemResultData extends BaseListResponse {
+public class ListItemResultData extends BaseListResponse implements Serializable {
 
   private int added;
   private int deleted;

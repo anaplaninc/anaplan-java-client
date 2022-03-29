@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 
 public class CsvTransformer {
 
+  private CsvTransformer(){}
+
   /**
    * Transforms a grid CSV to single column result
    *
@@ -176,7 +178,7 @@ public class CsvTransformer {
      */
     private void addLineValues(String line) {
       List<String> split = splitValues(line);
-      if (split.size() > 0) {
+      if (!split.isEmpty()) {
         List<String> value = new ArrayList<>(split);
         value.remove(0);
         lineValues.put(split.get(0), value);

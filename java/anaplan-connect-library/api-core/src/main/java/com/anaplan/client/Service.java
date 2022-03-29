@@ -1,6 +1,5 @@
 //   Copyright 2011, 2012 Anaplan Inc.
 //
-//   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
 //   You may obtain a copy of the License at
 //
@@ -49,10 +48,8 @@ import java.io.File;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,15 +74,10 @@ public class Service implements Closeable {
   private static final URI PRODUCTION_AUTH_API_ROOT;
 
   static {
-    try {
-      PRODUCTION_API_ROOT = new URI("https://api.anaplan.com/");
-      PRODUCTION_AUTH_API_ROOT = new URI("https://auth.anaplan.com/");
-    } catch (URISyntaxException uriSyntaxException) {
-      throw new ExceptionInInitializerError(uriSyntaxException);
-    }
+    PRODUCTION_API_ROOT = URI.create("https://api.anaplan.com/");
+    PRODUCTION_AUTH_API_ROOT = URI.create("https://auth.anaplan.com/");
   }
 
-  //  private String userId;
   private final ConnectionProperties props;
   private Supplier<AnaplanAPI> apiProvider;
   private Authenticator authProvider;
@@ -217,10 +209,9 @@ public class Service implements Closeable {
    * @return The list of views
    * @throws AnaplanAPIException an error occurred
    */
-  public Iterable<ViewData> getViews(String workspaceId, String modelId, String moduleId)
+  public Iterable<ViewData> getViews(String modelId, String moduleId)
       throws AnaplanAPIException {
     return new Paginator<ViewData>() {
-
       @Override
       public ViewData[] getPage(int offset) {
         ViewsResponse response = apiProvider.get().getViews(modelId, moduleId, offset);
@@ -239,7 +230,7 @@ public class Service implements Closeable {
    *
    * @param workspaceIdorName The workspace ID or name of the workspace.
    * @return The workspace; null if no such workspace exists or the user is not permitted to access the workspace.
-   * @throws com.anaplan.client.exceptions.AnaplanAPIException an error occurred.
+   * @throws AnaplanAPIException an error occurred.
    */
 
   public Workspace getWorkspace(String workspaceIdorName)
@@ -268,7 +259,7 @@ public class Service implements Closeable {
    * @param workspaceId the workspace id
    * @param modelId the model id
    * @return {@link ListName}
-   * @throws AnaplanAPIException
+   * @throws AnaplanAPIException the error
    */
   public ListName getList(final String listIdOrName, final String workspaceId, final String modelId)
       throws AnaplanAPIException {
@@ -312,7 +303,7 @@ public class Service implements Closeable {
       }
     }
     if (model == null) {
-      LOG.error("Model \"" + modelId + "\" not found in workspace \"" + workspaceId + "\"");
+      LOG.error("Model \"{}\" not found in workspace \"{}\"", modelId, workspaceId);
     }
     return model;
   }
@@ -335,27 +326,33 @@ public class Service implements Closeable {
           ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper().copy();
           objectMapper.setSerializationInclusion(Include.NON_ABSENT);
           try {
+            final String name = listMetadata.getName();
+            final String meta = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listMetadata);
             LOG.info("List metadata - {}:\n{}",
-                listMetadata.getName(),
-                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(listMetadata));
+                name, meta
+                );
           } catch (JsonProcessingException e) {
             throw new IllegalStateException(e);
           }
         } else {
-          File targetFile = new File(fileId);
-          if (CSV.equalsIgnoreCase(fileType)) {
-            Stream<String> lines = ListMetadataCsvWriter.getLines(listMetadata);
-            ListItemFileWriter.linesToFile(listMetadata.getName(), targetFile.toPath(), lines);
-          } else if (JSON.equalsIgnoreCase(fileType)) {
-            ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper().copy();
-            objectMapper.setSerializationInclusion(Include.NON_ABSENT);
-            ListItemFileWriter
-                .listToFile("List metadata - " + listMetadata.getName(), targetFile.toPath(),
-                    Arrays.asList(listMetadata),
-                    objectMapper);
-          }
+          exportMetaFromFile(fileId, listMetadata, fileType);
         }
       }
+    }
+  }
+
+  private void exportMetaFromFile(final String fileId, final ListMetadata listMetadata, final String fileType) {
+    File targetFile = new File(fileId);
+    if (CSV.equalsIgnoreCase(fileType)) {
+      Stream<String> lines = ListMetadataCsvWriter.getLines(listMetadata);
+      ListItemFileWriter.linesToFile(listMetadata.getName(), targetFile.toPath(), lines);
+    } else if (JSON.equalsIgnoreCase(fileType)) {
+      ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper().copy();
+      objectMapper.setSerializationInclusion(Include.NON_ABSENT);
+      ListItemFileWriter
+          .listToFile("List metadata - " + listMetadata.getName(), targetFile.toPath(),
+              Arrays.asList(listMetadata),
+              objectMapper);
     }
   }
 
@@ -372,7 +369,8 @@ public class Service implements Closeable {
       List<ListName> listNames = StreamSupport.stream(getListNames(workspaceId, modelId).spliterator(), false)
           .collect(Collectors.toList());
       if (fileId == null) {
-        LOG.info(Utils.formatTSV("id", "name"));
+        final String logInfo = Utils.formatTSV("id", "name");
+        LOG.info(logInfo);
         listNames
             .forEach(listName -> LOG.info(Utils.formatTSV(listName.getId(), listName.getName())));
       } else {

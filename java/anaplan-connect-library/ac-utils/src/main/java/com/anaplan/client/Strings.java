@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 public class Strings {
 
+  private Strings(){}
+
   private static final Logger LOG = LoggerFactory.getLogger(Strings.class);
 
   /**

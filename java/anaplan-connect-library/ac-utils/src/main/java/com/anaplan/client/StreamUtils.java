@@ -6,6 +6,8 @@ import java.io.InputStream;
 
 public class StreamUtils {
 
+  private StreamUtils(){}
+
   public static final int BUFFER_SIZE = 16384;
 
   public static byte[] inputStreamToByteArray(InputStream inputStream) throws IOException {

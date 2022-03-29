@@ -18,12 +18,11 @@ public class FeignApiRetryer extends Retryer.Default {
   public static final int DEFAULT_MAX_ATTEMPTS = Constants.MIN_RETRY_COUNT;
   public static final double DEFAULT_BACKOFF_MULTIPLIER = Constants.DEFAULT_BACKOFF_MULTIPLIER;
 
-  private Long period;
-  private Long maxPeriod;
-  private Integer maxAttempts;
-  private int attempt;
-  private Double backoffMultiplier;
-  private long sleptForMillis;
+  private final Long period;
+  private final Long maxPeriod;
+  private final Integer maxAttempts;
+  private int retries;
+  private final Double backoffMultiplier;
 
   public FeignApiRetryer(Long period, Long maxPeriod, Integer maxAttempts, Double backoffMultiplier) {
     this.period = (period == null) ? DEFAULT_PERIOD : period;
@@ -42,10 +41,10 @@ public class FeignApiRetryer extends Retryer.Default {
    */
   @Override
   public void continueOrPropagate(RetryableException e) {
-    if (this.attempt++ >= this.maxAttempts) {
+    if (this.retries++ >= this.maxAttempts) {
       throw e;
     } else {
-      LOG.info("Retrying API request: Attempt ({})", this.attempt);
+      LOG.info("Retrying API request: Attempt ({})", this.retries);
       LOG.debug("Request details: {}", e.getMessage());
       long interval;
       if (e.retryAfter() != null) {
@@ -57,14 +56,13 @@ public class FeignApiRetryer extends Retryer.Default {
           return;
         }
       } else {
-        interval = this.nextMaxInterval();
+        interval = this.nextMaxInterval(period, backoffMultiplier, retries, maxPeriod);
       }
       try {
         Thread.sleep(interval);
       } catch (InterruptedException ex) {
         Thread.currentThread().interrupt();
       }
-      this.sleptForMillis += interval;
     }
   }
 
@@ -73,9 +71,9 @@ public class FeignApiRetryer extends Retryer.Default {
    *
    * @return An interval that is set by the backOffMultiplier
    */
-  private long nextMaxInterval() {
-    long interval = (long) ((double) this.period * Math.pow(backoffMultiplier, (double) (this.attempt - 1)));
-    return interval > this.maxPeriod ? this.maxPeriod : interval;
+  private long nextMaxInterval(final Long period, final Double backoffMultiplier, final int retries, final Long maxPeriod) {
+    long interval = (long) ((double) period * Math.pow(backoffMultiplier, (retries - 1)));
+    return interval > maxPeriod ? maxPeriod : interval;
   }
 
   @Override

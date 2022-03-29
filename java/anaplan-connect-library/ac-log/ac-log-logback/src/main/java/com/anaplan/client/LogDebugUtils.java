@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 
 public class LogDebugUtils {
 
-  private static final String consoleAppenderName = "CONSOLE_STDOUT";
-  private static final String debugPatternName = "DEBUG_STDOUT";
+  private LogDebugUtils(){}
+
+  private static final String CONSOLE_APPENDER_NAME = "CONSOLE_STDOUT";
+  private static final String DEBUG_PATTERN_NAME = "DEBUG_STDOUT";
 
   /**
    * Enables debug logging in Logback.
@@ -22,12 +24,12 @@ public class LogDebugUtils {
 
     ConsoleAppender<ILoggingEvent> consoleAppender = (ConsoleAppender<ILoggingEvent>) context
         .getLogger(packageName)
-        .getAppender(consoleAppenderName);
+        .getAppender(CONSOLE_APPENDER_NAME);
     if (consoleAppender != null) {
       consoleAppender.stop();
 
       PatternLayout debugLayout = new PatternLayout();
-      debugLayout.setPattern(context.getProperty(debugPatternName));
+      debugLayout.setPattern(context.getProperty(DEBUG_PATTERN_NAME));
       debugLayout.setContext(context);
       debugLayout.start();
 

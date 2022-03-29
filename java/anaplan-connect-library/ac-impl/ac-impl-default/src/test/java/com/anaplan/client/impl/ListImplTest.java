@@ -29,7 +29,7 @@ import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ListImplTest extends BaseTest {
+class ListImplTest extends BaseTest {
 
   private final String listId = "123";
   private Model mockModel;
@@ -55,7 +55,7 @@ public class ListImplTest extends BaseTest {
   }
 
   @Test
-  public void getDataFromCSV() throws IOException, CsvValidationException {
+  void getDataFromCSV() throws IOException, CsvValidationException {
     File listItemsCSV = new File("src/test/resources/files/listItems.csv");
     ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
 
@@ -69,23 +69,23 @@ public class ListImplTest extends BaseTest {
 
       final MetaContent metaContent = new MetaContent(prop, subset);
       list.parseHeader(header, null, parentMap, metaContent, propMap, subsetsMap);
-      assertEquals(propMap.size(), 2);
-      assertEquals(subsetsMap.size(), 1);
-      assertEquals(propMap.get(3), "prop1");
-      assertEquals(propMap.get(4), "prop2");
+      assertEquals(2, propMap.size());
+      assertEquals(1, subsetsMap.size());
+      assertEquals("prop1", propMap.get(3));
+      assertEquals("prop2", propMap.get(4));
 
       List<ListItem> items = list.parseFileBatch(csvReader, parentMap, propMap, subsetsMap);
-      assertEquals(items.size(), 5);
-      assertEquals(items.get(0).getName(), "test1");
-      assertEquals(items.get(3).getName(), "test4");
+      assertEquals(5, items.size());
+      assertEquals("test1", items.get(0).getName());
+      assertEquals("test4", items.get(3).getName());
       items = list.parseFileBatch(csvReader, parentMap, propMap, subsetsMap);
-      assertEquals(items.size(), 0);
+      assertEquals(0, items.size());
     }
 
   }
 
   @Test
-  public void getDataFromCSVWithMapping() throws IOException, CsvValidationException {
+  void getDataFromCSVWithMapping() throws IOException, CsvValidationException {
     File listItemsCSV = new File("src/test/resources/files/listItemsMapped.csv");
     File mappings = new File("src/test/resources/files/listItemMapping.properties");
     ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
@@ -109,21 +109,21 @@ public class ListImplTest extends BaseTest {
       }
 
       list.parseHeader(header, map, parentMap, metaContent, propMap, subsetsMap);
-      assertEquals(propMap.size(), 2);
-      assertEquals(subsetsMap.size(), 1);
-      assertEquals(propMap.get(3), "prop1");
-      assertEquals(propMap.get(4), "prop2");
+      assertEquals(2, propMap.size());
+      assertEquals(1, subsetsMap.size());
+      assertEquals("prop1", propMap.get(3));
+      assertEquals("prop2", propMap.get(4));
 
       List<ListItem> items = list.parseFileBatch(csvReader, parentMap, propMap, subsetsMap);
-      assertEquals(items.size(), 2);
-      assertEquals(items.get(0).getName(), "test1");
-      assertEquals(items.get(1).getName(), "test2");
+      assertEquals(2, items.size());
+      assertEquals("test1", items.get(0).getName());
+      assertEquals("test2", items.get(1).getName());
 
     }
   }
 
   @Test
-  public void getDataFromJSON() throws IOException {
+  void getDataFromJSON() throws IOException {
     File listItemsJSON = new File("src/test/resources/files/listItems.json");
     ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
 
@@ -148,7 +148,7 @@ public class ListImplTest extends BaseTest {
   }
 
   @Test
-  public void getDataFromJSONWithMapping() throws IOException {
+  void getDataFromJSONWithMapping() throws IOException {
     File listItemsJSON = new File("src/test/resources/files/listItemsMapped.json");
     File mappings = new File("src/test/resources/files/listItemMapping.properties");
     ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
@@ -204,13 +204,13 @@ public class ListImplTest extends BaseTest {
     return expectedList;
   }
 
-  private ListImpl.MetaContent getMetaContent() {
+  private MetaContent getMetaContent() {
     List<String> props = new ArrayList<>(2);
     props.add("prop1");
     props.add("prop2");
     List<String> subsets = new ArrayList<>(1);
     subsets.add("subset");
-    ListImpl.MetaContent metaContent = new ListImpl.MetaContent(props, subsets);
+    MetaContent metaContent = new MetaContent(props, subsets);
     return metaContent;
   }
 

@@ -2,6 +2,7 @@ package com.anaplan.client;
 
 import com.anaplan.client.auth.Authenticator;
 import com.anaplan.client.auth.AuthenticatorFactoryUtil;
+import com.anaplan.client.auth.UnknownAuthenticationException;
 import com.anaplan.client.transport.ConnectionProperties;
 import com.anaplan.client.transport.client.OkHttpFeignClientProvider;
 import feign.Client;
@@ -9,7 +10,10 @@ import java.util.function.Supplier;
 
 public class DefaultServiceProvider {
 
-  public static Service getService(ConnectionProperties properties){
+  private DefaultServiceProvider(){}
+
+  public static Service getService(ConnectionProperties properties)
+      throws UnknownAuthenticationException {
 
     OkHttpFeignClientProvider okHttpClientProvider = new OkHttpFeignClientProvider();
     Supplier<Client> clientSupplier = () -> okHttpClientProvider.createFeignClient(properties);

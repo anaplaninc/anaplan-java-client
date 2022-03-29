@@ -19,14 +19,14 @@ public class ObjectMapperProvider {
   }
 
   public static ObjectMapper getObjectMapper() {
-    return INSTANCE_HOLDER.SINGLETON_INSTANCE.objectMapper;
+    return InstanceHolder.SINGLETON_INSTANCE.objectMapper;
   }
 
   /**
    * Customizes the object-mapper to use a custom file-chunk-serializer. Also sets the visibility for parsing to
    * field-names only, so getter and setter names are ignored.
    *
-   * @return
+   * @return {@link ObjectMapper}
    */
   private static ObjectMapper createObjectMapper() {
     ObjectMapper objectMapper = new ObjectMapper();
@@ -42,9 +42,9 @@ public class ObjectMapperProvider {
     return objectMapper;
   }
 
-  private static class INSTANCE_HOLDER {
+  private static class InstanceHolder {
 
-    private static ObjectMapperProvider SINGLETON_INSTANCE = new ObjectMapperProvider();
+    private static final ObjectMapperProvider SINGLETON_INSTANCE = new ObjectMapperProvider();
   }
 
 }

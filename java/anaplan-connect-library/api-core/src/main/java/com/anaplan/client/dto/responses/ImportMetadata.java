@@ -1,6 +1,8 @@
 package com.anaplan.client.dto.responses;
 
-public class ImportMetadata {
+import java.io.Serializable;
+
+public class ImportMetadata implements Serializable {
   private String id;
   private String name;
   private String type;
