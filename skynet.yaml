@@ -14,10 +14,10 @@ run:
     - master
 
 artifacts:
-  - /testing/build/test-results/test
+  - /testing/build/target/surefire-reports
 
 test-reports:
-  - /testing/build/test-results/test
+  - /testing/build/target/surefire-reports
 
 scripts:
-  - cd java && mvn test
+  - pwd && cd java && mvn test
