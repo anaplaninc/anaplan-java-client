@@ -1,0 +1,23 @@
+# Testing with Skynet - https://github.com/Workiva/skynet/tree/master/docs
+name: anaplan-java-client-unit-tests
+image: maven:3.8.5-amazoncorretto-8
+description: run anaplan-java-client unit tests
+timeout: 300 #5 minutes
+size: small
+contact: support-onecloud
+
+run:
+  on-pull-request: yes
+  on-tag: yes
+  when-branch-name-is:
+    - ^refs/tags/.+
+    - master
+
+artifacts:
+  - /testing/build/test-results/test
+
+test-reports:
+  - /testing/build/test-results/test
+
+scripts:
+  - cd java && mvn test
