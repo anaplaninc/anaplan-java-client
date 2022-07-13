@@ -10,7 +10,6 @@ run:
   on-pull-request: yes
   on-tag: yes
   when-branch-name-is:
-    - ^refs/tags/.+
     - master
 
 artifacts:
