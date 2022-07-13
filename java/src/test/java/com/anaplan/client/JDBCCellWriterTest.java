@@ -60,24 +60,24 @@ public class JDBCCellWriterTest extends BaseTest {
     }
 
     @Test
-    public void testSqlInsertQuerySingleRow() throws AnaplanAPIException,IOException,SQLException {
-        int[] mapcols = {0,0,0};
+    public void testSqlInsertQuerySingleRow() throws AnaplanAPIException, IOException, SQLException {
+        int[] mapcols = {0, 0, 0};
         InputStream inputStream = new FileInputStream("src/test/resources/files/chunk_1row.txt");
-        assertEquals(1,jdbcCellWriter.writeDataRow("exportId",5,10,inputStream,1,"0",mapcols,3,","));
+        assertEquals(1, jdbcCellWriter.writeDataRow("exportId", 5, 10, inputStream, 1, "0", mapcols, 3, ","));
     }
 
     @Test
-    public void testSqlInsertQueryFourRows() throws AnaplanAPIException,IOException,SQLException {
-        int[] mapcols = {0,0,0};
+    public void testSqlInsertQueryFourRows() throws AnaplanAPIException, IOException, SQLException {
+        int[] mapcols = {0, 0, 0};
         InputStream inputStream = new FileInputStream("src/test/resources/files/chunk_2rows.txt");
-        assertEquals(4,jdbcCellWriter.writeDataRow("exportId",5,10,inputStream,1,"0",mapcols,3,","));
+        assertEquals(4, jdbcCellWriter.writeDataRow("exportId", 5, 10, inputStream, 1, "0", mapcols, 3, ","));
     }
 
     @Test
-    public void testCorruptedRecordsException() throws AnaplanAPIException,IOException,SQLException {
-        int[] mapcols = {0,0,0,11111};
+    public void testCorruptedRecordsException() throws AnaplanAPIException, IOException, SQLException {
+        int[] mapcols = {0, 0, 0, 11111};
         InputStream inputStream = new FileInputStream("src/test/resources/files/chunk_3rows.txt");
-        assertEquals(4,jdbcCellWriter.writeDataRow("exportId",5,10,inputStream,1,"0",mapcols,3,","));
+        assertEquals(4, jdbcCellWriter.writeDataRow("exportId", 5, 10, inputStream, 1, "0", mapcols, 3, ","));
     }
 
     @Test
@@ -100,3 +100,4 @@ public class JDBCCellWriterTest extends BaseTest {
     }
 
 }
+

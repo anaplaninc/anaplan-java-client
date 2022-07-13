@@ -11,6 +11,7 @@ import com.anaplan.client.transport.interceptors.AConnectHeaderInjector;
 import com.anaplan.client.transport.interceptors.AuthTokenInjector;
 import com.anaplan.client.transport.interceptors.CompressPutBodyInjector;
 import com.anaplan.client.transport.interceptors.UserAgentInjector;
+import com.anaplan.client.transport.retryer.AnaplanErrorDecoder;
 import com.anaplan.client.transport.retryer.FeignApiRetryer;
 import com.anaplan.client.transport.serialization.ByteArraySerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -95,6 +96,7 @@ public class AnaplanApiProvider implements TransportApi {
                             (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
                             properties.getMaxRetryCount(),
                             FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER))
+                    .errorDecoder(new AnaplanErrorDecoder())
                     .target(AnaplanAPI.class, properties.getApiServicesUri().toString() + "/" + Version.API_MAJOR + "/" + Version.API_MINOR);
         }
         return apiClient;
@@ -147,6 +149,7 @@ public class AnaplanApiProvider implements TransportApi {
             } else {
                 okHttpBuilder
                         .proxyAuthenticator((route, response) -> response.request().newBuilder()
+                                .header("Connection","close")
                                 .header(PROXY_AUTHORIZATION_HEADER, okhttp3.Credentials.basic(
                                         proxyCredentials.getUserName(),
                                         proxyCredentials.getPassPhrase()))
