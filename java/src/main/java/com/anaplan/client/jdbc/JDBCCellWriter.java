@@ -109,25 +109,38 @@ public class JDBCCellWriter implements CellWriter {
             String line;
             List rowBatch = new ArrayList<>();
             while (null != (line = lnr.readLine())) {
+                String[] row;
                 //ignore the header
                 if (lnr.getLineNumber() == 1 && chunkId.equals("0")) {
                     LOG.info("Export {} to database started successfully", exportId);
-                }else {
+                } else {
+                    //adding a fix to handle the case when the chunk ends with a complete record
                     if (lnr.getLineNumber() == 1 && !(chunkId.equals("0"))) {
-                        line = lastRow.concat(line);
+                        String temp = lastRow.concat(line);
+                        if (temp.split(separator).length == columnCount) {
+                            line = temp;
+                        } else {
+                            row = lastRow.split(separator);
+                            rowBatch.add(row);
+                        }
                     }
-                    String[] row = line.split(separator);
+                    row = line.split(separator);
                     rowBatch.add(row);
                     lastRow = line;
                     if (++batch_records % batch_size == 0) {
                         ++batch_no;
                         //for this batch, code should have dummy values to bypass the check for chunkId and no of chunks
                         // chunkId is being sent as 1 and no of chunks as 2 to bypass the check
-                        batchExecution(rowBatch, columnCount, mapcols,"1",2, maxRetryCount, retryTimeout);
+                        batchExecution(rowBatch, columnCount, mapcols, "1", 2, maxRetryCount, retryTimeout);
                         rowBatch = new ArrayList<>(); //reset temoRowList
                         batch_records = 0;
                     }
                 }
+            }
+            //Check to make sure it is not the last chunk
+            //removing the last record so that it can be processed in the next chunk
+            if(Integer.parseInt(chunkId)!=noOfChunks-1 && rowBatch.size()>0) {
+                rowBatch.remove(rowBatch.size() - 1);
             }
             //transfer the last batch when all of the lines from inputstream have been read
             ++batch_no;
@@ -155,9 +168,7 @@ public class JDBCCellWriter implements CellWriter {
     private void batchExecution(List<String[]> rowBatch, int columnCount, int[] mapcols, String chunkId, int noOfChunks,
                                  int maxRetryCount, int retryTimeout) throws SQLException {
         int k = 0; //retry count
-        int[] count = new int[batch_size];
         boolean retry = false;
-        int notAvailable = 0;
         int rowBatchSize = rowBatch.size();
         do {
             k++;
@@ -168,10 +179,6 @@ public class JDBCCellWriter implements CellWriter {
                 if (preparedStatement == null || preparedStatement.isClosed()) {
                     preparedStatement = connection.prepareStatement(jdbcConfig.getJdbcQuery(),
                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                }
-                int chunkno = Integer.parseInt(chunkId);
-                if (chunkno != noOfChunks-1) {
-                    rowBatchSize = rowBatch.size()-1;
                 }
                 for (int i = 0; i < rowBatchSize; i++) {
                     psLineEndWithSeparator(mapcols, columnCount, rowBatch.get(i));
