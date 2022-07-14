@@ -19,6 +19,8 @@
         </layout>
     </appender>
 
+    <logger name="org.apache.hc" level="off"/>
+
     <logger name="com.anaplan.client" level="info" additivity="false">
         <appender-ref ref="CONSOLE_STDOUT"/>
     </logger>
