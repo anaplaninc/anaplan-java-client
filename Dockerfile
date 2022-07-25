@@ -18,7 +18,6 @@ ARG GIT_TAG
 RUN ./scripts/build.sh
 
 # Collect assembled jar for publishing
-ARG BUILD_ARTIFACTS_RELEASE=/build/target/*.jar
 ARG BUILD_ARTIFACTS_JAVA=/build/target/*.jar
 
 # Generate Veracode Artifact
