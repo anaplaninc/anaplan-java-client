@@ -184,28 +184,6 @@
                     <target>${jdk.version}</target>
                 </configuration>
             </plugin>
-            <!-- Maven Assembly Plugin -->
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.anaplan.client</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- Maven deploy plugin, required for Maven Github plugin -->
             <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
