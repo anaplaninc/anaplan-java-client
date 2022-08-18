@@ -5,9 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.anaplan.java.client</groupId>
+    <groupId>com.anaplan.client</groupId>
     <artifactId>ac-auth</artifactId>
-    <version>3.0.0</version>
+    <version>1.2.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -18,21 +18,30 @@
   <dependencies>
 
     <dependency>
-      <groupId>com.anaplan.java.client</groupId>
+      <groupId>com.anaplan.client</groupId>
       <artifactId>api-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk15on</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.anaplan.client</groupId>
+      <artifactId>ac-http-feign</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <!-- Set a compiler level -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

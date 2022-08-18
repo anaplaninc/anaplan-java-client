@@ -18,6 +18,8 @@ public class AuthenticatorFactoryUtil {
         return new BasicAuthenticator(properties, authClient);
       case CA_CERTIFICATE:
         return new CertificateAuthenticator(properties, authClient);
+      case DEVICE:
+        return new DeviceAuthenticator(properties, authClient);
       default:
         throw new UnknownAuthenticationException(
             "Unknown authentication scheme: " + properties.getApiCredentials().getScheme());

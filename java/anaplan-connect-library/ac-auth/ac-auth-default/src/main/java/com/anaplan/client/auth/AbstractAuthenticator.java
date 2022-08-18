@@ -45,7 +45,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
     return new String(authToken);
   }
 
-  private byte[] refreshToken() {
+  byte[] refreshToken() {
     LOG.info("Refreshing auth token...");
     try {
       RefreshTokenResp refreshTokenResp = authClient.refreshToken(new String(authToken));
