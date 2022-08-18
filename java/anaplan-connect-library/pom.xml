@@ -46,7 +46,7 @@
     <mockito.version>1.10.19</mockito.version>
     <guava.version>30.0-jre</guava.version>
     <opencsv.version>5.5.1</opencsv.version>
-    <h2.version>2.0.204</h2.version>
+    <h2.version>2.1.210</h2.version>
     <common-csv-version>1.9.0</common-csv-version>
   </properties>
 
