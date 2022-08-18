@@ -1,7 +1,5 @@
 package com.anaplan.client.api;
 
-import com.anaplan.client.dto.DeviceCodeInfo;
-import com.anaplan.client.dto.OauthTokenInfo;
 import com.anaplan.client.dto.responses.AuthenticationResp;
 import com.anaplan.client.dto.responses.RefreshTokenResp;
 import com.anaplan.client.dto.responses.ValidationTokenResp;
@@ -40,19 +38,4 @@ public interface AnaplanAuthenticationAPIFeign extends AnaplanAuthenticationAPI{
   @RequestLine("POST /token/logout")
   @Headers({"AUTHORIZATION: AnaplanAuthToken {token}"})
   void logout(@Param("token") String token);
-
-  @RequestLine("POST /oauth/device/code")
-  DeviceCodeInfo deviceCode(@Param("scope") String scope, @Param("client_id") String clientId);
-
-  @RequestLine("POST /oauth/token")
-  OauthTokenInfo oauthToken(
-      @Param("grant_type") String grantType,
-      @Param("device_code") String deviceCode,
-      @Param("client_id") String clientId);
-
-  @RequestLine("POST /oauth/token")
-  OauthTokenInfo oauthRefreshToken(
-      @Param("grant_type") String grantType,
-      @Param("client_id") String clientId,
-      @Param("refresh_token") String refreshToken);
 }

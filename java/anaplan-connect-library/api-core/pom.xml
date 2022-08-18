@@ -5,42 +5,20 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.anaplan.client</groupId>
-    <artifactId>ac-parent</artifactId>
-    <version>1.2.1</version>
+    <groupId>com.anaplan.java.client</groupId>
+    <artifactId>anaplan-connect-library</artifactId>
+    <version>3.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>api-core</artifactId>
   <name>Anaplan Storage SDK Library API</name>
   <packaging>jar</packaging>
-  <properties>
-    <opencsv-version>5.5.1</opencsv-version>
-  </properties>
 
   <dependencies>
     <dependency>
-      <groupId>com.anaplan.client</groupId>
+      <groupId>com.anaplan.java.client</groupId>
       <artifactId>ac-utils</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.opencsv</groupId>
-      <artifactId>opencsv</artifactId>
-      <version>${opencsv-version}</version>
-    </dependency>
-    <!-- TODO: remove this -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-csv</artifactId>
-      <version>${common-csv-version}</version>
     </dependency>
   </dependencies>
 
@@ -50,7 +28,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
-
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+      </plugin>
     </plugins>
   </build>
 

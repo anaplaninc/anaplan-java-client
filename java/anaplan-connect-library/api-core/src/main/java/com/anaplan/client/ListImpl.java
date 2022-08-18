@@ -59,27 +59,21 @@ public class ListImpl implements ListFactory {
   private final boolean numberedList;
   private final AnaplanAPI anaplanAPI;
   private final int batchSize;
-  private final ListMetadata listMetadata;
-  private final List<String> booleanParamList;
-  private final Service service;
 
   public ListImpl(final Service service, String workspaceId, String modelId,
-                  final String listId, final boolean isJDBC) {
-    this(service, workspaceId, modelId, listId, BATCH_SIZE, isJDBC);
+                  final String listId) {
+    this(service, workspaceId, modelId, listId, BATCH_SIZE);
   }
 
   public ListImpl(final Service service, String workspaceId, String modelId,
-                  final String listId, final int batchSize, final boolean isJDBC) {
-    this.service = service;
+                  final String listId, final int batchSize) {
     this.anaplanAPI = service.getApiProvider().get();
     this.workspaceId = service.getWorkspace(workspaceId).getId();
     this.modelId = service.getModel(workspaceId, modelId).getId();
     this.listId = service.getList(listId, this.workspaceId, this.modelId).getId();
     final ListMetadata list = service.getListMetadata(this.workspaceId, this.modelId, this.listId);
     this.numberedList = list.getNumberedList();
-    this.listMetadata = service.getListMetadata(this.workspaceId, this.modelId, this.listId);
     this.batchSize = batchSize;
-    this.booleanParamList = isJDBC ? Utils.getBooleanParams(this.listMetadata.getProperties()) : new ArrayList<>(0);
   }
 
   @Override
@@ -175,7 +169,7 @@ public class ListImpl implements ListFactory {
     }
   }
 
-  public boolean verifyHeaderMapping(final String[] headerSource,
+  public void verifyHeaderMapping(final String[] headerSource,
       final Map<String, String> mappingProperty,
       final List<String> propertiesModel,
       final List<String> subsetModel) {
@@ -198,9 +192,7 @@ public class ListImpl implements ListFactory {
       LOG.warn("The provided mapping file has invalid mappings which will be ignored:");
       invalidSourceHeaders.forEach(k-> LOG.info("Source mapping: {}", k));
       invalidTargetHeaders.forEach(v-> LOG.info("Target mapping: {}", v));
-      return false;
     }
-    return true;
   }
 
   private void getFromHeader(final String realColName, final Map<String, Integer> parentMap, final
@@ -248,7 +240,7 @@ public class ListImpl implements ListFactory {
     String[] columns;
     while ((columns = csvReader.readNext()) != null) {
       final ListItem itemData =
-          ListItem.mapCSVToItemData(columns, parentMap, propMap, subsetsMap, booleanParamList, listMetadata.getNumberedList(), false);
+          ListItem.mapCSVToItemData(columns, parentMap, propMap, subsetsMap, numberedList);
       itemList.add(itemData);
 
       if (itemList.size() == this.batchSize) {
@@ -325,7 +317,7 @@ public class ListImpl implements ListFactory {
 
   public MetaContent getContent() {
     final ListMetadata listMetadata =
-        service.getListMetadata(workspaceId, modelId, listId);
+        anaplanAPI.getListMetadata(workspaceId, modelId, listId).getItem();
     List<String> propNames = new ArrayList<>(0);
     if (listMetadata.getProperties() != null) {
       propNames = listMetadata.getProperties().stream()
@@ -374,7 +366,7 @@ public class ListImpl implements ListFactory {
     for (final String[] row : rows) {
       itemsParameterData
           .add(ListItem
-              .mapCSVToItemData(row, parentMap, mapPropIndex, mapSubsetIndex, booleanParamList, listMetadata.getNumberedList(), true));
+              .mapCSVToItemData(row, parentMap, mapPropIndex, mapSubsetIndex, numberedList));
     }
 
     final ListItemParametersData listItemParametersData = new ListItemParametersData();

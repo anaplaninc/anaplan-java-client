@@ -3,19 +3,14 @@ package com.anaplan.client.impl;
 import static com.anaplan.client.Constants.BATCH_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.anaplan.client.Constants;
 import com.anaplan.client.ListImpl;
 import com.anaplan.client.ListImpl.MetaContent;
 import com.anaplan.client.Model;
 import com.anaplan.client.Utils;
 import com.anaplan.client.dto.ListItem;
-import com.anaplan.client.dto.ListItemParametersData;
 import com.anaplan.client.dto.ListMetadata;
-import com.anaplan.client.dto.ListMetadataProperty;
 import com.anaplan.client.dto.ListName;
-import com.anaplan.client.dto.ListSubset;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.opencsv.CSVReader;
@@ -31,8 +26,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,25 +52,12 @@ class ListImplTest extends BaseTest {
 
     doReturn(listName).when(mockModel.getService())
             .getListMetadata(mockModel.getWorkspace().getId(), mockModel.getId(), listId);
-    List<ListMetadataProperty> properties = new ArrayList<>();
-    ListMetadataProperty p = new ListMetadataProperty();
-    p.setName("o");
-    SortedMap<String, String> t = new TreeMap<>();
-    t.put(Constants.DATA_TYPE, Constants.BOOLEAN);
-    p.setFormatMetadata(t);
-    properties.add(p);
-    List<ListSubset> subsets= new ArrayList<>();
-    ListSubset s = new ListSubset();
-    s.setName("a");
-    subsets.add(s);
-    listName.setSubsets(subsets);
-    listName.setProperties(properties);
   }
 
   @Test
   void getDataFromCSV() throws IOException, CsvValidationException {
     File listItemsCSV = new File("src/test/resources/files/listItems.csv");
-    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE, false);
+    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
 
     try (CSVReader csvReader = new CSVReader(new FileReader(listItemsCSV))) {
       final String[] header = csvReader.readNext();
@@ -108,7 +88,7 @@ class ListImplTest extends BaseTest {
   void getDataFromCSVWithMapping() throws IOException, CsvValidationException {
     File listItemsCSV = new File("src/test/resources/files/listItemsMapped.csv");
     File mappings = new File("src/test/resources/files/listItemMapping.properties");
-    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE, false);
+    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
 
     try (CSVReader csvReader = new CSVReader(new FileReader(listItemsCSV))) {
       final String[] header = csvReader.readNext();
@@ -145,7 +125,7 @@ class ListImplTest extends BaseTest {
   @Test
   void getDataFromJSON() throws IOException {
     File listItemsJSON = new File("src/test/resources/files/listItems.json");
-    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE, false);
+    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
 
     final JsonFactory jsonFactory = new JsonFactory();
     try(final JsonParser jsonParser = jsonFactory.createParser(listItemsJSON)) {
@@ -171,7 +151,7 @@ class ListImplTest extends BaseTest {
   void getDataFromJSONWithMapping() throws IOException {
     File listItemsJSON = new File("src/test/resources/files/listItemsMapped.json");
     File mappings = new File("src/test/resources/files/listItemMapping.properties");
-    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE, false);
+    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE);
     final JsonFactory jsonFactory = new JsonFactory();
     try(final JsonParser jsonParser = jsonFactory.createParser(listItemsJSON)) {
       jsonParser.nextToken();
@@ -224,13 +204,13 @@ class ListImplTest extends BaseTest {
     return expectedList;
   }
 
-  private ListImpl.MetaContent getMetaContent() {
+  private MetaContent getMetaContent() {
     List<String> props = new ArrayList<>(2);
     props.add("prop1");
     props.add("prop2");
     List<String> subsets = new ArrayList<>(1);
     subsets.add("subset");
-    ListImpl.MetaContent metaContent = new ListImpl.MetaContent(props, subsets);
+    MetaContent metaContent = new MetaContent(props, subsets);
     return metaContent;
   }
 
@@ -244,26 +224,5 @@ class ListImplTest extends BaseTest {
     assertEquals(listItem1.getListName(), listItem2.getListName());
     assertEquals(listItem1.getProperties(), listItem2.getProperties());
     assertEquals(listItem1.getSubsets(), listItem2.getSubsets());
-  }
-
-  @Test
-  void getDataFromJDBC() throws IOException {
-
-    ListImpl list = new ListImpl(mockModel.getService(), mockModel.getWorkspace().getId(), mockModel.getId(), listId, BATCH_SIZE, true);
-
-    String[] header = new String[]{"name","code","o","a"};
-
-    List<String> property= new ArrayList<>();
-    property.add("o");
-    List<String> subset = new ArrayList<>();
-    subset.add("a");
-    assertTrue(list.verifyHeaderMapping(header, new HashMap<>(0), property, subset));
-
-    List<String[]> rows = new ArrayList<>();
-    String[] row = new String[]{"zzz","www","1","0"};
-    rows.add(row);
-    ListItemParametersData listItemParametersData = list.getListItemFromJDBC(header, null, rows);
-    assertEquals("true", listItemParametersData.getItems().get(0).getProperties().get("o"));
-    assertEquals(false, listItemParametersData.getItems().get(0).getSubsets().get("a"));
   }
 }

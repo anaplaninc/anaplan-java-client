@@ -1,11 +1,7 @@
 package com.anaplan.client.dto;
 
-import com.anaplan.client.Constants;
 import com.anaplan.client.ListImpl;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -93,7 +89,7 @@ public class ListItem extends NamedObjectData implements Serializable {
    * @return {@link ListItem}
    */
   public static ListItem mapCSVToItemData(final String[] columns, final Map<String, Integer> parentMap, final Map<Integer, String> prop,
-      final Map<Integer, String> subsets, final List<String> listMetadata, final boolean isNumberedList, final boolean fromJDBC) {
+      final Map<Integer, String> subsets, final Boolean numberedList) {
     final ListItem itemData = new ListItem();
     if (columns == null) {
       return itemData;
@@ -103,73 +99,25 @@ public class ListItem extends NamedObjectData implements Serializable {
     final Integer codeIndex = parentMap.get(ListImpl.CODE);
     final Integer idIndex = parentMap.get(ListImpl.ID);
     final int index = nameIndex == null ? 0 : nameIndex;
-    final String name = Boolean.TRUE.equals(isNumberedList) ? null : columns[index];
+    final String name = Boolean.TRUE.equals(numberedList) ? null : columns[index];
     itemData.setName(name);
     itemData.setCode(columns[codeIndex == null ? 2 : codeIndex]);
     final String parent = parentIndex == null || "".equals(columns[parentIndex]) ? null : columns[parentIndex];
     itemData.setParent(parent);
     itemData.setId(idIndex == null ? null : columns[idIndex]);
 
-    if (prop != null) {
-      if (fromJDBC) {
-        itemData.setProperties(getJDBCPropertiesFromMeta(prop, columns, listMetadata));
-      } else {
-        itemData.setProperties(getPropertiesFromMeta(prop, columns));
-      }
+    if (prop !=null) {
+      Map<String, String> properties = prop.keySet().stream().filter(key -> key < columns.length)
+          .collect(Collectors.toMap(prop::get, key -> columns[key], (a, b) -> b));
+      itemData.setProperties(properties);
     }
-    if (subsets != null) {
+    if (subsets !=null) {
       Map<String, Boolean> sub = subsets.keySet().stream().filter(key -> key < columns.length)
           .collect(
-              Collectors.toMap(subsets::get, key -> (columns[key].equals(Constants.ONE) || Boolean.parseBoolean(columns[key])),
+              Collectors.toMap(subsets::get, key -> (columns[key].equals("1") || Boolean.parseBoolean(columns[key])),
                       (a, b) -> b));
       itemData.setSubsets(sub);
     }
     return itemData;
-  }
-
-  private static Map<String, String> getJDBCPropertiesFromMeta(final Map<Integer, String> prop,
-      final String[] columns, final List<String> listProperties) {
-    if (prop.isEmpty()) {
-      return new HashMap<>(0);
-    }
-    final Map<String, String> properties = new HashMap<>();
-    for (Iterator<Integer> iterator = prop.keySet().iterator(); iterator.hasNext();) {
-      Integer key = iterator.next();
-      if (key >= columns.length) {
-        continue;
-      }
-      final String propName = prop.get(key);
-      boolean isBoolean = listProperties.contains(propName);
-      String propValue = columns[key];
-      //For JDBC source properties we convert 1 and 0 values to true and false if the property is boolean type
-      if (isBoolean) {
-        listProperties.remove(propName);
-        if (Constants.ONE.equals(propValue)) {
-          propValue = Boolean.TRUE.toString();
-        } else if (Constants.ZERO.equals(propValue)) {
-          propValue = Boolean.FALSE.toString();
-        }
-      }
-      properties.put(propName, propValue);
-    }
-    return properties;
-  }
-
-  private static Map<String, String> getPropertiesFromMeta(final Map<Integer, String> prop,
-      final String[] columns) {
-    if (prop.isEmpty()) {
-      return new HashMap<>(0);
-    }
-    final Map<String, String> properties = new HashMap<>();
-    for (Iterator<Integer> iterator = prop.keySet().iterator(); iterator.hasNext();) {
-      Integer key = iterator.next();
-      if (key >= columns.length) {
-        continue;
-      }
-      final String propName = prop.get(key);
-      String propValue = columns[key];
-      properties.put(propName, propValue);
-    }
-    return properties;
   }
 }

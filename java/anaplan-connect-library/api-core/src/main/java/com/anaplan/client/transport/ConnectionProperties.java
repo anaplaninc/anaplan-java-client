@@ -1,7 +1,5 @@
 package com.anaplan.client.transport;
 
-import com.anaplan.client.Constants;
-import com.anaplan.client.DeviceTypeToken;
 import com.anaplan.client.auth.Credentials;
 import java.net.URI;
 
@@ -18,51 +16,6 @@ public class ConnectionProperties {
   private int retryTimeout;
   private int maxRetryCount;
   private int httpTimeout;
-  private String clientId;
-  private String refreshType = DeviceTypeToken.NON_ROTATABLE.name();
-  private boolean forceRegister;
-  private String major = Constants.TWO;
-  private String minor = Constants.ZERO;
-
-  public String getMajor() {
-    return major;
-  }
-
-  public void setMajor(String major) {
-    this.major = major;
-  }
-
-  public String getMinor() {
-    return minor;
-  }
-
-  public void setMinor(String minor) {
-    this.minor = minor;
-  }
-
-  public String getClientId() {
-    return clientId;
-  }
-
-  public void setClientId(String clientId) {
-    this.clientId = clientId;
-  }
-
-  public String getRefreshType() {
-    return refreshType;
-  }
-
-  public void setRefreshType(String refreshType) {
-    this.refreshType = refreshType;
-  }
-
-  public boolean isForceRegister() {
-    return forceRegister;
-  }
-
-  public void setForceRegister(boolean forceRegister) {
-    this.forceRegister = forceRegister;
-  }
 
   public URI getApiServicesUri() {
     return apiServicesUri;
