@@ -214,6 +214,14 @@ public class ListImpl implements ListFactory {
     }
   }
 
+  /**
+   * Performs verifications on the mapping of the headers
+   * @param headerSource
+   * @param mappingProperty
+   * @param propertiesModel
+   * @param subsetModel
+   * @return
+   */
   public boolean verifyHeaderMapping(final String[] headerSource,
       final Map<String, String> mappingProperty,
       final List<String> propertiesModel,
