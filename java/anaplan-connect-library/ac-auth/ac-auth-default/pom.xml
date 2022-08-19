@@ -34,7 +34,7 @@
       <artifactId>bcpkix-jdk15on</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.anaplan.java.client</groupId>
+      <groupId>com.anaplan.client</groupId>
       <artifactId>ac-http-feign</artifactId>
     </dependency>
   </dependencies>
