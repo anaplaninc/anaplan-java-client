@@ -25,6 +25,7 @@ import com.anaplan.client.logging.LogUtils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +35,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -107,10 +109,15 @@ public class ServerFile extends NamedObject {
    * @param deleteExisting If true, the target file will automatically be deleted if it already exists; otherwise an
    *                       Exception will be thrown
    */
-  public void downLoad(final File target, boolean deleteExisting) throws IOException {
+  public void downLoad(File target, boolean deleteExisting) throws IOException {
+    if (target == null) {
+      throw new FileNotFoundException("Target file does not exist.");
+    }
     LogUtils.logSeparatorDownload();
     LOG.info("Downloading file {}", target.getAbsolutePath());
     Utils.checkTarget(target, PATH, FILE, deleteExisting);
+
+    target = Utils.getAbsolutePath(target.toPath()).toFile();
 
     // We will write to a temporary location first and move it to its final
     // destination only when complete.
@@ -187,10 +194,10 @@ public class ServerFile extends NamedObject {
   }
 
   /**
-   * Create a {@link CellReader} implementation which will download the content from the server. The
+   * Create a {@link com.anaplan.client.CellReader} implementation which will download the content from the server. The
    * content is assumed to be in the same format as written to by getUploadCellWriter.
    *
-   * @return a {@link CellReader} which will read the content stored on the server
+   * @return a {@link com.anaplan.client.CellReader} which will read the content stored on the server
    * @since 1.2
    */
   public CellReader getDownloadCellReader() throws IOException {
@@ -445,7 +452,7 @@ public class ServerFile extends NamedObject {
   }
 
   /**
-   * Return a {@link CellWriter} implementation which will upload written content to the server,
+   * Return a {@link com.anaplan.client.CellWriter} implementation which will upload written content to the server,
    * writing it to the specified target file. The file will have the following format:
    * <ul>
    * <li>Encoding: UTF-8</li>
@@ -456,7 +463,7 @@ public class ServerFile extends NamedObject {
    * <li>First data row: 2</li>
    * </ul>
    *
-   * @return a {@link CellWriter} implementation
+   * @return a {@link com.anaplan.client.CellWriter} implementation
    * @since 1.2
    */
   public CellWriter getUploadCellWriter(final int chunkSize) {

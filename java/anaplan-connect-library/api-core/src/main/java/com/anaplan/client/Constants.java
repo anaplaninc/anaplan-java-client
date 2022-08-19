@@ -41,4 +41,9 @@ public class Constants {
   public static final int MAX_BATCH_SIZE = 100 * 1000;
   public static final int BATCH_SIZE = 75 * 1000;
 
+  public static final String DATA_TYPE = "dataType";
+  public static final String BOOLEAN = "boolean";
+  public static final String ONE = "1";
+  public static final String ZERO = "0";
+  public static final String TWO = "2";
 }

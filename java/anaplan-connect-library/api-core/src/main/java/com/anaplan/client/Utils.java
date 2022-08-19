@@ -1,15 +1,26 @@
 package com.anaplan.client;
 
+import com.anaplan.client.dto.ListMetadataProperty;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +38,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by Spondon Saha Date: 5/5/18 Time: 3:48 PM
@@ -109,7 +123,7 @@ public class Utils {
     List<String> list = new ArrayList<>();
     for (CSVRecord s1 : keyParsed.getRecords()) {
       for (String str : s1.toList()) {
-        if (str != null && !"".equals(str)) {
+        if (str != null) {
           if (str.contains(format.getDelimiterString()) || str.contains(format.getQuoteCharacter().toString())) {
             list.add("\""+ str+"\"");
           } else {
@@ -305,4 +319,80 @@ public class Utils {
     }
   }
 
+  /**
+   * Get absolute path if the path is relative
+   * @param target the path to check
+   * @return absolute path
+   */
+  public static Path getAbsolutePath(Path target) throws FileNotFoundException {
+    if (target == null) {
+      throw new FileNotFoundException("Path does not exist");
+    }
+    if (!target.isAbsolute()) {
+      target = Paths.get(target.toFile().getAbsolutePath());
+    }
+    return target;
+  }
+
+  public static byte[] createHash(String clientId) {
+    byte[] encodedHash = new byte[0];
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-512/256");
+      encodedHash = digest.digest(clientId.getBytes(StandardCharsets.UTF_8));
+    } catch (NoSuchAlgorithmException e) {
+      LOG.error("The SHA algorithm was not found. {}", e.getMessage());
+    }
+    return encodedHash;
+  }
+
+  public static String bytesToHex(byte[] hash) {
+    StringBuilder hexString = new StringBuilder(2 * hash.length);
+    for (byte b : hash) {
+      String hex = Integer.toHexString(0xff & b);
+      if (hex.length() == 1) {
+        hexString.append('0');
+      }
+      hexString.append(hex);
+    }
+    return hexString.toString();
+  }
+
+  public static Key loadKeystore(FileInputStream fileInputStream, String keyStoreName, char[] password)
+      throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+
+    KeyStore jks = KeyStore.getInstance("JKS");
+    jks.load(fileInputStream, password);
+    Key secretKeyAlias = jks.getKey(keyStoreName, password);
+    return secretKeyAlias;
+  }
+
+  public static KeyStore saveEntryInKeyStore(byte[] encodedKey, String keyStoreName, char[] password)
+      throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
+    KeyStore ks = KeyStore.getInstance("pkcs12");
+    ks.load(null, password);
+
+    SecretKey mySecretKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
+    KeyStore.SecretKeyEntry skEntry = new KeyStore.SecretKeyEntry(mySecretKey);
+    KeyStore.ProtectionParameter protectionParameter = new KeyStore.PasswordProtection(password);
+    ks.setEntry(keyStoreName, skEntry, protectionParameter);
+    return ks;
+  }
+  /**
+   * For jdbc source items we prepare the boolean property list from model
+   * to compare with the source properties and check for 1 and 0 values to convert it to boolean value
+   * @param properties {@link ListMetadataProperty} list
+   */
+  public static List<String> getBooleanParams(final List<ListMetadataProperty> properties) {
+    if (properties == null) {
+      return new ArrayList<>(0);
+    }
+    final List<String> params = new ArrayList<>();
+    for (final ListMetadataProperty listMetadataProperty : properties) {
+      if (listMetadataProperty.getFormatMetadata().get(Constants.DATA_TYPE)
+          .equalsIgnoreCase(Constants.BOOLEAN)) {
+        params.add(listMetadataProperty.getName());
+      }
+    }
+    return params;
+  }
 }

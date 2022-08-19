@@ -8,15 +8,15 @@ import java.util.List;
  */
 public class TasksResponse extends ListResponse<TaskData> {
 
-  private List<TaskData> tasksDatas;
+  private List<TaskData> tasks;
 
   @Override
   public List<TaskData> getItem() {
-    return tasksDatas;
+    return tasks;
   }
 
   @Override
   public void setItem(List<TaskData> item) {
-    this.tasksDatas = item;
+    this.tasks = item;
   }
 }

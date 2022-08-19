@@ -27,7 +27,8 @@ public final class Credentials {
   public enum Scheme {
     BASIC,
     NTLM,
-    CA_CERTIFICATE
+    CA_CERTIFICATE,
+    DEVICE
   }
 
   private Scheme scheme;
@@ -36,6 +37,7 @@ public final class Credentials {
   private String passPhrase;
   private String domain;
   private String workstation;
+  private String clientId;
 
   private X509Certificate certificate;
   private RSAPrivateKey privateKey;
@@ -52,6 +54,19 @@ public final class Credentials {
     this.domain = workstation = null;
     this.certificate = null;
     this.scheme = Scheme.BASIC;
+  }
+
+  /**
+   * Create device credential
+   * @param clientId the device id
+   */
+  public Credentials(String clientId) {
+    this.userName = null;
+    this.passPhrase = null;
+    this.clientId = clientId;
+    this.domain = workstation = null;
+    this.certificate = null;
+    this.scheme = Scheme.DEVICE;
   }
 
   /**
