@@ -43,11 +43,6 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
   private final char[] keystorePass;
   private OauthTokenInfo oauthTokenInfo;
 
-  /**
-   * Initialization of the properties required for keystore generation
-   * @param connectionProperties
-   * @param authClient
-   */
   public DeviceAuthenticator(ConnectionProperties connectionProperties,
                              AnaplanAuthenticationAPI authClient) {
     super(connectionProperties, authClient);
@@ -60,10 +55,6 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
     keystorePass = CryptoUtil.encrypt(this.connectionProperties.getClientId()).toCharArray();
   }
 
-  /**
-   * Authenticates the device
-   * @return refreshToken
-   */
   @Override
   public byte[] authenticate() {
     LOG.info("Authenticating via Device...");
@@ -82,9 +73,6 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
     }
   }
 
-  /**
-   * Deletes the existing JKS at the existing path
-   */
   public void clearRefreshTokenEntry() {
     LOG.info("Deleting already existing JKS and re-registering the device...");
 

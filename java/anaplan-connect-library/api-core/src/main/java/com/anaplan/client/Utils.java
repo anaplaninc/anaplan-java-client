@@ -348,11 +348,6 @@ public class Utils {
     return target;
   }
 
-  /**
-   * Creates the Hash for the provided client id with SHA-512/256 algorithm
-   * @param clientId
-   * @return
-   */
   public static byte[] createHash(String clientId) {
     byte[] encodedHash = new byte[0];
     try {
@@ -364,11 +359,6 @@ public class Utils {
     return encodedHash;
   }
 
-  /**
-   * Converts bytes to hexadecimal
-   * @param hash
-   * @return
-   */
   public static String bytesToHex(byte[] hash) {
     StringBuilder hexString = new StringBuilder(2 * hash.length);
     for (byte b : hash) {
@@ -381,18 +371,6 @@ public class Utils {
     return hexString.toString();
   }
 
-  /**
-   * Loads the Keystore and provides the resulted encrypted Key
-   * @param fileInputStream
-   * @param keyStoreName
-   * @param password
-   * @return {@link Key}
-   * @throws KeyStoreException
-   * @throws IOException
-   * @throws NoSuchAlgorithmException
-   * @throws CertificateException
-   * @throws UnrecoverableKeyException
-   */
   public static Key loadKeystore(FileInputStream fileInputStream, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
 
@@ -402,17 +380,6 @@ public class Utils {
     return secretKeyAlias;
   }
 
-  /**
-   * Saves the provided encoded key into the keystore
-   * @param encodedKey
-   * @param keyStoreName
-   * @param password
-   * @return {@link KeyStore}
-   * @throws KeyStoreException
-   * @throws IOException
-   * @throws NoSuchAlgorithmException
-   * @throws CertificateException
-   */
   public static KeyStore saveEntryInKeyStore(byte[] encodedKey, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
     KeyStore ks = KeyStore.getInstance("pkcs12");
