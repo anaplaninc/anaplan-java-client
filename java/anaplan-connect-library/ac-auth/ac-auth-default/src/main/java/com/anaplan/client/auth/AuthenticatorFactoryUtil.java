@@ -10,6 +10,13 @@ public class AuthenticatorFactoryUtil {
 
   private AuthenticatorFactoryUtil() {}
 
+  /**
+   * Provides the requested authentication method instance
+   * @param properties
+   * @param authClient
+   * @return {@link Authenticator}
+   * @throws UnknownAuthenticationException
+   */
   public static Authenticator getAuthenticator(ConnectionProperties properties,
       AnaplanAuthenticationAPI authClient) throws UnknownAuthenticationException {
     switch (properties.getApiCredentials().getScheme()) {

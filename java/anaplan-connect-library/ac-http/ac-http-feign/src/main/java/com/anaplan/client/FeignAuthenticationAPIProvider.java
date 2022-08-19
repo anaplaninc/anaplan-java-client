@@ -20,12 +20,21 @@ public class FeignAuthenticationAPIProvider {
   private final Supplier<Client> clientSupplier;
   private AnaplanAuthenticationAPI authClient;
 
+  /**
+   * Initializes API Provider with parameter
+   * @param connectionProperties
+   * @param clientSupplier
+   */
   public FeignAuthenticationAPIProvider(ConnectionProperties connectionProperties,
       Supplier<Client> clientSupplier) {
     this.connectionProperties = connectionProperties;
     this.clientSupplier = clientSupplier;
   }
 
+  /**
+   * Provides the Client Authentication API
+   * @return {@link AnaplanAuthenticationAPI}
+   */
   public AnaplanAuthenticationAPI getAuthClient() {
     if (authClient == null) {
       authClient = Feign.builder()

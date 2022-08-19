@@ -63,11 +63,28 @@ public class ListImpl implements ListFactory {
   private final List<String> booleanParamList;
   private final Service service;
 
+  /**
+   * Initializes List Implementation parameters
+   * @param service
+   * @param workspaceId
+   * @param modelId
+   * @param listId
+   * @param isJDBC
+   */
   public ListImpl(final Service service, String workspaceId, String modelId,
                   final String listId, final boolean isJDBC) {
     this(service, workspaceId, modelId, listId, BATCH_SIZE, isJDBC);
   }
 
+  /**
+   * Initializes List Implementation parameters and batchSize
+   * @param service
+   * @param workspaceId
+   * @param modelId
+   * @param listId
+   * @param batchSize
+   * @param isJDBC
+   */
   public ListImpl(final Service service, String workspaceId, String modelId,
                   final String listId, final int batchSize, final boolean isJDBC) {
     this.service = service;
@@ -82,12 +99,24 @@ public class ListImpl implements ListFactory {
     this.booleanParamList = isJDBC ? Utils.getBooleanParams(this.listMetadata.getProperties()) : new ArrayList<>(0);
   }
 
+  /**
+   * Deletes Items List providing Parameter Data
+   * @param itemParametersData {@link ListItemParametersData}
+   * @return {@link ListItemResultData}
+   */
   @Override
   public ListItemResultData deleteItemsList(final ListItemParametersData itemParametersData) {
     return anaplanAPI.deleteItemsList(workspaceId, modelId, listId,
         itemParametersData);
   }
 
+  /**
+   * Deletes Items List providing row data with headers
+   * @param rows items
+   * @param header header from source
+   * @param headerMap header name mapped
+   * @return {@link ListItemResultData}
+   */
   @Override
   public ListItemResultData deleteItemsList(final List<String[]> rows, final String[] header,
                                             final Map<String, String> headerMap) {
@@ -121,11 +150,21 @@ public class ListImpl implements ListFactory {
     return new ListItemResultData();
   }
 
+  /**
+   * Adding Items into List providing Parameter Data
+   * @param listItemParametersData {@link ListItemParametersData}
+   * @return {@link ListItemResultData}
+   */
   public ListItemResultData addItemsToList(final ListItemParametersData listItemParametersData) {
     return anaplanAPI.addItemsToList(workspaceId, modelId, listId,
         listItemParametersData);
   }
 
+  /**
+   * Updating Items in List providing Parameter Data
+   * @param itemParametersData {@link ListItemParametersData}
+   * @return
+   */
   public ListItemResultData updateItemsList(final ListItemParametersData itemParametersData) {
     return this.anaplanAPI.updateItemsList(workspaceId, modelId, listId, itemParametersData);
   }
@@ -175,6 +214,14 @@ public class ListImpl implements ListFactory {
     }
   }
 
+  /**
+   * Performs verifications on the mapping of the headers
+   * @param headerSource
+   * @param mappingProperty
+   * @param propertiesModel
+   * @param subsetModel
+   * @return
+   */
   public boolean verifyHeaderMapping(final String[] headerSource,
       final Map<String, String> mappingProperty,
       final List<String> propertiesModel,
@@ -225,6 +272,15 @@ public class ListImpl implements ListFactory {
     }
   }
 
+  /**
+   * It parses the Headers
+   * @param header
+   * @param mappings
+   * @param parentMap
+   * @param metaContent
+   * @param propMap
+   * @param subsetsMap
+   */
   public void parseHeader(final String[] header, final Map<String, String> mappings,
                           final Map<String, Integer> parentMap,
                           final MetaContent metaContent, final Map<Integer, String> propMap,
@@ -239,6 +295,16 @@ public class ListImpl implements ListFactory {
     }
   }
 
+  /**
+   * Performs parsing on the File Batch
+   * @param csvReader
+   * @param parentMap
+   * @param propMap
+   * @param subsetsMap
+   * @return
+   * @throws IOException
+   * @throws CsvValidationException
+   */
   public List<ListItem> parseFileBatch(final CSVReader csvReader,
                                        final Map<String, Integer> parentMap,
                                        final Map<Integer, String> propMap,
