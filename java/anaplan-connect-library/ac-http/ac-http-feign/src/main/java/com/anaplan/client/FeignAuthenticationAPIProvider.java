@@ -17,15 +17,24 @@ import java.util.function.Supplier;
 public class FeignAuthenticationAPIProvider {
 
   protected ConnectionProperties connectionProperties;
-  private Supplier<Client> clientSupplier;
+  private final Supplier<Client> clientSupplier;
   private AnaplanAuthenticationAPI authClient;
 
+  /**
+   * Initializes API Provider with parameter
+   * @param connectionProperties
+   * @param clientSupplier
+   */
   public FeignAuthenticationAPIProvider(ConnectionProperties connectionProperties,
       Supplier<Client> clientSupplier) {
     this.connectionProperties = connectionProperties;
     this.clientSupplier = clientSupplier;
   }
 
+  /**
+   * Provides the Client Authentication API
+   * @return {@link AnaplanAuthenticationAPI}
+   */
   public AnaplanAuthenticationAPI getAuthClient() {
     if (authClient == null) {
       authClient = Feign.builder()
@@ -34,8 +43,8 @@ public class FeignAuthenticationAPIProvider {
           .decoder(new JacksonDecoder())
           .requestInterceptor(new AConnectHeaderInjector())
           .retryer(new FeignApiRetryer(
-              (long) (connectionProperties.getRetryTimeout() * 1000),
-              (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
+              connectionProperties.getRetryTimeout() * 1000L,
+              Constants.MAX_RETRY_TIMEOUT_SECS * 1000L,
               connectionProperties.getMaxRetryCount(),
               FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER))
           .target(AnaplanAuthenticationAPIFeign.class,

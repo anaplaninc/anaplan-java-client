@@ -131,6 +131,8 @@ public abstract class Program {
   private static boolean proxyLocationSet = false;
   private static String username = null;
   private static String passphrase = null;
+  private static String clientId = null;
+  private static String refreshType = null;
   private static String proxyUsername = null;
   private static boolean proxyUsernameSet = false;
   private static String proxyPassphrase = null;
@@ -139,7 +141,6 @@ public abstract class Program {
   private static String keyStorePassword = null;
   private static String privateKeyPath = null;
   private static String certificatePath = null;
-  private static boolean userCertificateAuthentication = false;
   private static String workspaceId = null;
   private static String modelId = null;
   private static String moduleId = null;
@@ -154,6 +155,7 @@ public abstract class Program {
   private static String itemPropertiesPath = null;
   private static TaskResult lastResult = null;
   private static boolean somethingDone = false;
+  private static boolean forceRegister = false;
   private static boolean includeAll;
   private static boolean executeParamPresent;
   private static TaskParameters taskParameters = new TaskParameters();
@@ -168,6 +170,10 @@ public abstract class Program {
   private static final String OUTPUT = "-output:";
   private static final String DUMP_FILE_WRITTEN = "Dump file written to {}";
   private static final String ITEMS_IGNORED = "{} items ignored";
+  private static final String ROTATABLE = "rotatable";
+  private enum AUTH_TYPE {BASIC, CERT, OAUTH}
+  private static AUTH_TYPE authType;
+
 
   /**
    * Parse and process the command line. The process will exit with status 1 if a serious error occurs; the exit status
@@ -207,6 +213,10 @@ public abstract class Program {
             LogDebugUtils.enableDebugLogging();
             displayVersion();
           }
+        } else if (Objects.equals(arg, "--forceRegister")) {
+          forceRegister = true;
+          somethingDone = true;
+          getService();
         } else if (Objects.equals(arg, "-MO") || Objects.equals(arg, "-modules")) {
           somethingDone = true;
           logModules();
@@ -553,6 +563,11 @@ public abstract class Program {
           // processing consuming options
         } else if (argi >= args.length) {
           break;
+        } else if (Objects.equals(arg, "-oauth-client-id")) {
+          authType = AUTH_TYPE.OAUTH;
+          clientId = args[argi++];
+        } else if (Objects.equals(arg, "--rotatable")) {
+          refreshType = ROTATABLE;
         } else if (Objects.equals(arg, "-s") || Objects.equals(arg, "-service")) {
           serviceLocation = new URI(args[argi++]);
         } else if (Objects.equals(arg, "-u") || Objects.equals(arg, "-user")) {
@@ -669,15 +684,15 @@ public abstract class Program {
               null : new File(itemPropertiesPath).toPath();
           if ("jdbc".equalsIgnoreCase(type)) {
             final Map<String, String> headerMap = getHeader(jdbcConfig, itemMapFile, args[argi++]);
-            listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
+            listImpl = new ListImpl(getService(), workspaceId, modelId, listId, true);
             result = JDBCUtils.doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap,
-                ListAction.ADD, (itemPropertiesPath != null));
+                ListImpl.ListAction.ADD, (itemPropertiesPath != null));
           } else {
             final File sourceFile = new File(args[argi++]);
-            listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
+            listImpl = new ListImpl(getService(), workspaceId, modelId, listId, false);
 
             result = listImpl.doActionToItems(sourceFile.toPath(), itemMapFile, FileType
-                .valueOf(type.toUpperCase()), ListAction.ADD);
+                .valueOf(type.toUpperCase()), ListImpl.ListAction.ADD);
           }
 
           if (result != null) {
@@ -700,22 +715,24 @@ public abstract class Program {
           if (outputPath != null) {
             outputType = args[argi + 1].substring(OUTPUT.length());
           }
-          final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
+          final ListImpl listImpl;
           ListItemResultData result = new ListItemResultData();
           result.setFailures(new ArrayList<>(0));
           final Path itemMapFile = ("".equals(itemPropertiesPath) || itemPropertiesPath == null)
               ? null : new File(itemPropertiesPath).toPath();
           if ("jdbc".equalsIgnoreCase(type)) {
+            listImpl = new ListImpl(getService(), workspaceId, modelId, listId, true);
             final Map<String, String> headerMap = getHeader(jdbcConfig, itemMapFile, args[argi++]);
             result = JDBCUtils
                 .doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap, ListAction.UPDATE,
                     (itemPropertiesPath != null));
           } else {
+            listImpl = new ListImpl(getService(), workspaceId, modelId, listId, false);
             final File sourceFile = new File(args[argi++]);
 
             result = listImpl
                 .doActionToItems(sourceFile.toPath(), itemMapFile,
-                    FileType.valueOf(type.toUpperCase()), ListAction.UPDATE);
+                    FileType.valueOf(type.toUpperCase()), ListImpl.ListAction.UPDATE);
           }
           if (result != null) {
             String log = String.format("%d items updated in the list", result.getUpdated());
@@ -746,22 +763,16 @@ public abstract class Program {
           result.setFailures(new ArrayList<>());
           if ("jdbc".equalsIgnoreCase(type)) {
             final Map<String, String> headerMap = getHeader(jdbcConfig, itemMapFile, args[argi++]);
-            CellReader cellReader = null;
-            try {
-              final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
-              result = JDBCUtils.doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap,
-                  ListAction.DELETE, (itemPropertiesPath != null));
-              argi = handleDeleteLog(result, outputPath, outputType, listImpl.getContent(), argi);
-            } finally {
-              if (cellReader != null) {
-                cellReader.close();
-              }
-            }
+            final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId,
+                true);
+            result = JDBCUtils.doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap,
+                ListImpl.ListAction.DELETE, (itemPropertiesPath != null));
+            argi = handleDeleteLog(result, outputPath, outputType, listImpl.getContent(), argi);
           } else {
             final File sourceFile = new File(args[argi++]);
-            final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId);
+            final ListImpl listImpl = new ListImpl(getService(), workspaceId, modelId, listId, false);
             result = listImpl.doActionToItems(sourceFile.toPath(), itemMapFile, FileType
-                .valueOf(type.toUpperCase()), ListAction.DELETE);
+                .valueOf(type.toUpperCase()), ListImpl.ListAction.DELETE);
             argi = handleDeleteLog(result, outputPath, outputType, listImpl.getContent(), argi);
           }
         } else if (Objects.equals(arg, "-p") || Objects.equals(arg, "-put")) {
@@ -1526,22 +1537,32 @@ public abstract class Program {
    * @since 1.3
    */
   protected static Service getService() throws AnaplanAPIException, UnknownAuthenticationException {
-    if (service == null) {
-      ConnectionProperties props = new ConnectionProperties();
-      props.setApiServicesUri(serviceLocation);
-      props.setAuthServiceUri(getAuthServiceUri());
-      props.setApiCredentials(getServiceCredentials());
-      props.setRetryTimeout(retryTimeout);
-      props.setMaxRetryCount(maxRetryCount);
-      props.setHttpTimeout(httpConnectionTimeout);
-      if (proxyLocationSet) {
-        props.setProxyLocation(proxyLocation);
-        props.setProxyCredentials(getProxyCredentials());
-      }
-      service = DefaultServiceProvider.getService(props);
-      service.authenticate();
+    if (service != null) {
+      return service;
     }
+
+    ConnectionProperties props = getConnectionProperties();
+    service = DefaultServiceProvider.getService(props);
+    service.authenticate();
     return service;
+  }
+
+  protected static ConnectionProperties getConnectionProperties() {
+    ConnectionProperties props = new ConnectionProperties();
+    props.setApiServicesUri(serviceLocation);
+    props.setAuthServiceUri(getAuthServiceUri());
+    props.setApiCredentials(getServiceCredentials());
+    props.setRetryTimeout(retryTimeout);
+    props.setMaxRetryCount(maxRetryCount);
+    props.setHttpTimeout(httpConnectionTimeout);
+    props.setClientId(clientId);
+    props.setRefreshType(refreshType);
+    props.setForceRegister(forceRegister);
+    if (proxyLocationSet) {
+      props.setProxyLocation(proxyLocation);
+      props.setProxyCredentials(getProxyCredentials());
+    }
+    return props;
   }
 
   /**
@@ -1552,15 +1573,16 @@ public abstract class Program {
    * @since 1.3.1
    */
   protected static Credentials getServiceCredentials() throws AnaplanAPIException {
-    if (userCertificateAuthentication) {
+    if (authType == AUTH_TYPE.CERT) {
       try {
         return new Credentials(getCertificate(), getPrivateKey());
       } catch (Exception e) {
         throw new AnaplanAPIException("Could not initialise service credentials", e);
       }
-    } else {
-      return new Credentials(getUsername(), getPassphrase());
+    } else if (authType == AUTH_TYPE.OAUTH) {
+      return new Credentials(clientId);
     }
+    return new Credentials(getUsername(), getPassphrase());
   }
 
   /**
@@ -1834,7 +1856,7 @@ public abstract class Program {
    */
   protected static void setCertificatePath(String certificatePath) {
     Program.certificatePath = certificatePath;
-    Program.userCertificateAuthentication = true;
+    Program.authType = AUTH_TYPE.CERT;
   }
 
   /**
@@ -1851,7 +1873,7 @@ public abstract class Program {
    */
   public static void setPrivateKeyPath(String privateKeyPath) {
     Program.privateKeyPath = privateKeyPath;
-    Program.userCertificateAuthentication = true;
+    Program.authType = AUTH_TYPE.CERT;
   }
 
   /**
@@ -1871,7 +1893,7 @@ public abstract class Program {
    */
   protected static void setKeyStorePath(String keyStorePath) {
     Program.keyStorePath = keyStorePath;
-    Program.userCertificateAuthentication = true;
+    Program.authType = AUTH_TYPE.CERT;
   }
 
   /**
@@ -2146,9 +2168,12 @@ public abstract class Program {
         + "(-s|-service) <service URI>: API service endpoint"
         + " (defaults to https://api.anaplan.com/)\n"
         + "(-u|-user) <username>[:<password>]"
+        + "(-oauth-client-id) <clientId>"
         + ": Anaplan user name + (optional) password\n"
         + "(-auth|-authServiceUrl) <Auth Service URL>: Anaplan SSO server."
         + "(-c|-certificate) <CA certificate filepath>"
+        + "(--rotatable) <Token is rotatable>"
+        + "(--forceRegister) <Will be used in order to delete JKS and re-register device>"
         +
         ": Path to user certificate used for authentication (an alternative to using a key store)\n"
         + "(-pkey|-privatekey) <privatekey path>:<passphrase>"
@@ -2205,8 +2230,8 @@ public abstract class Program {
         + "(-i|-import) (<id>|<name>): select an import by id/name\n"
         + "(-E|-exports): list available exports in selected model\n"
         + "(-e|-export) (<id>|<name>): select an export by id/name\n"
-        + "(-A|-actions): list available actions in selected model\n"
-        + "(-a|-action) (<id>|<name>): select an action by id/name\n"
+        + "(-A|-actions): list available Delete actions in selected model\n"
+        + "(-a|-action) (<id>|<name>): select a Delete action by id/name\n"
         + "(-P|-processes): list available processes in selected model\n"
         + "(-pr|-process) <id/name>: select a process by id/name\n"
         + "(-xl|-locale) <locale> Specify locale (eg en_US) to perform server operation\n"

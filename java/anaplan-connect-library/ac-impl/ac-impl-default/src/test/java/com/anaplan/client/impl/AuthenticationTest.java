@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.anaplan.client.Service;
 import com.anaplan.client.Workspace;
+import com.anaplan.client.dto.responses.WorkspacesResponse;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.AnaplanAPITransportException;
+import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 
 class AuthenticationTest extends BaseTest {
@@ -27,8 +30,8 @@ class AuthenticationTest extends BaseTest {
   }
 
   public void checkWorkspace() throws AnaplanAPIException {
-    Workspace workspace = mockService.getWorkspace(getTestWorkspaceNameOrId());
-    assertEquals(getTestWorkspaceNameOrId(), workspace.getId());
+    Workspace workspace = mockService.getWorkspace(BaseTest.getTestWorkspaceNameOrId());
+    assertEquals(BaseTest.getTestWorkspaceNameOrId(), workspace.getId());
     assertEquals("Workspace A", workspace.getName());
   }
 }

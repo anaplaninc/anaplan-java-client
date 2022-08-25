@@ -10,6 +10,9 @@
     <version>3.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
+  <properties>
+    <opencsv-version>5.5.1</opencsv-version>
+  </properties>
 
   <artifactId>api-core</artifactId>
   <name>Anaplan Storage SDK Library API</name>
@@ -19,6 +22,25 @@
     <dependency>
       <groupId>com.anaplan.java.client</groupId>
       <artifactId>ac-utils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <version>${opencsv-version}</version>
+    </dependency>
+    <!-- TODO: remove this -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>${common-csv-version}</version>
     </dependency>
   </dependencies>
 

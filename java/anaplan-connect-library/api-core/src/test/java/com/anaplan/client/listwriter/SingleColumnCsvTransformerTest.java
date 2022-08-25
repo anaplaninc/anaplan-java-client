@@ -78,6 +78,30 @@ class SingleColumnCsvTransformerTest {
   }
 
 
+  @Test
+  void toSingleColumnSpaces() throws IOException {
+    assertEquals(
+            "Line Items,view-data-test-columns,Value\n" +
+                    "Data,Jan 18\n" +
+                    "Data,Feb 18\n" +
+                    "Data,Mar 18\n" +
+                    "Data,Q1 FY18\n" +
+                    "Multiplier,Jan 18\n" +
+                    "Multiplier,Feb 18\n" +
+                    "Multiplier,Mar 18\n" +
+                    "Multiplier,Q1 FY18\n" +
+                    "Result,Jan 18\n" +
+                    "Result,Feb 18\n" +
+                    "Result,Mar 18\n" +
+                    "Result,Q1 FY18\n",
+            SingleColumnCsvTransformer.toSingleColumn(
+                    getViewMetadataNoPage(),",Jan 18,Feb 18,Mar 18,Q1 FY18\n" +
+                    "Data,,,,\n" +
+                    "Multiplier,,,,\n" +
+                    "Result,,,,\n"));
+  }
+
+
   private static ViewMetadata getViewMetadataOnePage() {
     ViewMetadata viewMetadata = new ViewMetadata();
     viewMetadata.setColumns(Arrays.asList(new ViewMetadataRow("101000000114", "view-data-test-columns")));

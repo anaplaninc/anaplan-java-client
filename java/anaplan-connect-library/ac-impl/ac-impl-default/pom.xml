@@ -35,6 +35,11 @@
       <groupId>com.anaplan.java.client</groupId>
       <artifactId>ac-http-feign</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

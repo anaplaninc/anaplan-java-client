@@ -212,6 +212,7 @@ public class Service implements Closeable {
   public Iterable<ViewData> getViews(String modelId, String moduleId)
       throws AnaplanAPIException {
     return new Paginator<ViewData>() {
+
       @Override
       public ViewData[] getPage(int offset) {
         ViewsResponse response = apiProvider.get().getViews(modelId, moduleId, offset);
@@ -230,7 +231,7 @@ public class Service implements Closeable {
    *
    * @param workspaceIdorName The workspace ID or name of the workspace.
    * @return The workspace; null if no such workspace exists or the user is not permitted to access the workspace.
-   * @throws AnaplanAPIException an error occurred.
+   * @throws com.anaplan.client.exceptions.AnaplanAPIException an error occurred.
    */
 
   public Workspace getWorkspace(String workspaceIdorName)

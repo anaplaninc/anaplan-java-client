@@ -1,6 +1,10 @@
 package com.anaplan.client.api;
 
+import com.anaplan.client.dto.DeviceCodeInfo;
+import com.anaplan.client.dto.OauthTokenInfo;
 import com.anaplan.client.dto.responses.AuthenticationResp;
+import com.anaplan.client.dto.responses.DeviceCodeResp;
+import com.anaplan.client.dto.responses.OauthTokenResp;
 import com.anaplan.client.dto.responses.RefreshTokenResp;
 import com.anaplan.client.dto.responses.ValidationTokenResp;
 
@@ -52,4 +56,30 @@ public interface AnaplanAuthenticationAPI {
    * @param token the token
    */
   void logout(String token);
+
+  /**
+   * Device Code Response
+   * @param scope the scope request
+   * @param clientId the client's id
+   * @return {@link DeviceCodeInfo}
+   */
+  DeviceCodeInfo deviceCode(String scope, String clientId);
+
+  /**
+   * OAuth token Response
+   * @param grantType the grant type
+   * @param deviceCode the device code
+   * @param clientId the client's id
+   * @return {@link OauthTokenInfo}
+   */
+  OauthTokenInfo oauthToken(String grantType, String deviceCode, String clientId);
+
+  /**
+   * OAuth Refresh token Response
+   * @param grantType the grant type
+   * @param clientId the client's id
+   * @param refreshToken the refresh token
+   * @return {@link OauthTokenInfo}
+   */
+  OauthTokenInfo oauthRefreshToken(String grantType, String clientId, String refreshToken);
 }

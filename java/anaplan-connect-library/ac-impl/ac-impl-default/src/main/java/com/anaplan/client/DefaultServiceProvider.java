@@ -2,6 +2,7 @@ package com.anaplan.client;
 
 import com.anaplan.client.auth.Authenticator;
 import com.anaplan.client.auth.AuthenticatorFactoryUtil;
+import com.anaplan.client.auth.DeviceAuthenticator;
 import com.anaplan.client.auth.UnknownAuthenticationException;
 import com.anaplan.client.transport.ConnectionProperties;
 import com.anaplan.client.transport.client.OkHttpFeignClientProvider;
@@ -12,6 +13,12 @@ public class DefaultServiceProvider {
 
   private DefaultServiceProvider(){}
 
+  /**
+   * Provides the service instance
+   * @param properties
+   * @return {@link Service}
+   * @throws UnknownAuthenticationException
+   */
   public static Service getService(ConnectionProperties properties)
       throws UnknownAuthenticationException {
 
@@ -27,6 +34,4 @@ public class DefaultServiceProvider {
 
     return new Service(properties, authenticator, apiProvider);
   }
-
-
 }
