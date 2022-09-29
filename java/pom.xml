@@ -13,6 +13,7 @@
   <properties>
     <category>Community</category>
     <licensePath>LICENSE.txt</licensePath>
+    <commitVersionFilePath>sha-version.txt</commitVersionFilePath>
     <maven.build.timestamp.format>MMM dd, yyyy @ KK:mm:ss a (z)</maven.build.timestamp.format>
     <artifactory-maven-plugin.version>2.7.0</artifactory-maven-plugin.version>
     <build-info-maven-plugin.version>1.0.3</build-info-maven-plugin.version>
@@ -51,7 +52,6 @@
     <commons.io.version>2.8.0</commons.io.version>
     <common-csv-version>1.9.0</common-csv-version>
   </properties>
-
   <modules>
     <module>anaplan-connect-library</module>
     <module>anaplan-connect-client</module>
@@ -499,6 +499,57 @@
           <execution>
             <goals>
               <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- GIT COMMIT ID PLUGIN CONFIGURATION -->
+      <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <version>2.2.5</version>
+          <executions>
+              <execution>
+                  <phase>initialize</phase>
+                  <id>get-the-git-infos-for-repository-one</id>
+                  <goals>
+                    <goal>revision</goal>
+                  </goals>
+                  <configuration>
+                      <prefix>git</prefix>
+                  </configuration>
+              </execution>
+          </executions>
+          <configuration>
+              <verbose>false</verbose>
+              <skipPoms>false</skipPoms>
+              <injectAllReactorProjects>true</injectAllReactorProjects>
+              <generateGitPropertiesFile>false</generateGitPropertiesFile>
+          </configuration>
+      </plugin>
+      <!-- WRITE PROJECT VERSION AND GIT COMMIT ID TO A FILE -->
+      <plugin>
+        <groupId>ru.yaal.maven</groupId>
+        <artifactId>write-text-files-maven-plugin</artifactId>
+        <version>1.1</version>
+        <configuration>
+          <charset>UTF-8</charset>
+          <files>
+            <file>
+              <path>${commitVersionFilePath}</path>
+              <lines>
+                <line>ArtifactId: ${project.artifactId} | Version: ${project.version} | SHA-CommitId: ${git.commit.id}</line>
+              </lines>
+            </file>
+          </files>
+        </configuration>
+        <executions>
+          <execution>
+            <id>write-text-files</id>
+            <phase>prepare-package</phase>
+            <inherited>False</inherited>
+            <goals>
+              <goal>write-text-files</goal>
             </goals>
           </execution>
         </executions>
