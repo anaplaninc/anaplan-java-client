@@ -1,1 +1,0 @@
-ArtifactId: anaplan-connect | Version: 3.0.0 | SHA-CommitId: d5196c86da7a335772243af6338c0b9028f8f46b
