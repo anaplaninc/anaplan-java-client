@@ -228,6 +228,12 @@ public class Utils {
     return value;
   }
 
+  /**
+   * Provides CSV properties from inputStream
+   * @param inputStream
+   * @return
+   * @throws IOException
+   */
   public static Map<String, String> getPropertyFile(final InputStream inputStream)
       throws IOException {
 
