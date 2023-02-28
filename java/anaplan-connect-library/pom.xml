@@ -5,11 +5,11 @@
   <parent>
     <groupId>com.anaplan.java.client</groupId>
     <artifactId>anaplan-connect</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.3</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>anaplan-connect-library</artifactId>
-  <version>3.0.0</version>
+  <version>4.0.3</version>
   <name>Anaplan Storage SDK Library Parent POM</name>
   <packaging>pom</packaging>
 

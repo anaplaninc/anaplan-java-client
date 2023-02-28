@@ -7,7 +7,7 @@
   <parent>
     <artifactId>anaplan-connect-library</artifactId>
     <groupId>com.anaplan.java.client</groupId>
-    <version>3.0.0</version>
+    <version>4.0.3</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
