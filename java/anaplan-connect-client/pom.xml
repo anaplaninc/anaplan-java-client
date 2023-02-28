@@ -12,7 +12,7 @@
   <version>4.0.3</version>
 
   <properties>
-    <ac.version>3.0.0</ac.version>
+    <ac.version>4.0.3</ac.version>
     <category>Community</category>
     <licensePath>LICENSE.md</licensePath>
     <maven.build.timestamp.format>MMM dd, yyyy @ KK:mm:ss a (z)</maven.build.timestamp.format>
