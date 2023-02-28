@@ -345,6 +345,11 @@ public class Utils {
     return target;
   }
 
+  /**
+   * Creates the Hash for the provided client id with SHA-512/256 algorithm
+   * @param clientId
+   * @return
+   */
   public static byte[] createHash(String clientId) {
     byte[] encodedHash = new byte[0];
     try {
@@ -356,6 +361,11 @@ public class Utils {
     return encodedHash;
   }
 
+  /**
+   * Converts bytes to hexadecimal
+   * @param hash
+   * @return
+   */
   public static String bytesToHex(byte[] hash) {
     StringBuilder hexString = new StringBuilder(2 * hash.length);
     for (byte b : hash) {
