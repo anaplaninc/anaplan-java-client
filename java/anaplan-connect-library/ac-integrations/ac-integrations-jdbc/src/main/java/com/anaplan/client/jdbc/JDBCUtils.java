@@ -10,6 +10,7 @@ import com.anaplan.client.dto.ListItemResultData;
 import java.security.InvalidParameterException;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -19,6 +20,7 @@ import java.util.regex.Matcher;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jdbc related utilities, e.g. connection string checks
@@ -34,6 +36,7 @@ public class JDBCUtils {
   public static final Pattern QUOTE_REGEX_PATTERN = Pattern.compile("[^\"]*\"");
 
   private static final int MAX_ALLOWED_CONNECTION_STRING_LENGTH = 1500;
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(JDBCUtils.class);
 
   //Set to false positive
   public static void validateURL(final JDBCConfig config) {
@@ -54,8 +57,7 @@ public class JDBCUtils {
           "JDBC connection string is not valid !");
     }
     if (config.getJdbcPassword() == null || config.getJdbcPassword().length == 0) {
-      throw new InvalidParameterException(
-          "JDBC password string cannot be empty !");
+      LOG.warn("JDBC password is empty !");
     }
 
   }
@@ -116,7 +118,7 @@ public class JDBCUtils {
    * @throws SQLException exception
    */
   public static ListItemResultData doActionsItemsFromJDBC(final JDBCConfig jdbcConfig, final ListImpl listImpl, final Map<String, String> headerMap,
-                                                          final ListImpl.ListAction action, final boolean doMapping)
+      final ListImpl.ListAction action, final boolean doMapping)
       throws SQLException, IOException {
     return doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap, action, BATCH_SIZE, doMapping);
   }

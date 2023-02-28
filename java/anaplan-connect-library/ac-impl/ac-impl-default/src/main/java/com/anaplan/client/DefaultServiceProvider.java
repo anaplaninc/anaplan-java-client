@@ -34,4 +34,18 @@ public class DefaultServiceProvider {
 
     return new Service(properties, authenticator, apiProvider);
   }
+
+  /**
+   * Get the authenticator based on properties
+   * @param properties the connection properties
+   * @return {@link DeviceAuthenticator}
+   */
+  public static DeviceAuthenticator getDeviceAuthenticator(ConnectionProperties properties) {
+    OkHttpFeignClientProvider okHttpClientProvider = new OkHttpFeignClientProvider();
+    Supplier<Client> clientSupplier = () -> okHttpClientProvider.createFeignClient(properties);
+
+    FeignAuthenticationAPIProvider authApiProvider = new FeignAuthenticationAPIProvider(properties,
+        clientSupplier);
+    return new DeviceAuthenticator(properties, authApiProvider.getAuthClient());
+  }
 }

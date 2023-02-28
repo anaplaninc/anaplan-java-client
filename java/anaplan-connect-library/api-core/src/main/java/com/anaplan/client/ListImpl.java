@@ -63,30 +63,13 @@ public class ListImpl implements ListFactory {
   private final List<String> booleanParamList;
   private final Service service;
 
-  /**
-   * Initializes List Implementation parameters
-   * @param service
-   * @param workspaceId
-   * @param modelId
-   * @param listId
-   * @param isJDBC
-   */
   public ListImpl(final Service service, String workspaceId, String modelId,
-                  final String listId, final boolean isJDBC) {
+      final String listId, final boolean isJDBC) {
     this(service, workspaceId, modelId, listId, BATCH_SIZE, isJDBC);
   }
 
-  /**
-   * Initializes List Implementation parameters and batchSize
-   * @param service
-   * @param workspaceId
-   * @param modelId
-   * @param listId
-   * @param batchSize
-   * @param isJDBC
-   */
   public ListImpl(final Service service, String workspaceId, String modelId,
-                  final String listId, final int batchSize, final boolean isJDBC) {
+      final String listId, final int batchSize, final boolean isJDBC) {
     this.service = service;
     this.anaplanAPI = service.getApiProvider().get();
     this.workspaceId = service.getWorkspace(workspaceId).getId();
@@ -99,27 +82,15 @@ public class ListImpl implements ListFactory {
     this.booleanParamList = isJDBC ? Utils.getBooleanParams(this.listMetadata.getProperties()) : new ArrayList<>(0);
   }
 
-  /**
-   * Deletes Items List providing Parameter Data
-   * @param itemParametersData {@link ListItemParametersData}
-   * @return {@link ListItemResultData}
-   */
   @Override
   public ListItemResultData deleteItemsList(final ListItemParametersData itemParametersData) {
     return anaplanAPI.deleteItemsList(workspaceId, modelId, listId,
         itemParametersData);
   }
 
-  /**
-   * Deletes Items List providing row data with headers
-   * @param rows items
-   * @param header header from source
-   * @param headerMap header name mapped
-   * @return {@link ListItemResultData}
-   */
   @Override
   public ListItemResultData deleteItemsList(final List<String[]> rows, final String[] header,
-                                            final Map<String, String> headerMap) {
+      final Map<String, String> headerMap) {
     ListItemParametersData itemParametersData = getDeleteItems(rows, header, headerMap);
     return anaplanAPI.deleteItemsList(workspaceId, modelId, listId,
         itemParametersData);
@@ -135,7 +106,7 @@ public class ListImpl implements ListFactory {
    * @throws IOException io errors
    */
   public ListItemResultData doActionToItems(final Path source, final Path itemMapPath,
-                                            final FileType fileType, final ListAction action)
+      final FileType fileType, final ListAction action)
       throws IOException, CsvValidationException {
     Utils.isFileAndReadable(source);
     if (itemMapPath != null) {
@@ -150,21 +121,11 @@ public class ListImpl implements ListFactory {
     return new ListItemResultData();
   }
 
-  /**
-   * Adding Items into List providing Parameter Data
-   * @param listItemParametersData {@link ListItemParametersData}
-   * @return {@link ListItemResultData}
-   */
   public ListItemResultData addItemsToList(final ListItemParametersData listItemParametersData) {
     return anaplanAPI.addItemsToList(workspaceId, modelId, listId,
         listItemParametersData);
   }
 
-  /**
-   * Updating Items in List providing Parameter Data
-   * @param itemParametersData {@link ListItemParametersData}
-   * @return
-   */
   public ListItemResultData updateItemsList(final ListItemParametersData itemParametersData) {
     return this.anaplanAPI.updateItemsList(workspaceId, modelId, listId, itemParametersData);
   }
@@ -179,9 +140,9 @@ public class ListImpl implements ListFactory {
    * @throws IOException input-output exception
    */
   public ListItemResultData getDataFromCSV(final Path source,
-                                           @Nullable final Path itemFile,
-                                           final MetaContent metaContent,
-                                           final ListAction action)
+      @Nullable final Path itemFile,
+      final MetaContent metaContent,
+      final ListAction action)
       throws IOException, CsvValidationException {
 
     Map<String, String> properties = new HashMap<>(10);
@@ -192,8 +153,8 @@ public class ListImpl implements ListFactory {
   }
 
   private ListItemResultData parseSource(final Path source, final Map<String, String> mappings,
-                                         final MetaContent metaContent,
-                                         final ListAction action)
+      final MetaContent metaContent,
+      final ListAction action)
       throws IOException, CsvValidationException {
     try (CSVReader csvReader = new CSVReader(new FileReader(source.toFile()))) {
       final String[] header = csvReader.readNext();
@@ -214,14 +175,6 @@ public class ListImpl implements ListFactory {
     }
   }
 
-  /**
-   * Performs verifications on the mapping of the headers
-   * @param headerSource
-   * @param mappingProperty
-   * @param propertiesModel
-   * @param subsetModel
-   * @return
-   */
   public boolean verifyHeaderMapping(final String[] headerSource,
       final Map<String, String> mappingProperty,
       final List<String> propertiesModel,
@@ -252,7 +205,7 @@ public class ListImpl implements ListFactory {
 
   private void getFromHeader(final String realColName, final Map<String, Integer> parentMap, final
   Collection<String> prop, final Collection<String> subset, Map<Integer, String> propMap,
-                             Map<Integer, String> subsetsMap, int i) {
+      Map<Integer, String> subsetsMap, int i) {
     if (NAME.equalsIgnoreCase(realColName)) {
       parentMap.put(NAME, i);
     } else if (PARENT.equalsIgnoreCase(realColName)) {
@@ -272,19 +225,10 @@ public class ListImpl implements ListFactory {
     }
   }
 
-  /**
-   * It parses the Headers
-   * @param header
-   * @param mappings
-   * @param parentMap
-   * @param metaContent
-   * @param propMap
-   * @param subsetsMap
-   */
   public void parseHeader(final String[] header, final Map<String, String> mappings,
-                          final Map<String, Integer> parentMap,
-                          final MetaContent metaContent, final Map<Integer, String> propMap,
-                          final Map<Integer, String> subsetsMap) {
+      final Map<String, Integer> parentMap,
+      final MetaContent metaContent, final Map<Integer, String> propMap,
+      final Map<Integer, String> subsetsMap) {
     String realColName;
     int size = header.length;
     for (int i = 0; i < size; i++) {
@@ -295,20 +239,10 @@ public class ListImpl implements ListFactory {
     }
   }
 
-  /**
-   * Performs parsing on the File Batch
-   * @param csvReader
-   * @param parentMap
-   * @param propMap
-   * @param subsetsMap
-   * @return
-   * @throws IOException
-   * @throws CsvValidationException
-   */
   public List<ListItem> parseFileBatch(final CSVReader csvReader,
-                                       final Map<String, Integer> parentMap,
-                                       final Map<Integer, String> propMap,
-                                       final Map<Integer, String> subsetsMap)
+      final Map<String, Integer> parentMap,
+      final Map<Integer, String> propMap,
+      final Map<Integer, String> subsetsMap)
       throws IOException, CsvValidationException {
     final List<ListItem> itemList = new ArrayList<>(this.batchSize);
     String[] columns;
@@ -325,8 +259,8 @@ public class ListImpl implements ListFactory {
   }
 
   private void getBatchResultData(final List<ListItem> itemList,
-                                  final ListItemResultData overallItemResultData,
-                                  final ListAction action) {
+      final ListItemResultData overallItemResultData,
+      final ListAction action) {
     ListItemResultData batchItemResultData = new ListItemResultData();
     ListItemParametersData listItemParametersData = new ListItemParametersData();
     listItemParametersData.setItems(itemList);
@@ -414,8 +348,8 @@ public class ListImpl implements ListFactory {
    * @return {@link ListItemParametersData}
    */
   public ListItemParametersData getListItemFromJDBC(final String[] header,
-                                                    final Map<String, String> headerMap,
-                                                    final List<String[]> rows) throws IOException {
+      final Map<String, String> headerMap,
+      final List<String[]> rows) throws IOException {
 
     if (header == null || header.length == 0 || rows.isEmpty()) {
       return new ListItemParametersData();
@@ -456,7 +390,7 @@ public class ListImpl implements ListFactory {
    * @return {@link ListItemParametersData}
    */
   public ListItemParametersData getDeleteItems(final List<String[]> rows, final String[] header,
-                                               final Map<String, String> headerMap) {
+      final Map<String, String> headerMap) {
     if (Utils.collectionIsEmpty(rows) || header == null || header.length == 0) {
       return new ListItemParametersData();
     }
@@ -510,7 +444,7 @@ public class ListImpl implements ListFactory {
    * @throws IOException parsing error
    */
   public ListItemResultData parseBatchJSON(final Path file, final Path itemFile,
-                                           final MetaContent metaContent, final ListAction action)
+      final MetaContent metaContent, final ListAction action)
       throws IOException {
     final JsonFactory jsonFactory = new JsonFactory();
     final ListItemResultData overallItemResultData = new ListItemResultData();
@@ -546,9 +480,9 @@ public class ListImpl implements ListFactory {
    * @throws IOException parsing error
    */
   public List<ListItem> getItemsFromJson(final JsonParser jsonParser, final Path itemFile,
-                                         final Map<String, String> mapProperties,
-                                         final Map<String, String> properties,
-                                         final MetaContent metaContent) throws IOException {
+      final Map<String, String> mapProperties,
+      final Map<String, String> properties,
+      final MetaContent metaContent) throws IOException {
     final List<ListItem> listItems = new ArrayList<>(BATCH_SIZE);
     JsonToken current;
     while ((current = jsonParser.nextToken()) != JsonToken.END_ARRAY && current != null) {
@@ -602,8 +536,8 @@ public class ListImpl implements ListFactory {
   }
 
   private void getItemFromJson(final MetaContent metaContent, final JsonParser jp,
-                               final ListItem item, final String name,
-                               final String value) throws IOException {
+      final ListItem item, final String name,
+      final String value) throws IOException {
     if (NAME.equalsIgnoreCase(name) || "".equalsIgnoreCase(name)) {
       item.setName(value);
     } else if (CODE.equalsIgnoreCase(name)) {
@@ -624,7 +558,7 @@ public class ListImpl implements ListFactory {
   }
 
   private void addJSONBatch(final ListItemResultData overallItemResultData,
-                            final List<ListItem> listItems, final ListAction action) {
+      final List<ListItem> listItems, final ListAction action) {
     getBatchResultData(listItems, overallItemResultData, action);
     listItems.clear();
   }
