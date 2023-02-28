@@ -304,6 +304,14 @@ public class Utils {
     }
   }
 
+  /**
+   * Checks provided file status
+   * @param target
+   * @param path
+   * @param file
+   * @param deleteExisting
+   * @throws IOException
+   */
   public static void checkTarget(final File target, String path, String file, boolean deleteExisting) throws IOException {
     if (target.exists()) {
       if (!target.isFile()) {
@@ -360,6 +368,18 @@ public class Utils {
     return hexString.toString();
   }
 
+  /**
+   * Loads the Keystore and provides the resulted encrypted Key
+   * @param fileInputStream
+   * @param keyStoreName
+   * @param password
+   * @return {@link Key}
+   * @throws KeyStoreException
+   * @throws IOException
+   * @throws NoSuchAlgorithmException
+   * @throws CertificateException
+   * @throws UnrecoverableKeyException
+   */
   public static Key loadKeystore(FileInputStream fileInputStream, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
 
@@ -369,6 +389,17 @@ public class Utils {
     return secretKeyAlias;
   }
 
+  /**
+   * Saves the provided encoded key into the keystore
+   * @param encodedKey
+   * @param keyStoreName
+   * @param password
+   * @return {@link KeyStore}
+   * @throws KeyStoreException
+   * @throws IOException
+   * @throws NoSuchAlgorithmException
+   * @throws CertificateException
+   */
   public static KeyStore saveEntryInKeyStore(byte[] encodedKey, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
     KeyStore ks = KeyStore.getInstance("pkcs12");
