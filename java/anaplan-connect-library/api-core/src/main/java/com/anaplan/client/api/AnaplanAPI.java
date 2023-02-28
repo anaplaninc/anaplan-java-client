@@ -40,6 +40,7 @@ import com.anaplan.client.dto.responses.WorkspacesResponse;
 public interface AnaplanAPI {
 
   String URL_IMPORT_TASKS = "/workspaces/{workspaceId}/models/{modelId}/imports/{importId}/tasks";
+  String URL_CHUNK_ID = "/workspaces/{workspaceId}/models/{modelId}/files/{fileId}/chunks/{chunkId}";
 
   /* Workspaces */
 

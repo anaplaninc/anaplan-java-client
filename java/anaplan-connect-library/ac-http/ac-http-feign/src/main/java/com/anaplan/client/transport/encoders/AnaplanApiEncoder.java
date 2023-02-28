@@ -1,5 +1,6 @@
 package com.anaplan.client.transport.encoders;
 
+import static com.anaplan.client.api.AnaplanAPI.URL_CHUNK_ID;
 import static com.anaplan.client.api.AnaplanAPI.URL_IMPORT_TASKS;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,14 +28,18 @@ public class AnaplanApiEncoder extends JacksonEncoder {
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
-    try {
+    Charset charset = getCharset(template);
+    if (charset != null) {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
-      Charset charset;
-      String value = mapper.writerFor(javaType).writeValueAsString(object);
-      charset = getCharset(template);
-      template.body(value.getBytes(charset), charset);
-    } catch (JsonProcessingException e) {
-      throw new EncodeException(e.getMessage(), e);
+      try {
+        String value = mapper.writerFor(javaType).writeValueAsString(object);
+        template.body(value.getBytes(charset), charset);
+      } catch (JsonProcessingException e) {
+        throw new EncodeException(e.getMessage(), e);
+      }
+    }
+    else {
+      template.body((byte[]) object, null);
     }
   }
 
@@ -46,7 +51,9 @@ public class AnaplanApiEncoder extends JacksonEncoder {
    */
   private Charset getCharset(RequestTemplate template) {
     Charset charset;
-    if (URL_IMPORT_TASKS.equals(template.url())) {
+    if (URL_CHUNK_ID.equals(template.url())) {
+      charset = null;
+    } else if (URL_IMPORT_TASKS.equals(template.url())) {
       charset = StandardCharsets.UTF_8;
     } else {
       charset = Charset.forName(System.getProperty("file.encoding"));

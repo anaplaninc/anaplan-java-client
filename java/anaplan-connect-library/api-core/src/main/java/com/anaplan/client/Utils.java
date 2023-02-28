@@ -2,6 +2,7 @@ package com.anaplan.client;
 
 import com.anaplan.client.dto.ListMetadataProperty;
 import com.anaplan.client.exceptions.AnaplanAPIException;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,6 +32,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
@@ -106,7 +109,7 @@ public class Utils {
         tsv.append('\t');
       }
       if (value != null) {
-        tsv.append(value.toString());
+        tsv.append(value);
       }
     }
     return tsv.toString();
@@ -144,12 +147,12 @@ public class Utils {
   public static List<String> getColumnValues(String[] lines, int startIndex) {
     //Regex - ,(?=(?:[^"]*"[^"]*")*[^"]*$) - matches the character , that's not inside the double quotes
     return IntStream.range(startIndex, lines.length).filter(index -> lines[index].startsWith(","))
-            .mapToObj(index -> {
-                      String regex;
-                      regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-                      return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
-                    }
-            ).collect(Collectors.toList());
+        .mapToObj(index -> {
+              String regex;
+              regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
+              return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
+            }
+        ).collect(Collectors.toList());
   }
 
   /**
@@ -242,9 +245,9 @@ public class Utils {
     final CSVFormat format = PROPERTY_FORMAT_BUILDER.build();
     while (null != (line = lnr.readLine())) {
       final List<CSVRecord> records = CSVParser.parse(line, format).getRecords();
-        if (!records.isEmpty()) {
-          result.put(records.get(0).get(0), records.get(0).get(1));
-        }
+      if (!records.isEmpty()) {
+        result.put(records.get(0).get(0), records.get(0).get(1));
+      }
     }
     return result;
   }
@@ -441,5 +444,18 @@ public class Utils {
       }
     }
     return params;
+  }
+
+  public static String getPropertiesFromClassPathPomProperties(final String property, final String defaultValue){
+    Properties prop = new Properties();
+
+    try (InputStreamReader stream = new InputStreamReader(Objects.requireNonNull(Utils.class.getClassLoader()
+        .getResourceAsStream("properties-from-pom.properties")))) {
+      prop.load(stream);
+      return Objects.requireNonNull(prop.getProperty(property));
+    } catch (RuntimeException | IOException e) {
+      LOG.warn("Could not read property: {}. Returning Default Value: {}",  property, defaultValue);
+      return defaultValue;
+    }
   }
 }

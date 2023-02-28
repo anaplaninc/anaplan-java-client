@@ -9,18 +9,15 @@ public class Constants {
    */
   public static final String PW_FILE_PATH_SEGMENT = ".anaplan/api-client/keystore-access.txt";
 
-  public static final int AC_MAJOR = 3;
-  public static final int AC_MINOR = 0;
-  public static final int AC_REVISION = 0;
-  public static final String AC_RELEASE = "-Snapshot";
-
-  public static final boolean AUTH_CLIENT_CACHE_ENABLED = false;
-
-  public static final Integer AUTH_TTL_SECONDS = 30;
+  public static final String DEFAULT_AC_VERSION = "4.0.1";
+  public static final String AC_VERSION_PROPERTY_KEY = "ac.version";
+  public static final String AC_VERSION = Utils.getPropertiesFromClassPathPomProperties(AC_VERSION_PROPERTY_KEY, DEFAULT_AC_VERSION);
+  public static final int AC_MAJOR = Integer.parseInt(String.valueOf(AC_VERSION.split("\\.")[0]));
+  public static final int AC_MINOR = Integer.parseInt(String.valueOf(AC_VERSION.split("\\.")[1]));
+  public static final int AC_REVISION = Integer.parseInt(String.valueOf(AC_VERSION.split("\\.")[2]));
 
   public static final String X_ACONNECT_HEADER_KEY = "X-AConnect-Client";
-  public static final String X_ACONNECT_HEADER_VALUE = "Anaplan_Connect_3.0.0";
-  public static final String X_ACONNECT_HEADER = X_ACONNECT_HEADER_KEY + ":" + X_ACONNECT_HEADER_VALUE;
+  public static final String X_ACONNECT_HEADER_VALUE = "Anaplan_Connect_"+ AC_VERSION;
 
   public static final String CORS_HEADER_KEY = "Origin";
   public static final String CORS_HEADER_VALUE = "https://www.anaplan.com";

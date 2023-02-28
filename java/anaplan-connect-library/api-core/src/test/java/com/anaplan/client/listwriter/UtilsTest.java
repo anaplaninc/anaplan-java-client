@@ -1,5 +1,7 @@
 package com.anaplan.client.listwriter;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,5 +20,10 @@ class UtilsTest {
   @Test
   void fileAbsoluteNullTest () {
     assertThrows(FileNotFoundException.class , () -> Utils.getAbsolutePath(null));
+  }
+
+  @Test
+  void propertyFileNotPresentShouldReturnDefault() {
+    assertThat(Utils.getPropertiesFromClassPathPomProperties("AC_VERSION_PROPERTY_KEY", "4.0.1"), is("4.0.1"));
   }
 }

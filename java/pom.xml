@@ -7,7 +7,7 @@
   <groupId>com.anaplan.java.client</groupId>
   <artifactId>anaplan-connect</artifactId>
   <packaging>pom</packaging>
-  <version>3.0.0</version>
+  <version>4.1.0</version>
   <name>Anaplan Connect</name>
 
   <properties>

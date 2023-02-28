@@ -5,14 +5,14 @@
   <parent>
     <artifactId>anaplan-connect</artifactId>
     <groupId>com.anaplan.java.client</groupId>
-    <version>3.0.0</version>
+    <version>4.1.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>anaplan-connect-client</artifactId>
-  <version>3.0.0</version>
+  <version>4.1.0</version>
 
   <properties>
-    <ac.version>3.0.0</ac.version>
+    <ac.version>4.1.0</ac.version>
     <category>Community</category>
     <licensePath>LICENSE.md</licensePath>
     <maven.build.timestamp.format>MMM dd, yyyy @ KK:mm:ss a (z)</maven.build.timestamp.format>
