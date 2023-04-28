@@ -13,6 +13,7 @@
 
 package com.anaplan.client;
 
+import com.anaplan.client.LargeDataExport.TYPE_LARGE_EXPORT;
 import com.anaplan.client.api.AnaplanAPI;
 import com.anaplan.client.auth.Authenticator;
 import com.anaplan.client.dto.ListItem;
@@ -21,19 +22,22 @@ import com.anaplan.client.dto.ListName;
 import com.anaplan.client.dto.ModelData;
 import com.anaplan.client.dto.ModuleData;
 import com.anaplan.client.dto.ViewData;
-import com.anaplan.client.dto.WorkspaceData;
 import com.anaplan.client.dto.responses.ListItemsResponse;
 import com.anaplan.client.dto.responses.ListMetadataResponse;
 import com.anaplan.client.dto.responses.ListNamesResponse;
+import com.anaplan.client.dto.responses.ModelResponse;
 import com.anaplan.client.dto.responses.ModelsResponse;
 import com.anaplan.client.dto.responses.ModulesResponse;
 import com.anaplan.client.dto.responses.ViewsResponse;
+import com.anaplan.client.dto.responses.WorkspaceResponse;
 import com.anaplan.client.dto.responses.WorkspacesResponse;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.ListItemsNotFoundException;
 import com.anaplan.client.exceptions.ListMetadataNotFoundException;
 import com.anaplan.client.exceptions.ListNamesNotFoundException;
 import com.anaplan.client.exceptions.ListNotFoundException;
+import com.anaplan.client.exceptions.ModelNotFoundException;
+import com.anaplan.client.exceptions.ViewDataNotFoundException;
 import com.anaplan.client.exceptions.WorkspaceNotFoundException;
 import com.anaplan.client.listwriter.ListItemFileWriter;
 import com.anaplan.client.listwriter.ListMetadataCsvWriter;
@@ -52,14 +56,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 
 
 /**
@@ -67,8 +76,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Service implements Closeable {
 
-  public static final String CSV = "csv";
-  public static final String JSON = "json";
   private static final Logger LOG = LoggerFactory.getLogger(Service.class);
   private static final URI PRODUCTION_API_ROOT;
   private static final URI PRODUCTION_AUTH_API_ROOT;
@@ -83,7 +90,7 @@ public class Service implements Closeable {
   private Authenticator authProvider;
 
   // Cached Workspace instances
-  private final Map<WorkspaceData, Reference<Workspace>> workspaceCache = new WeakHashMap<>();
+  private final Map<String, Reference<Workspace>> workspaceCache = new WeakHashMap<>();
 
   public Service(ConnectionProperties properties, Authenticator authProvider, Supplier<AnaplanAPI> apiProvider) {
     if (properties.getApiServicesUri() == null) {
@@ -141,12 +148,8 @@ public class Service implements Closeable {
           return response.getItem()
               .stream()
               .map(workspaceData -> {
-                Reference<Workspace> workspaceReference = workspaceCache.get(workspaceData);
-                Workspace workspace = workspaceReference == null ? null : workspaceReference.get();
-                if (workspace == null) {
-                  workspace = new Workspace(self, workspaceData);
-                  workspaceCache.put(workspaceData, new WeakReference<>(workspace));
-                }
+                Workspace workspace = new Workspace(self, workspaceData);
+                cacheWorkspace(workspace);
                 return workspace;
               })
               .toArray(Workspace[]::new);
@@ -226,30 +229,67 @@ public class Service implements Closeable {
     };
   }
 
+  private void cacheWorkspace(Workspace workspace) {
+    // Cache workspace by both name and ID. This is not ideal but needed to support `getWorkspace` method as
+    // it can take either name or ID as parameter
+    workspaceCache.put(workspace.getId(), new WeakReference<>(workspace));
+    workspaceCache.put(workspace.getName(), new WeakReference<>(workspace));
+  }
+
+  private Workspace getWorkspaceFromCache(String workspaceNameOrId) {
+    // Get workspace with given name or ID from cache
+    Reference<Workspace> workspaceReference = workspaceCache.get(workspaceNameOrId);
+    return workspaceReference == null ? null : workspaceReference.get();
+  }
+
   /**
    * Retrieve a reference to a workspace from its workspaceId.
    *
-   * @param workspaceIdorName The workspace ID or name of the workspace.
+   * @param workspaceId The workspace ID.
    * @return The workspace; null if no such workspace exists or the user is not permitted to access the workspace.
-   * @throws com.anaplan.client.exceptions.AnaplanAPIException an error occurred.
+   * @throws com.anaplan.client.exceptions.WorkspaceNotFoundException an error occurred.
    */
+    public Workspace getWorkspaceById(@Nonnull String workspaceId)
+        throws AnaplanAPIException {
+      Workspace workspace = getWorkspaceFromCache(workspaceId);
 
-  public Workspace getWorkspace(String workspaceIdorName)
-      throws AnaplanAPIException {
-
-    Workspace workspace = null;
-    try {
-      for (Workspace w : getWorkspaces()) {
-        if (workspaceIdorName.equals(w.getId()) || workspaceIdorName.equalsIgnoreCase(w.getName())) {
-          workspace = w;
-          break;
+      if (workspace == null) {
+        try {
+          WorkspaceResponse response = apiProvider.get().getWorkspace(workspaceId);
+          workspace = new Workspace(this, response.getItem());
+          cacheWorkspace(workspace);
+        } catch (Exception e) {
+          throw new WorkspaceNotFoundException(workspaceId);
         }
       }
-    } catch (Exception e) {
-      throw new WorkspaceNotFoundException(workspaceIdorName);
+      return workspace;
     }
+
+  /**
+   * Retrieve a reference to a workspace from its workspaceId or name.
+   *
+   * @param workspaceIdOrName The workspace ID or name of the workspace.
+   * @return The workspace; null if no such workspace exists or the user is not permitted to access the workspace.
+   * @throws com.anaplan.client.exceptions.WorkspaceNotFoundException an error occurred.
+   */
+  public Workspace getWorkspace(@Nonnull String workspaceIdOrName)
+      throws AnaplanAPIException {
+    Workspace workspace = getWorkspaceFromCache(workspaceIdOrName);
+
     if (workspace == null) {
-      throw new WorkspaceNotFoundException(workspaceIdorName);
+      try {
+        for (Workspace w : getWorkspaces()) {
+          if (workspaceIdOrName.equals(w.getId()) || workspaceIdOrName.equalsIgnoreCase(w.getName())) {
+            workspace = w;
+            break;
+          }
+        }
+      } catch (Exception e) {
+        throw new WorkspaceNotFoundException(workspaceIdOrName);
+      }
+      if (workspace == null) {
+        throw new WorkspaceNotFoundException(workspaceIdOrName);
+      }
     }
     return workspace;
   }
@@ -280,13 +320,32 @@ public class Service implements Closeable {
 
   /**
    * Locate a model on the server. An error message will be produced if the workspace or model cannot be located.
+   * Note this method only supports workspace and model IDs, not names.
+   *
+   * @param workspaceId the ID of the workspace
+   * @param modelId     the ID of the model
+   * @return the model, or null if not found
+   */
+  public Model getModelById(@Nonnull String workspaceId, @Nonnull String modelId)
+      throws ModelNotFoundException {
+    Workspace workspace = getWorkspaceById(workspaceId);
+    try {
+      ModelResponse response = apiProvider.get().getModel(modelId);
+      return new Model(workspace, response.getItem());
+    } catch (Exception e) {
+      throw new ModelNotFoundException(modelId, e);
+    }
+  }
+
+  /**
+   * Locate a model on the server. An error message will be produced if the workspace or model cannot be located.
    *
    * @param workspaceId the name or ID of the workspace
    * @param modelId     the name or ID of the model
    * @return the model, or null if not found
    * @since 1.3
    */
-  public Model getModel(String workspaceId, String modelId)
+  public Model getModel(@Nonnull String workspaceId, @Nonnull String modelId)
       throws AnaplanAPIException {
     Workspace workspace = getWorkspace(workspaceId);
     if (workspace == null) {
@@ -344,10 +403,10 @@ public class Service implements Closeable {
 
   private void exportMetaFromFile(final String fileId, final ListMetadata listMetadata, final String fileType) {
     File targetFile = new File(fileId);
-    if (CSV.equalsIgnoreCase(fileType)) {
+    if (Constants.CSV.equalsIgnoreCase(fileType)) {
       Stream<String> lines = ListMetadataCsvWriter.getLines(listMetadata);
       ListItemFileWriter.linesToFile(listMetadata.getName(), targetFile.toPath(), lines);
-    } else if (JSON.equalsIgnoreCase(fileType)) {
+    } else if (Constants.JSON.equalsIgnoreCase(fileType)) {
       ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper().copy();
       objectMapper.setSerializationInclusion(Include.NON_ABSENT);
       ListItemFileWriter
@@ -376,11 +435,11 @@ public class Service implements Closeable {
             .forEach(listName -> LOG.info(Utils.formatTSV(listName.getId(), listName.getName())));
       } else {
         File targetFile = new File(fileId);
-        if (CSV.equalsIgnoreCase(fileType)) {
+        if (Constants.CSV.equalsIgnoreCase(fileType)) {
           ListItemFileWriter
               .linesToFile("list names", targetFile.toPath(),
                   ListNamesCsvWriter.getLines(listNames));
-        } else if (JSON.equalsIgnoreCase(fileType)) {
+        } else if (Constants.JSON.equalsIgnoreCase(fileType)) {
           ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper().copy();
           objectMapper.setSerializationInclusion(Include.NON_ABSENT);
           ListItemFileWriter.listToFile("list names", targetFile.toPath(), listNames, objectMapper);
@@ -401,8 +460,8 @@ public class Service implements Closeable {
    */
   public void exportListItems(String fileType, String fileId, String workspaceId, String modelId, String listId,
       boolean includeAll) throws ListNotFoundException {
-    boolean isCsv = CSV.equalsIgnoreCase(fileType);
-    boolean isJson = JSON.equalsIgnoreCase(fileType);
+    boolean isCsv = Constants.CSV.equalsIgnoreCase(fileType);
+    boolean isJson = Constants.JSON.equalsIgnoreCase(fileType);
     if (!isCsv && !isJson) {
       LOG.error(
           "Only supported list items export types are csv and json, please use the get:csv or get:json option");
@@ -426,6 +485,29 @@ public class Service implements Closeable {
       } else {
         throw new ListNotFoundException(modelId);
       }
+    }
+  }
+
+
+  /**
+   * @param fileId      the file
+   * @param workspaceId the workspace id
+   * @param modelId     the model id
+   * @param listId      the list id
+   * @throws ListNotFoundException
+   */
+  public void exportLargeListItems(final String fileId, final String workspaceId,
+      final String modelId, final String listId) throws ListNotFoundException {
+    File targetFile = new File(fileId);
+    if (workspaceId != null && modelId != null && listId != null) {
+      ListName listName = getListName(workspaceId, modelId, listId);
+      if (listName == null) {
+        throw new ListNotFoundException(modelId);
+      }
+      LOG.info("Started export for list {}", listName.getName());
+      String listItemsCsv = getLargeListItemsCsv(workspaceId, modelId, listId);
+      ListItemFileWriter.listItemToFile(listName.getName(), targetFile.toPath(), listItemsCsv);
+      LOG.info("Export for the view completed successfully");
     }
   }
 
@@ -535,6 +617,41 @@ public class Service implements Closeable {
     } catch (Exception e) {
       throw new ListItemsNotFoundException(listId, e);
     }
+  }
+
+  /**
+   * Retrieve the available lists items as a CSV string. This is used for up to 1 mil records.
+   *
+   * @param workspaceId The id of the workspace
+   * @param modelId     The id of the model
+   * @param listId      The id of the list
+   * @return A list of the available lists within this model
+   */
+  public String getLargeListItemsCsv(final String workspaceId,
+      final String modelId, final String listId)
+      throws AnaplanAPIException {
+    String requestId = null;
+    try {
+      //Start the request for download
+      requestId = apiProvider.get()
+          .listReadRequest(workspaceId, modelId, listId).getListReadRequest().getRequestId();
+      return getLargeDataExportService().getRequestData(workspaceId, modelId, listId, requestId);
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final Exception ex) {
+      throw new ViewDataNotFoundException(listId, ex);
+    } finally {
+      //In the end the request should be deleted
+      if (!Objects.isNull(requestId)) {
+        apiProvider.get().deleteListReadRequest(workspaceId, modelId, listId, requestId);
+      }
+    }
+    return StringUtils.EMPTY;
+  }
+
+  public LargeDataExport getLargeDataExportService() {
+    return LargeDataExport
+        .getLargeDataExportService(apiProvider.get(), TYPE_LARGE_EXPORT.LIST_EXPORT);
   }
 
   /**

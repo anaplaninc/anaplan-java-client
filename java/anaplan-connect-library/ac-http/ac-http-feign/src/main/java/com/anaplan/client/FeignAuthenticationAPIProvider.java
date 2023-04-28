@@ -19,31 +19,26 @@ public class FeignAuthenticationAPIProvider {
   protected ConnectionProperties connectionProperties;
   private final Supplier<Client> clientSupplier;
   private AnaplanAuthenticationAPI authClient;
+  private String clientKey;
+  private String clientValue;
 
-  /**
-   * Initializes API Provider with parameter
-   * @param connectionProperties
-   * @param clientSupplier
-   */
   public FeignAuthenticationAPIProvider(ConnectionProperties connectionProperties,
-      Supplier<Client> clientSupplier) {
+      Supplier<Client> clientSupplier, String clientKey, String clientValue) {
     this.connectionProperties = connectionProperties;
     this.clientSupplier = clientSupplier;
+    this.clientKey = clientKey;
+    this.clientValue = clientValue;
   }
 
-  /**
-   * Provides the Client Authentication API
-   * @return {@link AnaplanAuthenticationAPI}
-   */
   public AnaplanAuthenticationAPI getAuthClient() {
     if (authClient == null) {
       authClient = Feign.builder()
           .client(clientSupplier.get())
           .encoder(new JacksonEncoder())
           .decoder(new JacksonDecoder())
-          .requestInterceptor(new AConnectHeaderInjector())
+          .requestInterceptor(new AConnectHeaderInjector(clientKey, clientValue))
           .retryer(new FeignApiRetryer(
-              connectionProperties.getRetryTimeout() * 1000L,
+              connectionProperties.getRetryTimeout() == null ? null : connectionProperties.getRetryTimeout() * 1000L,
               Constants.MAX_RETRY_TIMEOUT_SECS * 1000L,
               connectionProperties.getMaxRetryCount(),
               FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER))

@@ -10,6 +10,7 @@ public class JDBCConfig {
   private boolean isStoredProcedure;
   private String jdbcQuery;
   private Object[] jdbcParams;
+  private int batchSize;
 
   public String getJdbcConnectionUrl() {
     return jdbcConnectionUrl;
@@ -39,6 +40,8 @@ public class JDBCConfig {
     return jdbcParams;
   }
 
+  public int getBatchSize() { return batchSize; }
+
   public void setJdbcConnectionUrl(String jdbcConnectionUrl) {
     this.jdbcConnectionUrl = jdbcConnectionUrl;
   }
@@ -66,4 +69,6 @@ public class JDBCConfig {
   public void setJdbcParams(Object[] jdbcParams) {
     this.jdbcParams = jdbcParams;
   }
+
+  public void setBatchSize(int batchSize) { this.batchSize = batchSize; }
 }

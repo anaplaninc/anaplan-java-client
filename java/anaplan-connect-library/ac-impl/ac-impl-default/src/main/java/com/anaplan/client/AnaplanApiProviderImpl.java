@@ -30,12 +30,16 @@ public class AnaplanApiProviderImpl implements Supplier<AnaplanAPI> {
   private ConnectionProperties connectionProperties;
   private Supplier<Client> clientSupplier;
   private AnaplanAPI apiClient;
+  private String clientKey;
+  private String clientValue;
 
   public AnaplanApiProviderImpl(ConnectionProperties connectionProperties,
-      Supplier<Client> clientSupplier, Authenticator authenticator) {
+      Supplier<Client> clientSupplier, Authenticator authenticator, String clientKey, String clientValue) {
     this.connectionProperties = connectionProperties;
     this.clientSupplier = clientSupplier;
     this.authenticator = authenticator;
+    this.clientKey = clientKey;
+    this.clientValue = clientValue;
   }
 
   /**
@@ -46,6 +50,7 @@ public class AnaplanApiProviderImpl implements Supplier<AnaplanAPI> {
   @Override
   public AnaplanAPI get() {
     if (apiClient == null) {
+      int httpTimeout = connectionProperties.getHttpTimeout() == null ? 0 : connectionProperties.getHttpTimeout() * 1000;
       apiClient = Feign.builder()
           .client(clientSupplier.get())
           .encoder(new AnaplanApiEncoder(ObjectMapperProvider.getObjectMapper()))
@@ -53,18 +58,18 @@ public class AnaplanApiProviderImpl implements Supplier<AnaplanAPI> {
           .requestInterceptors(Arrays.asList(
               new AuthTokenInjector(authenticator),
               new UserAgentInjector(),
-              new AConnectHeaderInjector(),
+              new AConnectHeaderInjector(clientKey, clientValue),
               new CompressPutBodyInjector()))
           .options(new Request.Options(
-              connectionProperties.getHttpTimeout() * 1000,
-              connectionProperties.getHttpTimeout() * 1000
+              httpTimeout,
+              httpTimeout
           ))
           .retryer(new FeignApiRetryer(
-              connectionProperties.getRetryTimeout() * 1000L,
+              connectionProperties.getRetryTimeout() == null ? null : connectionProperties.getRetryTimeout() * 1000L,
               Constants.MAX_RETRY_TIMEOUT_SECS * 1000L,
               connectionProperties.getMaxRetryCount(),
               FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER))
-          .errorDecoder(new AnaplanErrorDecoder())
+          .errorDecoder(new AnaplanErrorDecoder(authenticator))
           .target(AnaplanAPIFeign.class,
               connectionProperties.getApiServicesUri().toString() + "/" + connectionProperties.getMajor() + "/"
                   + connectionProperties.getMinor());

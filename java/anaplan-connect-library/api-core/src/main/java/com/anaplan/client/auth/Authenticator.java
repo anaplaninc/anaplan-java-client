@@ -18,4 +18,6 @@ public interface Authenticator {
    * @return {@link byte[]}
    */
   byte[] authenticate();
+
+  void setAuthToken(byte[] authToken);
 }

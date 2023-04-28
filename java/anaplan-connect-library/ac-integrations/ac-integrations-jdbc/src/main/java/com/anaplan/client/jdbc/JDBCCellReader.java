@@ -160,7 +160,7 @@ public class JDBCCellReader implements CellReader {
   public String[] readDataRow() throws AnaplanAPIException {
     try {
       if (resultSet == null || !resultSet.next()) {
-        return new String[0];
+        return null;
       }
       String[] dataRow = new String[columnCount];
       for (int i = 0; i < columnCount; ++i) {

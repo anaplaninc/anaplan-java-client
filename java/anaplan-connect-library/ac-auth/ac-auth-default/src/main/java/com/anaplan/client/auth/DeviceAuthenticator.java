@@ -7,23 +7,23 @@ import com.anaplan.client.dto.DeviceCodeInfo;
 import com.anaplan.client.dto.OauthTokenInfo;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.transport.ConnectionProperties;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import feign.FeignException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -38,36 +38,24 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
   private static final String DEVICE_SCOPE = "openid profile email offline_access";
   private static final String REFRESH_TOKEN = "refresh_token";
   private static final String JKS = ".jks";
-  private final String refreshTokenKeyStorePath;
-  private final String refreshTokenKeyStoreName;
-  private final char[] keystorePass;
-  private OauthTokenInfo oauthTokenInfo;
+  protected OauthTokenInfo oauthTokenInfo;
+  private char[] clientRefreshToken;
 
-  /**
-   * Initialization of the properties required for keystore generation
-   * @param connectionProperties
-   * @param authClient
-   */
+  private final DeviceAuthenticator.TokenStore store;
   public DeviceAuthenticator(ConnectionProperties connectionProperties,
-                             AnaplanAuthenticationAPI authClient) {
+      AnaplanAuthenticationAPI authClient) {
     super(connectionProperties, authClient);
-    refreshTokenKeyStoreName = String.format("ks_%s", Utils.bytesToHex(Utils.createHash(connectionProperties.getClientId())));
-    String keystoreDir = System.getProperty("user.home");
-    if (StringUtils.isNotBlank(System.getenv("AC_OAUTH_KEYSTORE_DIR"))) {
-      keystoreDir = System.getenv("AC_OAUTH_KEYSTORE_DIR");
-    }
-    refreshTokenKeyStorePath = keystoreDir + FileSystems.getDefault().getSeparator() + refreshTokenKeyStoreName + JKS;
-    keystorePass = CryptoUtil.encrypt(this.connectionProperties.getClientId()).toCharArray();
+    store = new DeviceAuthenticator.TokenStore(connectionProperties.getClientId());
   }
 
-  /**
-   * Authenticates the device
-   * @return refreshToken
-   */
   @Override
   public byte[] authenticate() {
     LOG.info("Authenticating via Device...");
+    if (clientRefreshToken != null) {
+      return getAuthToken(clientRefreshToken);
+    }
     String refreshToken = getDecodedRefreshToken();
+
     if (connectionProperties.isForceRegister()) {
       clearRefreshTokenEntry();
       deviceRegistration();
@@ -83,13 +71,13 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
   }
 
   /**
-   * Deletes the existing JKS at the existing path
+   * Clear JDK file
    */
   public void clearRefreshTokenEntry() {
     LOG.info("Deleting already existing JKS and re-registering the device...");
 
     try {
-      Files.deleteIfExists(Paths.get(refreshTokenKeyStorePath));
+      Files.deleteIfExists(Paths.get(store.getRefreshTokenKeyStorePath()));
     } catch (IOException e) {
       LOG.error("The JKS file with the Refresh Token was not found at that location. {}", e.getMessage());
     }
@@ -102,12 +90,13 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
    */
   @Override
   public byte[] refreshToken() {
-    String refreshToken = getDecodedRefreshToken(); // get refreshToken from JKS
+    String refreshToken = getDecodedRefreshToken();
     if (StringUtils.isBlank(refreshToken)) {
       deviceRegistration();
     } else {
       final String clientId = connectionProperties.getClientId();
-      oauthTokenInfo = authClient.oauthRefreshToken(REFRESH_TOKEN, clientId, refreshToken);
+      oauthTokenInfo = authClient
+          .oauthRefreshToken(REFRESH_TOKEN, clientId, refreshToken);
       boolean isRotatable = ROTATABLE.equalsIgnoreCase(connectionProperties.getRefreshType());
       if (isRotatable && !Objects.equals(oauthTokenInfo.getRefreshToken(), refreshToken)) {
         encodeAndSetRefreshToken(oauthTokenInfo.getRefreshToken());
@@ -117,6 +106,12 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
       authToken = accessToken.getBytes();
     }
     return authToken;
+  }
+
+  private byte[] getAuthToken(final char[] refreshToken) {
+    final String clientId = connectionProperties.getClientId();
+    oauthTokenInfo = authClient.oauthRefreshToken(REFRESH_TOKEN, clientId, new String(refreshToken));
+    return oauthTokenInfo.getAccessToken().getBytes();
   }
 
   /**
@@ -142,11 +137,28 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
     return deviceCodeResp;
   }
 
-  private OauthTokenInfo getAuthTokenFromServer(final String deviceCode) {
+  /**
+   *
+   * @param deviceCode the device code
+   * @return true if token is stored
+   */
+  @SuppressWarnings("unused")
+  public boolean setRefreshToken(String deviceCode) {
+    OauthTokenInfo tokenInfo = this.getAuthTokenFromServer(deviceCode);
+    if (StringUtils.isNotBlank(tokenInfo.getRefreshToken())) {
+      encodeAndSetRefreshToken(tokenInfo.getRefreshToken());
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public OauthTokenInfo getAuthTokenFromServer(final String deviceCode) {
     OauthTokenInfo oauthTokenResp = null;
     int retry = 0;
 
     synchronized (this) {
+      long timeout = connectionProperties.getRetryTimeout() == null ? 0 : connectionProperties.getRetryTimeout() * 1000L;
       while (retry < 30) {
         retry++;
         try {
@@ -159,7 +171,7 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
         } catch (final RuntimeException exception) {
           LOG.error("{} attempt. User has yet to authorize the device code in browser.", retry);
           try {
-            Thread.sleep(connectionProperties.getRetryTimeout() * 1000L);
+            Thread.sleep(timeout);
           } catch (InterruptedException interruptedException) {
             Thread.currentThread().interrupt();
             LOG.error(interruptedException.getMessage());
@@ -186,14 +198,31 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
     connectionProperties.setForceRegister(false);
   }
 
-  private void encodeAndSetRefreshToken(String refreshToken) {
+  /**
+   *
+   * @return {@link DeviceAuthenticator.DeviceCodeURL}
+   */
+  @SuppressWarnings("unused")
+  public DeviceAuthenticator.DeviceCodeURL getDeviceCodeURL() {
+    DeviceCodeInfo deviceCodeResp = this.authClient.deviceCode(DEVICE_SCOPE, this.connectionProperties.getClientId());
+    return new DeviceAuthenticator.DeviceCodeURL(deviceCodeResp.getDeviceCode(), deviceCodeResp.getVerificationUriComplete());
+  }
+
+
+
+  /**
+   *
+   * @param refreshToken the refresh token
+   */
+  @SuppressWarnings("unused")
+  public void encodeAndSetRefreshToken(String refreshToken) {
     int attempts = 0;
     byte[] encodedKey = Base64.getEncoder().encode(refreshToken.getBytes());
     do {
       attempts++;
-      try (FileOutputStream fileOutputStream = new FileOutputStream(refreshTokenKeyStorePath)) {
-        KeyStore ks = Utils.saveEntryInKeyStore(encodedKey, refreshTokenKeyStoreName, keystorePass);
-        ks.store(fileOutputStream, keystorePass);
+      try (FileOutputStream fileOutputStream = new FileOutputStream(store.getRefreshTokenKeyStorePath())) {
+        KeyStore ks = Utils.saveEntryInKeyStore(encodedKey, store.getRefreshTokenKeyStoreName(), store.getKeystorePass());
+        ks.store(fileOutputStream, store.getKeystorePass());
         return;
       } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
         LOG.error("Could not encode the refresh token or the token does not exist. {}", e.getMessage());
@@ -202,9 +231,18 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
     throw new AnaplanAPIException("Unable to save refresh token after " + attempts + " attempts.");
   }
 
-  private String getDecodedRefreshToken() {
-    try (FileInputStream fileInputStream = new FileInputStream(refreshTokenKeyStorePath)) {
-      Key secretKeyAlias = Utils.loadKeystore(fileInputStream, refreshTokenKeyStoreName, keystorePass);
+  public void setRefreshToken(final char[] clientRefreshToken) {
+    this.clientRefreshToken = clientRefreshToken;
+  }
+
+  /**
+   *
+   * @return refresh token
+   */
+  @SuppressWarnings("unused")
+  public String getDecodedRefreshToken() {
+    try (FileInputStream fileInputStream = new FileInputStream(store.getRefreshTokenKeyStorePath())) {
+      Key secretKeyAlias = Utils.loadKeystore(fileInputStream, store.getRefreshTokenKeyStoreName(), store.getKeystorePass());
 
       byte[] rawData = secretKeyAlias.getEncoded();
       byte[] decodedKey = Base64.getDecoder().decode(rawData);
@@ -217,7 +255,49 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
     return StringUtils.EMPTY;
   }
 
-  public OauthTokenInfo getOauthTokenInfo() {
-    return this.oauthTokenInfo;
+  public static final class TokenStore {
+    private final String refreshTokenKeyStorePath;
+    private final String refreshTokenKeyStoreName;
+    private final char[] keystorePass;
+    public TokenStore(final String clientID) {
+      refreshTokenKeyStoreName = String.format("ks_%s", Utils.bytesToHex(Utils.createHash(clientID)));
+      String keystoreDir = System.getProperty("user.home");
+      if (StringUtils.isNotBlank(System.getenv("AC_OAUTH_KEYSTORE_DIR"))){
+        keystoreDir = System.getenv("AC_OAUTH_KEYSTORE_DIR");
+      }
+      refreshTokenKeyStorePath = keystoreDir + FileSystems.getDefault().getSeparator() + refreshTokenKeyStoreName + JKS;
+      keystorePass = CryptoUtil.encrypt(clientID).toCharArray();
+    }
+
+    public String getRefreshTokenKeyStorePath() {
+      return refreshTokenKeyStorePath;
+    }
+
+    public String getRefreshTokenKeyStoreName() {
+      return refreshTokenKeyStoreName;
+    }
+
+    public char[] getKeystorePass() {
+      return keystorePass;
+    }
   }
+
+  public static final class DeviceCodeURL {
+    private final String deviceCode;
+    private final String authURL;
+
+    public DeviceCodeURL(String deviceCode, String authURL) {
+      this.deviceCode = deviceCode;
+      this.authURL = authURL;
+    }
+    @SuppressWarnings("unused")
+    public String getDeviceCode() {
+      return this.deviceCode;
+    }
+    @SuppressWarnings("unused")
+    public String getAuthURL() {
+      return this.authURL;
+    }
+  }
+
 }

@@ -4,6 +4,7 @@ import com.anaplan.client.api.AnaplanAuthenticationAPI;
 import com.anaplan.client.dto.responses.RefreshTokenResp;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.transport.ConnectionProperties;
+import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public abstract class AbstractAuthenticator implements Authenticator {
     } else if (authTokenExpiresAt - System.currentTimeMillis() < TOKEN_EXPIRATION_REFRESH_WINDOW) {
       authToken = refreshToken();
     }
+
     return new String(authToken);
   }
 
@@ -54,6 +56,10 @@ public abstract class AbstractAuthenticator implements Authenticator {
     } catch (Exception e) {
       throw new AnaplanAPIException("Token Refresh failed!", e);
     }
+  }
+
+  public void setAuthToken(byte[] authToken){
+    this.authToken = authToken;
   }
 
 }

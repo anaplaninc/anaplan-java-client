@@ -3,10 +3,12 @@ package com.anaplan.client.api;
 import com.anaplan.client.dto.ActionData;
 import com.anaplan.client.dto.ExportData;
 import com.anaplan.client.dto.ImportData;
+import com.anaplan.client.dto.LargeRequestData;
 import com.anaplan.client.dto.ListItemParametersData;
 import com.anaplan.client.dto.ListItemResultData;
 import com.anaplan.client.dto.ProcessData;
 import com.anaplan.client.dto.ServerFileData;
+import com.anaplan.client.dto.ViewRequestData;
 import com.anaplan.client.dto.responses.ActionsResponse;
 import com.anaplan.client.dto.responses.ChunksResponse;
 import com.anaplan.client.dto.responses.ExportMetadataResponse;
@@ -507,4 +509,65 @@ public interface AnaplanAPIFeign extends AnaplanAPI {
       @Param("modelId") String modelId,
       @Param("listId") String listId,
       ListItemParametersData itemData);
+
+  @RequestLine("POST /workspaces/{workspaceId}/models/{modelId}/views/{viewId}/readRequests")
+  ViewRequestData viewReadRequest(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("viewId") String viewId,
+      ExportData exportType);
+
+  @RequestLine("DELETE /workspaces/{workspaceId}/models/{modelId}/views/{viewId}/readRequests/{requestId}")
+  ViewRequestData deleteViewReadRequest(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("viewId") String viewId,
+      @Param("requestId") String requestId);
+
+  @RequestLine("GET /workspaces/{workspaceId}/models/{modelId}/views/{viewId}/readRequests/{requestId}")
+  ViewRequestData getViewRequestStatus(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("viewId") String viewId,
+      @Param("requestId") String requestId);
+
+  @RequestLine("GET /workspaces/{workspaceId}/models/{modelId}/views/{viewId}/readRequests/{requestId}/pages/{pageNo}")
+  @Headers("Accept: text/csv")
+  String downloadCSVViewRequestPage(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("viewId") String viewId,
+      @Param("requestId") String requestId,
+      @Param("pageNo") int pageNo);
+
+
+  @RequestLine("POST /workspaces/{workspaceId}/models/{modelId}/lists/{listId}/readRequests")
+  LargeRequestData listReadRequest(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("listId") String listId);
+
+  @RequestLine("DELETE /workspaces/{workspaceId}/models/{modelId}/lists/{listId}/readRequests/{requestId}")
+  LargeRequestData deleteListReadRequest(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("listId") String listId,
+      @Param("requestId") String requestId);
+
+  @RequestLine("GET /workspaces/{workspaceId}/models/{modelId}/lists/{listId}/readRequests/{requestId}")
+  LargeRequestData getListRequestStatus(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("listId") String listId,
+      @Param("requestId") String requestId);
+
+  @RequestLine("GET /workspaces/{workspaceId}/models/{modelId}/lists/{listId}/readRequests/{requestId}/pages/{pageNo}")
+  @Headers("Accept: text/csv")
+  String downloadCSVListRequest(
+      @Param("workspaceId") String workspaceId,
+      @Param("modelId") String modelId,
+      @Param("listId") String listId,
+      @Param("requestId") String requestId,
+      @Param("pageNo") int pageNo);
+
 }

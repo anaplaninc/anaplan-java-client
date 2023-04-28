@@ -7,6 +7,7 @@ import feign.Client;
 import feign.okhttp.OkHttpClient;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,10 @@ public class OkHttpFeignClientProvider implements FeignClientProvider {
       setupProxy(okHttpBuilder, properties);
     }
     // setting the read and write timeouts as well
-    okHttpBuilder.connectTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS)
-        .readTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS)
-        .writeTimeout(properties.getHttpTimeout(), TimeUnit.SECONDS);
+    int timeoutHTTP = Optional.ofNullable(properties.getHttpTimeout()).orElse(0);
+    okHttpBuilder.connectTimeout(timeoutHTTP, TimeUnit.SECONDS)
+        .readTimeout(timeoutHTTP, TimeUnit.SECONDS)
+        .writeTimeout(timeoutHTTP, TimeUnit.SECONDS);
     return new OkHttpClient(okHttpBuilder.build());
   }
 

@@ -118,7 +118,7 @@ public class JDBCUtils {
    * @throws SQLException exception
    */
   public static ListItemResultData doActionsItemsFromJDBC(final JDBCConfig jdbcConfig, final ListImpl listImpl, final Map<String, String> headerMap,
-      final ListImpl.ListAction action, final boolean doMapping)
+                                                          final ListImpl.ListAction action, final boolean doMapping)
       throws SQLException, IOException {
     return doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap, action, BATCH_SIZE, doMapping);
   }

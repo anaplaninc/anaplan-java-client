@@ -3,10 +3,12 @@ package com.anaplan.client.api;
 import com.anaplan.client.dto.ActionData;
 import com.anaplan.client.dto.ExportData;
 import com.anaplan.client.dto.ImportData;
+import com.anaplan.client.dto.LargeRequestData;
 import com.anaplan.client.dto.ListItemParametersData;
 import com.anaplan.client.dto.ListItemResultData;
 import com.anaplan.client.dto.ProcessData;
 import com.anaplan.client.dto.ServerFileData;
+import com.anaplan.client.dto.ViewRequestData;
 import com.anaplan.client.dto.responses.ActionsResponse;
 import com.anaplan.client.dto.responses.ChunksResponse;
 import com.anaplan.client.dto.responses.ExportMetadataResponse;
@@ -954,4 +956,119 @@ public interface AnaplanAPI {
       String workspaceId,
       String modelId,
       String importId);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param viewId the view id
+   * @param exportType TABULAR_SINGLE_COLUMN or TABULAR_MULTI_COLUMN or GRID_ALL_PAGES
+   * @return {@link ViewRequestData}
+   */
+  ViewRequestData viewReadRequest(
+      String workspaceId,
+      String modelId,
+      String viewId,
+      ExportData exportType);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param viewId the view id
+   * @param requestId the request id
+   * @return {@link ViewRequestData}
+   */
+  ViewRequestData deleteViewReadRequest(
+      String workspaceId,
+      String modelId,
+      String viewId,
+      String requestId);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param viewId the view id
+   * @param requestId the request id
+   * @return {@link ViewRequestData}
+   */
+  ViewRequestData getViewRequestStatus(
+      String workspaceId,
+      String modelId,
+      String viewId,
+      String requestId);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param viewId the view id
+   * @param requestId the request id
+   * @param pageNo page position
+   * @return the page content
+   */
+  String downloadCSVViewRequestPage(
+      String workspaceId,
+      String modelId,
+      String viewId,
+      String requestId,
+      int pageNo);
+
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param listId the list id
+   * @return {@link ViewRequestData}
+   */
+  LargeRequestData listReadRequest(
+      String workspaceId,
+      String modelId,
+      String listId);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param listId the list id
+   * @param requestId the request id
+   * @return {@link LargeRequestData}
+   */
+  LargeRequestData deleteListReadRequest(
+      String workspaceId,
+      String modelId,
+      String listId,
+      String requestId);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param listId the view id
+   * @param requestId the request id
+   * @return {@link LargeRequestData}
+   */
+  LargeRequestData getListRequestStatus(
+      String workspaceId,
+      String modelId,
+      String listId,
+      String requestId);
+
+  /**
+   *
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param listId the view id
+   * @param requestId the request id
+   * @param pageNo page position
+   * @return the page content
+   */
+  String downloadCSVListRequest(
+      String workspaceId,
+      String modelId,
+      String listId,
+      String requestId,
+      int pageNo);
 }

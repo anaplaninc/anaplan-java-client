@@ -11,6 +11,7 @@ import com.anaplan.client.Utils;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.AnaplanRetryableException;
 import com.anaplan.client.exceptions.TooLongQueryError;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.sql.BatchUpdateException;
@@ -57,6 +58,14 @@ public class JDBCCellWriter implements CellWriter {
     this.jdbcConfig = jdbcConfig;
     String rawJdbcQuery = jdbcConfig.getJdbcQuery();
     this.jdbcConfig.setJdbcQuery(sanitizeQuery(rawJdbcQuery));
+    if (this.jdbcConfig.getBatchSize() > 0) {
+      // Because of the last row while processing from the chunk can be incomplete
+      // the row will be added to the next batch and removed from current on
+      // that is why we need to have +1 records to be processed to have the right batch size
+      batchSize = jdbcConfig.getBatchSize() + 1;
+    } else {
+      batchSize = batchSize + 1;
+    }
   }
 
   /**
@@ -104,49 +113,21 @@ public class JDBCCellWriter implements CellWriter {
 
   @Override
   public int writeDataRow(final DataRow dataRow)
-      throws AnaplanAPIException, SQLException {
+          throws AnaplanAPIException, SQLException {
     Utils.checkSeparator(dataRow.getSeparator());
     JDBCUtils.validateURL(jdbcConfig);
     final CSVFormat anaplanCSVFormat = CSVFormat.RFC4180.builder().setDelimiter(dataRow.getSeparator().charAt(0)).build();
     try (LineNumberReader lnr = new LineNumberReader(
-        new InputStreamReader(dataRow.getInputStream()))) {
+            new InputStreamReader(dataRow.getInputStream()))) {
       String line;
       boolean rowBatchRemoved = false;
       List<String[]> rowBatch = new ArrayList<>();
-      while (null != (line = lnr.readLine())) {
-        String[] row;
-        // ignore the header
-        if (lnr.getLineNumber() == 1 && dataRow.getChunkId().equals("0")) {
-          LOG.info("Export {} to database started successfully", dataRow.getExportId());
-          continue;
-        }
-        // adding a fix to handle the case when the chunk ends with a complete record
-        if (lnr.getLineNumber() == 1 && !(dataRow.getChunkId().equals("0"))) {
-          String temp = lastRow.concat(line);
-          if (temp.split(dataRow.getSeparator()).length == dataRow.getColumnCount()) {
-            line = temp;
-          } else {
-            row = lastRow.split(dataRow.getSeparator());
-            rowBatch.add(row);
-            ++batchRecords;
-          }
-        }
-        List<String> dataRowStr;
-        //If the row have an odd number of quotes the row have multiple lines and we have to read line by line until quotes are even (closed)
-        boolean oddQuote = JDBCUtils.occurrence(line, JDBCUtils.QUOTE_REGEX_PATTERN) % 2 == 1;
-        dataRowStr = oddQuote ? JDBCUtils.addDelimiter(lnr, anaplanCSVFormat, line) : JDBCUtils.getListFromParse(anaplanCSVFormat, line);
-        row = dataRowStr.toArray(new String[0]);
-        rowBatch.add(row);
-        lastRow = line;
-        RowBatchComplete rowBatchComplete = checkEndingIncomplete(dataRow, rowBatch, row, rowBatchRemoved);
-        rowBatchRemoved = rowBatchComplete.isRowRemoved();
-        rowBatch = rowBatchComplete.getRowBatch();
-      }
+      rowBatch = processRowBatch(dataRow, anaplanCSVFormat, lnr, rowBatchRemoved, rowBatch);
       isLastChunk(dataRow, rowBatch);
       //transfer the last batch when all of the lines from inputstream have been read
       ++batchNo;
       batchExecution(rowBatch, dataRow.getColumnCount(), dataRow.getMapcols(), dataRow.getMaxRetryCount(),
-          dataRow.getRetryTimeout());
+              dataRow.getRetryTimeout());
       batchRecords = 0;
       //batch update exceptions captured to determine the committed and failed records
     } catch (Exception e) {
@@ -158,6 +139,41 @@ public class JDBCCellWriter implements CellWriter {
     }
     return datarowstransferred;
   }
+
+  private List<String[]> processRowBatch(DataRow dataRow, CSVFormat anaplanCSVFormat, LineNumberReader lnr, boolean rowBatchRemoved, List<String[]> rowBatch) throws IOException, SQLException {
+    String line;
+    while (null != (line = lnr.readLine())) {
+      String[] row;
+      // ignore the header
+      if (lnr.getLineNumber() == 1 && dataRow.getChunkId().equals("0")) {
+        LOG.info("Export {} to database started successfully", dataRow.getExportId());
+        continue;
+      }
+      // adding a fix to handle the case when the chunk ends with a complete record
+      if (lnr.getLineNumber() == 1 && !(dataRow.getChunkId().equals("0"))) {
+        String temp = lastRow.concat(line);
+        if (JDBCUtils.getListFromParse(anaplanCSVFormat, temp).size() == dataRow.getColumnCount()) {
+          line = temp;
+        } else {
+          row = lastRow.split(dataRow.getSeparator());
+          rowBatch.add(row);
+          ++batchRecords;
+        }
+      }
+      List<String> dataRowStr;
+      //If the row have an odd number of quotes the row have multiple lines and we have to read line by line until quotes are even (closed)
+      boolean oddQuote = JDBCUtils.occurrence(line, JDBCUtils.QUOTE_REGEX_PATTERN) % 2 == 1;
+      dataRowStr = oddQuote ? JDBCUtils.addDelimiter(lnr, anaplanCSVFormat, line) : JDBCUtils.getListFromParse(anaplanCSVFormat, line);
+      row = dataRowStr.toArray(new String[0]);
+      rowBatch.add(row);
+      lastRow = line;
+      RowBatchComplete rowBatchComplete = checkEndingIncomplete(dataRow, rowBatch, row, rowBatchRemoved);
+      rowBatchRemoved = rowBatchComplete.isRowRemoved();
+      rowBatch = rowBatchComplete.getRowBatch();
+    }
+    return rowBatch;
+  }
+
   private void isLastChunk(final DataRow dataRow, final List<String[]> rowBatch) {
     //Check to make sure it is not the last chunk
     //removing the last record so that it can be processed in the next chunk
@@ -167,7 +183,7 @@ public class JDBCCellWriter implements CellWriter {
   }
 
   private RowBatchComplete checkEndingIncomplete(final DataRow dataRow, List<String[]> rowBatch, final String[] row, boolean rowRemoved)
-      throws SQLException {
+          throws SQLException {
     boolean rowBatchRemoved = rowRemoved;
     if (++batchRecords % batchSize == 0) {
       ++batchNo;
@@ -210,7 +226,7 @@ public class JDBCCellWriter implements CellWriter {
         }
         if (preparedStatement == null || preparedStatement.isClosed()) {
           preparedStatement = connection.prepareStatement(jdbcConfig.getJdbcQuery(),
-              ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                  ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         }
         for (int i = 0; i < rowBatchSize; i++) {
           psLineEndWithSeparator(mapcols, columnCount, rowBatch.get(i));
@@ -234,12 +250,12 @@ public class JDBCCellWriter implements CellWriter {
     // not successful
     if (retry) {
       throw new AnaplanAPIException(
-          "Could not connect to the database after " + maxRetryCount + " retries");
+              "Could not connect to the database after " + maxRetryCount + " retries");
     }
   }
 
   private BatchResult execute(List<String[]> rowBatch, final int rowBatchSize, final int maxRetryCount)
-      throws AnaplanRetryableException, SQLException {
+          throws AnaplanRetryableException, SQLException {
     try {
       executeBatch(rowBatchSize, maxRetryCount);
       batchRecords = 0;
@@ -273,8 +289,8 @@ public class JDBCCellWriter implements CellWriter {
 
     final BatchResult result = new BatchResult(newRowBatch, newRowBatch.size(), true);
     final String logInfo = erroredRows.stream().
-        map(Object::toString).
-        collect(Collectors.joining(","));
+            map(Object::toString).
+            collect(Collectors.joining(","));
     LOG.info("The following rows errored when inserting into the database: {}", logInfo);
     LOG.info("Trying batch {} again without errored rows", batchNo);
 
@@ -289,10 +305,10 @@ public class JDBCCellWriter implements CellWriter {
    * @throws SQLException
    */
   private void psLineEndWithSeparator(int[] mapcols, int columnCount, String[] row)
-      throws SQLException {
+          throws SQLException {
     //handling the last column if the value is null in anaplan
     if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0
-        && !jdbcConfig.getJdbcParams()[0].equals("") && mapcols.length != 0) {
+            && !jdbcConfig.getJdbcParams()[0].equals("") && mapcols.length != 0) {
       setParamForStatement(mapcols, row);
     } else {
       setEmptyParamForStatement(columnCount, row);
@@ -305,8 +321,8 @@ public class JDBCCellWriter implements CellWriter {
         preparedStatement.setString(i + 1, "");
       } else {
         preparedStatement
-            .setString(i + 1,
-                !String.valueOf(row[mapcols[i]]).equals("") ? String.valueOf(row[mapcols[i]]) : "");
+                .setString(i + 1,
+                        !String.valueOf(row[mapcols[i]]).equals("") ? String.valueOf(row[mapcols[i]]) : "");
       }
     }
   }
@@ -317,7 +333,7 @@ public class JDBCCellWriter implements CellWriter {
         preparedStatement.setString(i + 1, "");
       } else {
         preparedStatement
-            .setString(i + 1, !String.valueOf(row[i]).equals("") ? String.valueOf(row[i]) : "");
+                .setString(i + 1, !String.valueOf(row[i]).equals("") ? String.valueOf(row[i]) : "");
       }
     }
   }
@@ -330,7 +346,7 @@ public class JDBCCellWriter implements CellWriter {
    * @return
    */
   private int[] executeBatch(int batchRecords, int maxRetryCount)
-      throws AnaplanRetryableException, BatchUpdateException {
+          throws AnaplanRetryableException, BatchUpdateException {
     int k = 0;
     int[] count = new int[batchSize];
     boolean retry;
@@ -351,8 +367,8 @@ public class JDBCCellWriter implements CellWriter {
           }
         });
         LOG.info("Batch {} written ({} records committed, {} records errored out)", batchNo,
-            update,
-            notUpdate);
+                update,
+                notUpdate);
         return count;
       } catch (BatchUpdateException buex) {
         retry = logBatchUpdateException(buex);
@@ -362,7 +378,7 @@ public class JDBCCellWriter implements CellWriter {
     } while (k < maxRetryCount && retry);
     return count;
   }
-  
+
   public boolean logBatchUpdateException(final BatchUpdateException buex) throws BatchUpdateException {
     LOG.debug("Exception observed during batch update : {}", buex.getMessage());
     if (buex.getSQLState().equals("08003")) {
@@ -371,7 +387,7 @@ public class JDBCCellWriter implements CellWriter {
       throw buex;
     }
     return true;
-  } 
+  }
 
   /**
    * Connects to DB with 5 retries
@@ -384,7 +400,7 @@ public class JDBCCellWriter implements CellWriter {
       try {
         if (connection == null || connection.isClosed()) {
           connection = DriverManager.getConnection(jdbcConfig.getJdbcConnectionUrl(),
-              jdbcConfig.getJdbcUsername(), new String(jdbcConfig.getJdbcPassword()));
+                  jdbcConfig.getJdbcUsername(), new String(jdbcConfig.getJdbcPassword()));
           connection.setAutoCommit(false);
           LOG.info("Created JDBC connection to: {}", connection.getMetaData().getURL());
           retry = false;
@@ -394,8 +410,8 @@ public class JDBCCellWriter implements CellWriter {
           final String logError = e.getMessage();
           LOG.error("Could not connect to the database: {}", logError);
           throw new AnaplanAPIException(
-              "Could not connect to the database. Please check the connection URL in your JDBC properties and " +
-                  "make sure you have a JDBC driver installed."
+                  "Could not connect to the database. Please check the connection URL in your JDBC properties and " +
+                          "make sure you have a JDBC driver installed."
           );
         }
 
@@ -406,7 +422,7 @@ public class JDBCCellWriter implements CellWriter {
     // if not successful after configured no of max retries
     if (retry) {
       throw new AnaplanAPIException(
-          "Could not connect to the database after " + maxRetryCount + " retries");
+              "Could not connect to the database after " + maxRetryCount + " retries");
     }
   }
 
@@ -419,14 +435,14 @@ public class JDBCCellWriter implements CellWriter {
   private void sleepNoNetwork(int maxRetryCount, int retryTimeout, int k) {
     Long interval = (long) retryTimeout * 1000;
     AnaplanJdbcRetryer anaplanJdbcRetryer =
-        new AnaplanJdbcRetryer(retryTimeout * 1000L, Constants.MAX_RETRY_TIMEOUT_SECS * 1000L,
-            Constants.DEFAULT_BACKOFF_MULTIPLIER);
+            new AnaplanJdbcRetryer(retryTimeout * 1000L, Constants.MAX_RETRY_TIMEOUT_SECS * 1000L,
+                    Constants.DEFAULT_BACKOFF_MULTIPLIER);
     if (k > 1) {
       interval = anaplanJdbcRetryer.nextMaxInterval(k - 1);
     }
     if (k < maxRetryCount) {
       LOG.info("Attempt {} : Could not connect to the database! Will retry in {} seconds ", k,
-          interval / 1000);
+              interval / 1000);
       try {
         Thread.sleep(interval);
       } catch (InterruptedException e1) {
@@ -437,7 +453,7 @@ public class JDBCCellWriter implements CellWriter {
     }
     if (k == maxRetryCount) {
       LOG.info("Attempt {} : Could not connect to the database! Max connection attempts reached..",
-          k);
+              k);
     }
   }
 

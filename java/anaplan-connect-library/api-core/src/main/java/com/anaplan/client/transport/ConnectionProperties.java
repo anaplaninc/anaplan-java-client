@@ -15,9 +15,9 @@ public class ConnectionProperties {
   private Credentials apiCredentials;
   private URI proxyLocation;
   private Credentials proxyCredentials;
-  private int retryTimeout;
-  private int maxRetryCount;
-  private int httpTimeout;
+  private Integer retryTimeout;
+  private Integer maxRetryCount;
+  private Integer httpTimeout;
   private String clientId;
   private String refreshType = DeviceTypeToken.NON_ROTATABLE.name();
   private boolean forceRegister;
@@ -104,27 +104,27 @@ public class ConnectionProperties {
     this.proxyCredentials = proxyCredentials;
   }
 
-  public int getRetryTimeout() {
+  public Integer getRetryTimeout() {
     return retryTimeout;
   }
 
-  public void setRetryTimeout(int retryTimeout) {
+  public void setRetryTimeout(Integer retryTimeout) {
     this.retryTimeout = retryTimeout;
   }
 
-  public int getMaxRetryCount() {
+  public Integer getMaxRetryCount() {
     return maxRetryCount;
   }
 
-  public void setMaxRetryCount(int maxRetryCount) {
+  public void setMaxRetryCount(Integer maxRetryCount) {
     this.maxRetryCount = maxRetryCount;
   }
 
-  public int getHttpTimeout() {
+  public Integer getHttpTimeout() {
     return httpTimeout;
   }
 
-  public void setHttpTimeout(int httpTimeout) {
+  public void setHttpTimeout(Integer httpTimeout) {
     this.httpTimeout = httpTimeout;
   }
 }

@@ -174,7 +174,7 @@ public abstract class BaseTest {
       mockAnaplanApi = Mockito.mock(AnaplanAPI.class);
       Supplier<AnaplanAPI> apiProvider = () -> mockAnaplanApi;
       mockService = Mockito.spy(new Service(props, null, apiProvider));
-      AnaplanApiProviderImpl anaplanApiProvider = new AnaplanApiProviderImpl(props,null,null);
+      AnaplanApiProviderImpl anaplanApiProvider = new AnaplanApiProviderImpl(props,null,null,"","");
       objectMapper = ObjectMapperProvider.getObjectMapper();
       mockAuthApi = Mockito.mock(AnaplanAuthenticationAPI.class);
 

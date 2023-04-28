@@ -3,6 +3,7 @@ package com.anaplan.client.transport.retryer;
 import com.anaplan.client.Constants;
 import feign.RetryableException;
 import feign.Retryer;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,7 @@ public class FeignApiRetryer extends Retryer.Default {
   private int retries;
   private final Double backoffMultiplier;
 
-  public FeignApiRetryer(Long period, Long maxPeriod, Integer maxAttempts, Double backoffMultiplier) {
+  public FeignApiRetryer(@Nullable Long period, @Nullable Long maxPeriod, @Nullable Integer maxAttempts, @Nullable Double backoffMultiplier) {
     this.period = (period == null) ? DEFAULT_PERIOD : period;
     this.maxPeriod = (maxPeriod == null) ? DEFAULT_MAX_PERIOD : maxPeriod;
     this.maxAttempts = (maxAttempts == null) ? DEFAULT_MAX_ATTEMPTS : maxAttempts;

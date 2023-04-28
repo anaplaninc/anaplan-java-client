@@ -2,7 +2,6 @@ package com.anaplan.client;
 
 import com.anaplan.client.dto.ListMetadataProperty;
 import com.anaplan.client.exceptions.AnaplanAPIException;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,9 +25,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,14 +37,15 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by Spondon Saha Date: 5/5/18 Time: 3:48 PM
@@ -54,6 +56,10 @@ public class Utils {
   private static final CSVFormat.Builder PROPERTY_FORMAT_BUILDER = CSVFormat.newFormat('=').builder().setQuote('"');
   private static final CSVFormat.Builder LINE_FORMAT_BUILDER = CSVFormat.newFormat(',').builder().setQuote('"');
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+
+  public enum EXPORT_TYPE {
+    TABULAR_SINGLE_COLUMN, TABULAR_MULTI_COLUMN, GRID_ALL_PAGES
+  }
 
   /**
    * Provide a suitable error message from an exception.
@@ -147,12 +153,12 @@ public class Utils {
   public static List<String> getColumnValues(String[] lines, int startIndex) {
     //Regex - ,(?=(?:[^"]*"[^"]*")*[^"]*$) - matches the character , that's not inside the double quotes
     return IntStream.range(startIndex, lines.length).filter(index -> lines[index].startsWith(","))
-        .mapToObj(index -> {
-              String regex;
-              regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-              return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
-            }
-        ).collect(Collectors.toList());
+            .mapToObj(index -> {
+                      String regex;
+                      regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
+                      return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
+                    }
+            ).collect(Collectors.toList());
   }
 
   /**
@@ -228,12 +234,6 @@ public class Utils {
     return value;
   }
 
-  /**
-   * Provides CSV properties from inputStream
-   * @param inputStream
-   * @return
-   * @throws IOException
-   */
   public static Map<String, String> getPropertyFile(final InputStream inputStream)
       throws IOException {
 
@@ -245,9 +245,9 @@ public class Utils {
     final CSVFormat format = PROPERTY_FORMAT_BUILDER.build();
     while (null != (line = lnr.readLine())) {
       final List<CSVRecord> records = CSVParser.parse(line, format).getRecords();
-      if (!records.isEmpty()) {
-        result.put(records.get(0).get(0), records.get(0).get(1));
-      }
+        if (!records.isEmpty()) {
+          result.put(records.get(0).get(0), records.get(0).get(1));
+        }
     }
     return result;
   }
@@ -310,14 +310,6 @@ public class Utils {
     }
   }
 
-  /**
-   * Checks provided file status
-   * @param target
-   * @param path
-   * @param file
-   * @param deleteExisting
-   * @throws IOException
-   */
   public static void checkTarget(final File target, String path, String file, boolean deleteExisting) throws IOException {
     if (target.exists()) {
       if (!target.isFile()) {
@@ -351,11 +343,6 @@ public class Utils {
     return target;
   }
 
-  /**
-   * Creates the Hash for the provided client id with SHA-512/256 algorithm
-   * @param clientId
-   * @return
-   */
   public static byte[] createHash(String clientId) {
     byte[] encodedHash = new byte[0];
     try {
@@ -367,11 +354,6 @@ public class Utils {
     return encodedHash;
   }
 
-  /**
-   * Converts bytes to hexadecimal
-   * @param hash
-   * @return
-   */
   public static String bytesToHex(byte[] hash) {
     StringBuilder hexString = new StringBuilder(2 * hash.length);
     for (byte b : hash) {
@@ -384,18 +366,6 @@ public class Utils {
     return hexString.toString();
   }
 
-  /**
-   * Loads the Keystore and provides the resulted encrypted Key
-   * @param fileInputStream
-   * @param keyStoreName
-   * @param password
-   * @return {@link Key}
-   * @throws KeyStoreException
-   * @throws IOException
-   * @throws NoSuchAlgorithmException
-   * @throws CertificateException
-   * @throws UnrecoverableKeyException
-   */
   public static Key loadKeystore(FileInputStream fileInputStream, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
 
@@ -405,17 +375,6 @@ public class Utils {
     return secretKeyAlias;
   }
 
-  /**
-   * Saves the provided encoded key into the keystore
-   * @param encodedKey
-   * @param keyStoreName
-   * @param password
-   * @return {@link KeyStore}
-   * @throws KeyStoreException
-   * @throws IOException
-   * @throws NoSuchAlgorithmException
-   * @throws CertificateException
-   */
   public static KeyStore saveEntryInKeyStore(byte[] encodedKey, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
     KeyStore ks = KeyStore.getInstance("pkcs12");
@@ -457,5 +416,27 @@ public class Utils {
       LOG.warn("Could not read property: {}. Returning Default Value: {}",  property, defaultValue);
       return defaultValue;
     }
+  }
+
+  /**
+   * @param retryValue date from header
+   * @return date for retry
+   */
+  public static Date getDateFromRetryAfter(final String retryValue) {
+    if (StringUtils.isEmpty(retryValue)) {
+      return null;
+    }
+    Date retryDate;
+    try {
+      // retryValue format : http-date or seconds
+      if (StringUtils.isNumeric(retryValue)) {
+        retryDate = DateUtils.addSeconds(new Date(), Integer.parseInt(retryValue));
+      } else {
+        retryDate = DateUtils.parseDate(retryValue, Constants.HTTP_DATE_FORMAT);
+      }
+    } catch (NumberFormatException | ParseException e) {
+      return null;
+    }
+    return retryDate;
   }
 }

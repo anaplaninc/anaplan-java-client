@@ -13,24 +13,18 @@ public class DefaultServiceProvider {
 
   private DefaultServiceProvider(){}
 
-  /**
-   * Provides the service instance
-   * @param properties
-   * @return {@link Service}
-   * @throws UnknownAuthenticationException
-   */
-  public static Service getService(ConnectionProperties properties)
+  public static Service getService(ConnectionProperties properties, String clientKey, String clientValue)
       throws UnknownAuthenticationException {
 
     OkHttpFeignClientProvider okHttpClientProvider = new OkHttpFeignClientProvider();
     Supplier<Client> clientSupplier = () -> okHttpClientProvider.createFeignClient(properties);
 
     FeignAuthenticationAPIProvider authApiProvider = new FeignAuthenticationAPIProvider(properties,
-        clientSupplier);
+        clientSupplier, clientKey, clientValue);
     Authenticator authenticator = AuthenticatorFactoryUtil
         .getAuthenticator(properties, authApiProvider.getAuthClient());
 
-    AnaplanApiProviderImpl apiProvider = new AnaplanApiProviderImpl(properties, clientSupplier, authenticator);
+    AnaplanApiProviderImpl apiProvider = new AnaplanApiProviderImpl(properties, clientSupplier, authenticator, clientKey, clientValue);
 
     return new Service(properties, authenticator, apiProvider);
   }
@@ -40,12 +34,12 @@ public class DefaultServiceProvider {
    * @param properties the connection properties
    * @return {@link DeviceAuthenticator}
    */
-  public static DeviceAuthenticator getDeviceAuthenticator(ConnectionProperties properties) {
+  public static DeviceAuthenticator getDeviceAuthenticator(ConnectionProperties properties, String clientKey, String clientValue) {
     OkHttpFeignClientProvider okHttpClientProvider = new OkHttpFeignClientProvider();
     Supplier<Client> clientSupplier = () -> okHttpClientProvider.createFeignClient(properties);
 
     FeignAuthenticationAPIProvider authApiProvider = new FeignAuthenticationAPIProvider(properties,
-        clientSupplier);
+        clientSupplier, clientKey, clientValue);
     return new DeviceAuthenticator(properties, authApiProvider.getAuthClient());
   }
 }

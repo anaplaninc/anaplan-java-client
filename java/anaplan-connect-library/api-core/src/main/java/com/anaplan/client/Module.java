@@ -13,6 +13,8 @@
 
 package com.anaplan.client;
 
+import com.anaplan.client.LargeDataExport.TYPE_LARGE_EXPORT;
+import com.anaplan.client.dto.ExportData;
 import com.anaplan.client.dto.ItemMetadataRow;
 import com.anaplan.client.dto.ModuleData;
 import com.anaplan.client.dto.ViewMetadata;
@@ -39,9 +41,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +69,7 @@ public class Module extends NamedObject {
    * Splitting the pagedimension and itemdimension using regex
    */
   private static String[] dimensionSplit(String page) {
-    String regex = "(?<!\\\\)" + Pattern.quote(":");
+    String regex = "(?<!\\\\)" + Pattern.quote(Constants.COLON);
     String[] dimensionSplit = page.split(regex);
     if (dimensionSplit.length != 2) {
       throw new IllegalArgumentException("Invalid pageDimension:itemDimension format");
@@ -77,7 +81,7 @@ public class Module extends NamedObject {
    * Removing escape characters
    */
   private static String escapeBackSlash(String src) {
-    return src.replace("\\", "");
+    return src.replace("\\", StringUtils.EMPTY);
   }
 
   /**
@@ -156,7 +160,7 @@ public class Module extends NamedObject {
     }
     return searchPageSplit.stream().map(
         nextList -> nextList.stream()
-            .collect(Collectors.joining(":")))
+            .collect(Collectors.joining(Constants.COLON)))
         .collect(Collectors.joining(","));
   }
 
@@ -173,6 +177,44 @@ public class Module extends NamedObject {
     } catch (Exception e) {
       throw new ViewDataNotFoundException(view.getId(), e);
     }
+  }
+
+  /**
+   *
+   * @param fileId the file path
+   * @param workspaceId the workspace id
+   * @param modelId the model id
+   * @param viewId the view id
+   * @param exportType export type single column or multi column
+   */
+  public void exportLargeDataView(final String fileId, final String workspaceId,
+      final String modelId,
+      final String viewId, final Utils.EXPORT_TYPE exportType) {
+
+    String requestId = null;
+    try {
+      requestId = getApi()
+          .viewReadRequest(workspaceId, modelId, viewId, new ExportData(exportType.name())).getViewReadRequest().getRequestId();
+      final String data = getLargeDataExportService()
+          .getRequestData(workspaceId, modelId, viewId, requestId);
+      ListItemFileWriter.linesToFile(viewId, new File(fileId).toPath(),
+          data);
+      LOG.info("Export for the view completed successfully");
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final Exception ex) {
+      throw new ViewDataNotFoundException(viewId, ex);
+    } finally {
+      //In the end the request should be deleted
+      if (!Objects.isNull(requestId)) {
+        getApi().deleteListReadRequest(workspaceId, modelId, viewId, requestId);
+      }
+    }
+  }
+
+  public LargeDataExport getLargeDataExportService() {
+    return LargeDataExport
+        .getLargeDataExportService(getApi(), TYPE_LARGE_EXPORT.VIEW_EXPORT);
   }
 
   /**
