@@ -234,6 +234,12 @@ public class Utils {
     return value;
   }
 
+  /**
+   * Provides CSV properties from inputStream
+   * @param inputStream
+   * @return
+   * @throws IOException
+   */
   public static Map<String, String> getPropertyFile(final InputStream inputStream)
       throws IOException {
 
@@ -310,6 +316,14 @@ public class Utils {
     }
   }
 
+  /**
+   * Checks provided file status
+   * @param target
+   * @param path
+   * @param file
+   * @param deleteExisting
+   * @throws IOException
+   */
   public static void checkTarget(final File target, String path, String file, boolean deleteExisting) throws IOException {
     if (target.exists()) {
       if (!target.isFile()) {
@@ -343,6 +357,11 @@ public class Utils {
     return target;
   }
 
+  /**
+   * Creates the Hash for the provided client id with SHA-512/256 algorithm
+   * @param clientId
+   * @return
+   */
   public static byte[] createHash(String clientId) {
     byte[] encodedHash = new byte[0];
     try {
@@ -354,6 +373,11 @@ public class Utils {
     return encodedHash;
   }
 
+  /**
+   * Converts bytes to hexadecimal
+   * @param hash
+   * @return
+   */
   public static String bytesToHex(byte[] hash) {
     StringBuilder hexString = new StringBuilder(2 * hash.length);
     for (byte b : hash) {
@@ -366,6 +390,18 @@ public class Utils {
     return hexString.toString();
   }
 
+  /**
+   * Loads the Keystore and provides the resulted encrypted Key
+   * @param fileInputStream
+   * @param keyStoreName
+   * @param password
+   * @return {@link Key}
+   * @throws KeyStoreException
+   * @throws IOException
+   * @throws NoSuchAlgorithmException
+   * @throws CertificateException
+   * @throws UnrecoverableKeyException
+   */
   public static Key loadKeystore(FileInputStream fileInputStream, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
 
@@ -375,6 +411,17 @@ public class Utils {
     return secretKeyAlias;
   }
 
+  /**
+   * Saves the provided encoded key into the keystore
+   * @param encodedKey
+   * @param keyStoreName
+   * @param password
+   * @return {@link KeyStore}
+   * @throws KeyStoreException
+   * @throws IOException
+   * @throws NoSuchAlgorithmException
+   * @throws CertificateException
+   */
   public static KeyStore saveEntryInKeyStore(byte[] encodedKey, String keyStoreName, char[] password)
       throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
     KeyStore ks = KeyStore.getInstance("pkcs12");
