@@ -13,6 +13,12 @@ public class DefaultServiceProvider {
 
   private DefaultServiceProvider(){}
 
+  /**
+   * Provides the service instance
+   * @param properties
+   * @return {@link Service}
+   * @throws UnknownAuthenticationException
+   */
   public static Service getService(ConnectionProperties properties, String clientKey, String clientValue)
       throws UnknownAuthenticationException {
 
