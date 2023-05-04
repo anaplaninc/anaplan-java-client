@@ -507,5 +507,4 @@ public interface AnaplanAPIFeign extends AnaplanAPI {
       @Param("modelId") String modelId,
       @Param("listId") String listId,
       ListItemParametersData itemData);
-
 }
