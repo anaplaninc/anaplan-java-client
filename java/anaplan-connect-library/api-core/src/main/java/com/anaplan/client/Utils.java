@@ -251,9 +251,9 @@ public class Utils {
     final CSVFormat format = PROPERTY_FORMAT_BUILDER.build();
     while (null != (line = lnr.readLine())) {
       final List<CSVRecord> records = CSVParser.parse(line, format).getRecords();
-        if (!records.isEmpty()) {
-          result.put(records.get(0).get(0), records.get(0).get(1));
-        }
+      if (!records.isEmpty()) {
+        result.put(records.get(0).get(0), records.get(0).get(1));
+      }
     }
     return result;
   }
