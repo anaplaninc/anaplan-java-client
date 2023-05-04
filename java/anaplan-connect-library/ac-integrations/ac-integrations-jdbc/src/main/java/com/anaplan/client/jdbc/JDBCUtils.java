@@ -7,16 +7,15 @@ import com.anaplan.client.ListImpl.MetaContent;
 import com.anaplan.client.dto.ListFailure;
 import com.anaplan.client.dto.ListItemParametersData;
 import com.anaplan.client.dto.ListItemResultData;
-import java.security.InvalidParameterException;
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.security.InvalidParameterException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -118,7 +117,7 @@ public class JDBCUtils {
    * @throws SQLException exception
    */
   public static ListItemResultData doActionsItemsFromJDBC(final JDBCConfig jdbcConfig, final ListImpl listImpl, final Map<String, String> headerMap,
-                                                          final ListImpl.ListAction action, final boolean doMapping)
+      final ListImpl.ListAction action, final boolean doMapping)
       throws SQLException, IOException {
     return doActionsItemsFromJDBC(jdbcConfig, listImpl, headerMap, action, BATCH_SIZE, doMapping);
   }

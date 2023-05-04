@@ -153,14 +153,13 @@ public class Utils {
   public static List<String> getColumnValues(String[] lines, int startIndex) {
     //Regex - ,(?=(?:[^"]*"[^"]*")*[^"]*$) - matches the character , that's not inside the double quotes
     return IntStream.range(startIndex, lines.length).filter(index -> lines[index].startsWith(","))
-            .mapToObj(index -> {
-                      String regex;
-                      regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
-                      return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
-                    }
-            ).collect(Collectors.toList());
+        .mapToObj(index -> {
+              String regex;
+              regex = ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";
+              return Arrays.stream(lines[index].split(regex)).filter(s1 -> s1 != null && !"".equals(s1)).collect(Collectors.joining(","));
+            }
+        ).collect(Collectors.toList());
   }
-
   /**
    * If source not exist and is not a file an Exception is throw
    * @param source source to check
