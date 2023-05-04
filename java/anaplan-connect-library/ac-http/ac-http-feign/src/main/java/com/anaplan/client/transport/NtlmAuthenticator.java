@@ -20,6 +20,13 @@ public class NtlmAuthenticator implements Authenticator {
   private final String password;
   private final String ntlmMsg1;
 
+  /**
+   * Initializes class parameter for Ntlm Authentication method
+   * @param username
+   * @param password
+   * @param domain
+   * @param workstation
+   */
   public NtlmAuthenticator(String username, String password, String domain, String workstation) {
     this.username = username;
     this.password = password;
@@ -35,6 +42,13 @@ public class NtlmAuthenticator implements Authenticator {
     ntlmMsg1 = localNtlmMsg1;
   }
 
+  /**
+   * Performs Authentication with Ntlm method
+   * @param route
+   * @param response
+   * @return {@link Request}
+   * @throws IOException
+   */
   @Override
   public Request authenticate(Route route, Response response) throws IOException {
     final List<String> wwwAuth = response.headers().values("WWW-Authenticate");
