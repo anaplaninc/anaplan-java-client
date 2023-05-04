@@ -13,7 +13,6 @@
 
 package com.anaplan.client;
 
-import com.anaplan.client.LargeDataExport.TYPE_LARGE_EXPORT;
 import com.anaplan.client.api.AnaplanAPI;
 import com.anaplan.client.auth.Authenticator;
 import com.anaplan.client.dto.ListItem;
@@ -37,7 +36,6 @@ import com.anaplan.client.exceptions.ListMetadataNotFoundException;
 import com.anaplan.client.exceptions.ListNamesNotFoundException;
 import com.anaplan.client.exceptions.ListNotFoundException;
 import com.anaplan.client.exceptions.ModelNotFoundException;
-import com.anaplan.client.exceptions.ViewDataNotFoundException;
 import com.anaplan.client.exceptions.WorkspaceNotFoundException;
 import com.anaplan.client.listwriter.ListItemFileWriter;
 import com.anaplan.client.listwriter.ListMetadataCsvWriter;
@@ -56,7 +54,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
@@ -64,7 +61,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -488,29 +484,6 @@ public class Service implements Closeable {
     }
   }
 
-
-  /**
-   * @param fileId      the file
-   * @param workspaceId the workspace id
-   * @param modelId     the model id
-   * @param listId      the list id
-   * @throws ListNotFoundException
-   */
-  public void exportLargeListItems(final String fileId, final String workspaceId,
-      final String modelId, final String listId) throws ListNotFoundException {
-    File targetFile = new File(fileId);
-    if (workspaceId != null && modelId != null && listId != null) {
-      ListName listName = getListName(workspaceId, modelId, listId);
-      if (listName == null) {
-        throw new ListNotFoundException(modelId);
-      }
-      LOG.info("Started export for list {}", listName.getName());
-      String listItemsCsv = getLargeListItemsCsv(workspaceId, modelId, listId);
-      ListItemFileWriter.listItemToFile(listName.getName(), targetFile.toPath(), listItemsCsv);
-      LOG.info("Export for the view completed successfully");
-    }
-  }
-
   /**
    * Get ListName for a list identifier
    *
@@ -617,41 +590,6 @@ public class Service implements Closeable {
     } catch (Exception e) {
       throw new ListItemsNotFoundException(listId, e);
     }
-  }
-
-  /**
-   * Retrieve the available lists items as a CSV string. This is used for up to 1 mil records.
-   *
-   * @param workspaceId The id of the workspace
-   * @param modelId     The id of the model
-   * @param listId      The id of the list
-   * @return A list of the available lists within this model
-   */
-  public String getLargeListItemsCsv(final String workspaceId,
-      final String modelId, final String listId)
-      throws AnaplanAPIException {
-    String requestId = null;
-    try {
-      //Start the request for download
-      requestId = apiProvider.get()
-          .listReadRequest(workspaceId, modelId, listId).getListReadRequest().getRequestId();
-      return getLargeDataExportService().getRequestData(workspaceId, modelId, listId, requestId);
-    } catch (final InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (final Exception ex) {
-      throw new ViewDataNotFoundException(listId, ex);
-    } finally {
-      //In the end the request should be deleted
-      if (!Objects.isNull(requestId)) {
-        apiProvider.get().deleteListReadRequest(workspaceId, modelId, listId, requestId);
-      }
-    }
-    return StringUtils.EMPTY;
-  }
-
-  public LargeDataExport getLargeDataExportService() {
-    return LargeDataExport
-        .getLargeDataExportService(apiProvider.get(), TYPE_LARGE_EXPORT.LIST_EXPORT);
   }
 
   /**
