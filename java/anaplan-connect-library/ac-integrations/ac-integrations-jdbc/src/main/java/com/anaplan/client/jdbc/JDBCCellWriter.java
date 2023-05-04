@@ -183,7 +183,7 @@ public class JDBCCellWriter implements CellWriter {
   }
 
   private RowBatchComplete checkEndingIncomplete(final DataRow dataRow, List<String[]> rowBatch, final String[] row, boolean rowRemoved)
-          throws SQLException {
+      throws SQLException {
     boolean rowBatchRemoved = rowRemoved;
     if (++batchRecords % batchSize == 0) {
       ++batchNo;
@@ -226,7 +226,7 @@ public class JDBCCellWriter implements CellWriter {
         }
         if (preparedStatement == null || preparedStatement.isClosed()) {
           preparedStatement = connection.prepareStatement(jdbcConfig.getJdbcQuery(),
-                  ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+              ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         }
         for (int i = 0; i < rowBatchSize; i++) {
           psLineEndWithSeparator(mapcols, columnCount, rowBatch.get(i));
@@ -250,7 +250,7 @@ public class JDBCCellWriter implements CellWriter {
     // not successful
     if (retry) {
       throw new AnaplanAPIException(
-              "Could not connect to the database after " + maxRetryCount + " retries");
+          "Could not connect to the database after " + maxRetryCount + " retries");
     }
   }
 
