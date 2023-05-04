@@ -1,8 +1,6 @@
 package com.anaplan.client;
 
 import com.anaplan.client.api.AnaplanAPI;
-import com.anaplan.client.dto.LargeRequestData;
-import com.anaplan.client.dto.ViewRequestData;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 
