@@ -22,6 +22,11 @@ public class FeignAuthenticationAPIProvider {
   private String clientKey;
   private String clientValue;
 
+  /**
+   * Initializes API Provider with parameter
+   * @param connectionProperties
+   * @param clientSupplier
+   */
   public FeignAuthenticationAPIProvider(ConnectionProperties connectionProperties,
       Supplier<Client> clientSupplier, String clientKey, String clientValue) {
     this.connectionProperties = connectionProperties;
@@ -30,6 +35,10 @@ public class FeignAuthenticationAPIProvider {
     this.clientValue = clientValue;
   }
 
+  /**
+   * Provides the Client Authentication API
+   * @return {@link AnaplanAuthenticationAPI}
+   */
   public AnaplanAuthenticationAPI getAuthClient() {
     if (authClient == null) {
       authClient = Feign.builder()
