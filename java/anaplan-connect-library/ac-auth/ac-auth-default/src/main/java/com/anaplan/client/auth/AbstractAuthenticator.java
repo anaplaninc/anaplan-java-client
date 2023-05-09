@@ -4,7 +4,6 @@ import com.anaplan.client.api.AnaplanAuthenticationAPI;
 import com.anaplan.client.dto.responses.RefreshTokenResp;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.transport.ConnectionProperties;
-import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

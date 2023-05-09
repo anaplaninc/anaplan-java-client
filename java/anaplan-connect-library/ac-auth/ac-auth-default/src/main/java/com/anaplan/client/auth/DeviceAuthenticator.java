@@ -7,24 +7,23 @@ import com.anaplan.client.dto.DeviceCodeInfo;
 import com.anaplan.client.dto.OauthTokenInfo;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.transport.ConnectionProperties;
-import feign.FeignException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Base64;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Objects;
 
 /**
  * Authenticate by device
@@ -42,8 +41,7 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
   private char[] clientRefreshToken;
 
   private final DeviceAuthenticator.TokenStore store;
-  public DeviceAuthenticator(ConnectionProperties connectionProperties,
-      AnaplanAuthenticationAPI authClient) {
+  public DeviceAuthenticator(ConnectionProperties connectionProperties, AnaplanAuthenticationAPI authClient) {
     super(connectionProperties, authClient);
     store = new DeviceAuthenticator.TokenStore(connectionProperties.getClientId());
   }
@@ -71,7 +69,7 @@ public class DeviceAuthenticator extends AbstractAuthenticator {
   }
 
   /**
-   * Clear JDK file
+   * Clear JKS file
    */
   public void clearRefreshTokenEntry() {
     LOG.info("Deleting already existing JKS and re-registering the device...");
