@@ -31,6 +31,7 @@ import com.anaplan.client.dto.ModuleData;
 import com.anaplan.client.dto.ViewData;
 import com.anaplan.client.dto.WorkspaceData;
 import com.anaplan.client.exceptions.AnaplanAPIException;
+import com.anaplan.client.exceptions.AnaplanChunkException;
 import com.anaplan.client.exceptions.BadSystemPropertyError;
 import com.anaplan.client.exceptions.PrivateKeyException;
 import com.anaplan.client.exceptions.WorkspaceNotFoundException;
@@ -48,6 +49,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVWriter;
+import feign.FeignException;
 import java.io.ByteArrayInputStream;
 import java.io.Console;
 import java.io.File;
@@ -142,7 +144,9 @@ public abstract class Program {
   private static String privateKeyPath = null;
   private static String certificatePath = null;
   private static String workspaceId = null;
+  private static boolean noValidateWorkspace = false;
   private static String modelId = null;
+  private static boolean noValidateModel = false;
   private static String moduleId = null;
   private static String viewId = null;
   private static String fileId = null;
@@ -632,8 +636,14 @@ public abstract class Program {
           setKeyStorePassword(keyStorePassword);
         } else if (Objects.equals(arg, "-w") || Objects.equals(arg, "-workspace")) {
           workspaceId = args[argi++];
+        } else if (Objects.equals(arg, "-w_id") || Objects.equals(arg, "-workspace_id")) {
+          workspaceId = args[argi++];
+          noValidateWorkspace = true;
         } else if (Objects.equals(arg, "-m") || Objects.equals(arg, "-model")) {
           modelId = args[argi++];
+        } else if (Objects.equals(arg, "-m_id") || Objects.equals(arg, "-model_id")) {
+          modelId = args[argi++];
+          noValidateModel = true;
         } else if (Objects.equals(arg, "-mo") || Objects.equals(arg, "-module")) {
           moduleId = args[argi++];
         } else if (Objects.equals(arg, "-vi") || Objects.equals(arg, "-view")) {
@@ -920,7 +930,14 @@ public abstract class Program {
       }
       closeDown();
     } catch (Exception thrown) {
-      if (!(thrown instanceof InterruptedException)) {
+      if (authType == AUTH_TYPE.OAUTH && thrown instanceof FeignException) {
+        FeignException exception = (FeignException) thrown;
+        if (exception.status() == 403) {
+          LOG.error("The refresh token has expired. Please register again using -forceRegister parameter once.", exception);
+        } else {
+          LOG.error(Utils.formatThrowable(thrown));
+        }
+      } else if (!(thrown instanceof InterruptedException)) {
         // Some brevity for those who don't
         LOG.error(Utils.formatThrowable(thrown));
       }
@@ -935,12 +952,16 @@ public abstract class Program {
   private static void doTransfer(final ServerFile serverFile, final JDBCConfig jdbcConfig,
       CellWriter cellWriter, final Map<String, Integer> headerName, final String separator,
       int columnCount)
-      throws IOException {
+      throws Exception {
     int transferredrows;
     int[] mapcols = new int[0];
     for (int k = 0; k < maxRetryCount; k++) {
       List<ChunkData> chunkList = serverFile.getChunks();
       try {
+        //If it is null the exception will be caught with retry
+        if (chunkList == null) {
+          throw new AnaplanChunkException("Export has no data.", null);
+        }
         //jdbc params exists
         if (jdbcConfig.getJdbcParams() != null && jdbcConfig.getJdbcParams().length > 0
             && !jdbcConfig.getJdbcParams()[0].equals("")) {
@@ -960,13 +981,10 @@ public abstract class Program {
       } catch (AnaplanAPIException ape) {
         LOG.error(ape.getMessage());
         break;
-      } catch (Exception e) {
-        AnaplanJdbcRetryer anaplanJdbcRetryer = new AnaplanJdbcRetryer(
-            (long) (retryTimeout * 1000),
-            (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
-            FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER);
-        long interval = anaplanJdbcRetryer.nextMaxInterval(k);
-        waitFor(interval);
+      } catch (final SQLException e) {
+        createRetrier(k, "Could not connect to the database!");
+      } catch (final Exception e) {
+        createRetrier(k, e.getMessage());
       } finally {
         if (cellWriter != null) {
           cellWriter.close();
@@ -974,6 +992,16 @@ public abstract class Program {
       }
     }
   }
+
+  private static void createRetrier(int k, final String message) {
+    AnaplanJdbcRetryer anaplanJdbcRetryer = new AnaplanJdbcRetryer(
+        (long) (retryTimeout * 1000),
+        (long) Constants.MAX_RETRY_TIMEOUT_SECS * 1000,
+        FeignApiRetryer.DEFAULT_BACKOFF_MULTIPLIER);
+    long interval = anaplanJdbcRetryer.nextMaxInterval(k);
+    waitFor(interval, message);
+  }
+
 
   private static int[] checkJDBCParams(final JDBCConfig jdbcConfig, Map<String, Integer> headerName, int len) {
     int[] mapcols = new int[len];
@@ -991,9 +1019,9 @@ public abstract class Program {
     return mapcols;
   }
 
-  private static void waitFor(long interval) {
+  private static void waitFor(long interval, final String message) {
     try {
-      LOG.debug("Could not connect to the database! Will retry in {} seconds ",
+      LOG.debug("{} Will retry in {} seconds ", message,
           interval / 1000);
       // do not retry if we get any other error
       Thread.sleep(interval);
@@ -1491,10 +1519,13 @@ public abstract class Program {
       return null;
     }
     Model model = null;
-    for (Model m : workspace.getModels()) {
-      if (modelId.equals(m.getId()) || modelId.equalsIgnoreCase(m.getName())) {
-        model = m;
-        break;
+
+    if (!noValidateModel) {
+      for (Model m : workspace.getModels()) {
+        if (modelId.equals(m.getId()) || modelId.equalsIgnoreCase(m.getName())) {
+          model = m;
+          break;
+        }
       }
     }
     if (model == null) {
@@ -1518,13 +1549,21 @@ public abstract class Program {
       LOG.error("A workspace ID must be provided");
       return null;
     }
-    Workspace result;
-    try {
-      result = getService().getWorkspace(workspaceId);
-    } catch(WorkspaceNotFoundException | UnknownAuthenticationException wnfe) {
+    Workspace result = null;
+
+    if (!noValidateWorkspace) {
+      try {
+        result = getService().getWorkspace(workspaceId);
+      } catch (WorkspaceNotFoundException | UnknownAuthenticationException ignored) {
+      }
+    }
+    if (result == null) {
       WorkspaceData data = new WorkspaceData();
       data.setId(workspaceId);
-      result = new Workspace(service, data);
+      try {
+        result = new Workspace(getService(), data);
+      } catch (UnknownAuthenticationException ignored) {
+      }
     }
     return result;
   }
@@ -1542,7 +1581,7 @@ public abstract class Program {
     }
 
     ConnectionProperties props = getConnectionProperties();
-    service = DefaultServiceProvider.getService(props);
+    service = DefaultServiceProvider.getService(props, Constants.X_ACONNECT_HEADER_KEY, Constants.X_ACONNECT_HEADER_VALUE);
     service.authenticate();
     return service;
   }
@@ -2133,6 +2172,12 @@ public abstract class Program {
     } catch (IOException e) {
       throw new IllegalArgumentException("Invalid params, unable to parse.", e);
     }
+    try {
+      jdbcConfig.setBatchSize(jdbcProps.getProperty("jdbc.batch.size") == null ? 0
+              : Integer.parseInt(jdbcProps.getProperty("jdbc.batch.size")));
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid JDBC Batch-size provided in properties.");
+    }
 
     return jdbcConfig;
   }
@@ -2199,7 +2244,9 @@ public abstract class Program {
         + "(-W|-workspaces): list available workspaces\n"
         + "(-M|-models): list available models\n"
         + "(-w|-workspace) (<id>|<name>): select a workspace by id/name\n"
+        + "(-w_id|-workspace_id) (<id>>): select a workspace by id\n"
         + "(-m|-model) (<id>|<name>): select a model by id/name\n"
+        + "(-m_id|-model_id) (<id>): select a model by id\n"
         + "(-V|-views): list available views\n"
         + "(-vi|-view) (<id>|<name>): select a view by id/name\n"
         + "(-MO|-modules): list available modules\n"

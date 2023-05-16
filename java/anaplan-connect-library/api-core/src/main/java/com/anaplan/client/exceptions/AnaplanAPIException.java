@@ -19,6 +19,9 @@ package com.anaplan.client.exceptions;
 
 public class AnaplanAPIException extends RuntimeException {
 
+  //HTTP status
+  private int status;
+
   /**
    * Create an exception with the specified message.
    */
@@ -27,9 +30,26 @@ public class AnaplanAPIException extends RuntimeException {
   }
 
   /**
+   * Create an exception with the specified message.
+   */
+  public AnaplanAPIException(String message, int status) {
+    super(message);
+    this.status = status;
+  }
+
+  /**
    * Create an exception with the specified message and cause.
    */
   public AnaplanAPIException(String message, Throwable cause) {
     super(message, cause);
+  }
+
+
+  public int getStatus() {
+    return status;
+  }
+
+  public void setStatus(int status) {
+    this.status = status;
   }
 }

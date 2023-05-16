@@ -11,6 +11,7 @@ import com.anaplan.client.Utils;
 import com.anaplan.client.exceptions.AnaplanAPIException;
 import com.anaplan.client.exceptions.AnaplanRetryableException;
 import com.anaplan.client.exceptions.TooLongQueryError;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.sql.BatchUpdateException;
@@ -57,6 +58,14 @@ public class JDBCCellWriter implements CellWriter {
     this.jdbcConfig = jdbcConfig;
     String rawJdbcQuery = jdbcConfig.getJdbcQuery();
     this.jdbcConfig.setJdbcQuery(sanitizeQuery(rawJdbcQuery));
+    if (this.jdbcConfig.getBatchSize() > 0) {
+      // Because of the last row while processing from the chunk can be incomplete
+      // the row will be added to the next batch and removed from current on
+      // that is why we need to have +1 records to be processed to have the right batch size
+      batchSize = jdbcConfig.getBatchSize() + 1;
+    } else {
+      batchSize = batchSize + 1;
+    }
   }
 
   /**
@@ -113,35 +122,7 @@ public class JDBCCellWriter implements CellWriter {
       String line;
       boolean rowBatchRemoved = false;
       List<String[]> rowBatch = new ArrayList<>();
-      while (null != (line = lnr.readLine())) {
-        String[] row;
-        // ignore the header
-        if (lnr.getLineNumber() == 1 && dataRow.getChunkId().equals("0")) {
-          LOG.info("Export {} to database started successfully", dataRow.getExportId());
-          continue;
-        }
-        // adding a fix to handle the case when the chunk ends with a complete record
-        if (lnr.getLineNumber() == 1 && !(dataRow.getChunkId().equals("0"))) {
-          String temp = lastRow.concat(line);
-          if (temp.split(dataRow.getSeparator()).length == dataRow.getColumnCount()) {
-            line = temp;
-          } else {
-            row = lastRow.split(dataRow.getSeparator());
-            rowBatch.add(row);
-            ++batchRecords;
-          }
-        }
-        List<String> dataRowStr;
-        //If the row have an odd number of quotes the row have multiple lines and we have to read line by line until quotes are even (closed)
-        boolean oddQuote = JDBCUtils.occurrence(line, JDBCUtils.QUOTE_REGEX_PATTERN) % 2 == 1;
-        dataRowStr = oddQuote ? JDBCUtils.addDelimiter(lnr, anaplanCSVFormat, line) : JDBCUtils.getListFromParse(anaplanCSVFormat, line);
-        row = dataRowStr.toArray(new String[0]);
-        rowBatch.add(row);
-        lastRow = line;
-        RowBatchComplete rowBatchComplete = checkEndingIncomplete(dataRow, rowBatch, row, rowBatchRemoved);
-        rowBatchRemoved = rowBatchComplete.isRowRemoved();
-        rowBatch = rowBatchComplete.getRowBatch();
-      }
+      rowBatch = processRowBatch(dataRow, anaplanCSVFormat, lnr, rowBatchRemoved, rowBatch);
       isLastChunk(dataRow, rowBatch);
       //transfer the last batch when all of the lines from inputstream have been read
       ++batchNo;
@@ -158,6 +139,41 @@ public class JDBCCellWriter implements CellWriter {
     }
     return datarowstransferred;
   }
+
+  private List<String[]> processRowBatch(DataRow dataRow, CSVFormat anaplanCSVFormat, LineNumberReader lnr, boolean rowBatchRemoved, List<String[]> rowBatch) throws IOException, SQLException {
+    String line;
+    while (null != (line = lnr.readLine())) {
+      String[] row;
+      // ignore the header
+      if (lnr.getLineNumber() == 1 && dataRow.getChunkId().equals("0")) {
+        LOG.info("Export {} to database started successfully", dataRow.getExportId());
+        continue;
+      }
+      // adding a fix to handle the case when the chunk ends with a complete record
+      if (lnr.getLineNumber() == 1 && !(dataRow.getChunkId().equals("0"))) {
+        String temp = lastRow.concat(line);
+        if (JDBCUtils.getListFromParse(anaplanCSVFormat, temp).size() == dataRow.getColumnCount()) {
+          line = temp;
+        } else {
+          row = lastRow.split(dataRow.getSeparator());
+          rowBatch.add(row);
+          ++batchRecords;
+        }
+      }
+      List<String> dataRowStr;
+      //If the row have an odd number of quotes the row have multiple lines and we have to read line by line until quotes are even (closed)
+      boolean oddQuote = JDBCUtils.occurrence(line, JDBCUtils.QUOTE_REGEX_PATTERN) % 2 == 1;
+      dataRowStr = oddQuote ? JDBCUtils.addDelimiter(lnr, anaplanCSVFormat, line) : JDBCUtils.getListFromParse(anaplanCSVFormat, line);
+      row = dataRowStr.toArray(new String[0]);
+      rowBatch.add(row);
+      lastRow = line;
+      RowBatchComplete rowBatchComplete = checkEndingIncomplete(dataRow, rowBatch, row, rowBatchRemoved);
+      rowBatchRemoved = rowBatchComplete.isRowRemoved();
+      rowBatch = rowBatchComplete.getRowBatch();
+    }
+    return rowBatch;
+  }
+
   private void isLastChunk(final DataRow dataRow, final List<String[]> rowBatch) {
     //Check to make sure it is not the last chunk
     //removing the last record so that it can be processed in the next chunk
@@ -362,7 +378,7 @@ public class JDBCCellWriter implements CellWriter {
     } while (k < maxRetryCount && retry);
     return count;
   }
-  
+
   public boolean logBatchUpdateException(final BatchUpdateException buex) throws BatchUpdateException {
     LOG.debug("Exception observed during batch update : {}", buex.getMessage());
     if (buex.getSQLState().equals("08003")) {
@@ -371,7 +387,7 @@ public class JDBCCellWriter implements CellWriter {
       throw buex;
     }
     return true;
-  } 
+  }
 
   /**
    * Connects to DB with 5 retries

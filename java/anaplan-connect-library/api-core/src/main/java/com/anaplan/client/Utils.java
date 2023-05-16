@@ -2,7 +2,6 @@ package com.anaplan.client;
 
 import com.anaplan.client.dto.ListMetadataProperty;
 import com.anaplan.client.exceptions.AnaplanAPIException;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,9 +25,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,14 +37,15 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by Spondon Saha Date: 5/5/18 Time: 3:48 PM
@@ -54,6 +56,10 @@ public class Utils {
   private static final CSVFormat.Builder PROPERTY_FORMAT_BUILDER = CSVFormat.newFormat('=').builder().setQuote('"');
   private static final CSVFormat.Builder LINE_FORMAT_BUILDER = CSVFormat.newFormat(',').builder().setQuote('"');
   private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+
+  public enum EXPORT_TYPE {
+    TABULAR_SINGLE_COLUMN, TABULAR_MULTI_COLUMN, GRID_ALL_PAGES
+  }
 
   /**
    * Provide a suitable error message from an exception.
@@ -154,7 +160,6 @@ public class Utils {
             }
         ).collect(Collectors.toList());
   }
-
   /**
    * If source not exist and is not a file an Exception is throw
    * @param source source to check
@@ -457,5 +462,27 @@ public class Utils {
       LOG.warn("Could not read property: {}. Returning Default Value: {}",  property, defaultValue);
       return defaultValue;
     }
+  }
+
+  /**
+   * @param retryValue date from header
+   * @return date for retry
+   */
+  public static Date getDateFromRetryAfter(final String retryValue) {
+    if (StringUtils.isEmpty(retryValue)) {
+      return null;
+    }
+    Date retryDate;
+    try {
+      // retryValue format : http-date or seconds
+      if (StringUtils.isNumeric(retryValue)) {
+        retryDate = DateUtils.addSeconds(new Date(), Integer.parseInt(retryValue));
+      } else {
+        retryDate = DateUtils.parseDate(retryValue, Constants.HTTP_DATE_FORMAT);
+      }
+    } catch (NumberFormatException | ParseException e) {
+      return null;
+    }
+    return retryDate;
   }
 }

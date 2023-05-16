@@ -26,7 +26,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.UUID;
 import java.util.function.Supplier;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,6 +51,7 @@ class DeviceAuthenticatorTest {
     connectionProperties.setClientId("id");
     connectionProperties.setAuthServiceUri(URI.create("auth_url"));
     connectionProperties.setMaxRetryCount(1);
+    connectionProperties.setRetryTimeout(0);
 
     authClient = Mockito.mock(AnaplanAuthenticationAPI.class);
     DeviceCodeInfo codeInfo = new DeviceCodeInfo();
@@ -93,17 +93,17 @@ class DeviceAuthenticatorTest {
       assertEquals(firstAccessToken, new String(response));
 
       // check token exists
-      Field field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      Field field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      String tokenPath = (String) field.get(deviceAuthenticator);
-      Files.exists(Paths.get(tokenPath));
+      DeviceAuthenticator.TokenStore tokenPath = (DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator);
+      Files.exists(Paths.get(tokenPath.getRefreshTokenKeyStorePath()));
 
       // check saved token
       Method method = deviceAuthenticator.getClass().getDeclaredMethod("getDecodedRefreshToken");
       method.setAccessible(true);
       String savedToken = (String) method.invoke(deviceAuthenticator);
       assertThat(firstRefreshToken, is(savedToken));
-      FileTime ft1 = Files.getLastModifiedTime(Paths.get(tokenPath));
+      FileTime ft1 = Files.getLastModifiedTime(Paths.get(tokenPath.getRefreshTokenKeyStorePath()));
       connectionProperties.setForceRegister(true);
       Thread.sleep(2000L);
 
@@ -118,17 +118,17 @@ class DeviceAuthenticatorTest {
       assertEquals(secondAccessToken, new String(response));
 
       // check token exists
-      field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      tokenPath = (String) field.get(deviceAuthenticator);
-      Files.exists(Paths.get(tokenPath));
+      tokenPath = (DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator);
+      Files.exists(Paths.get(tokenPath.getRefreshTokenKeyStorePath()));
 
       // check saved token
       method = deviceAuthenticator.getClass().getDeclaredMethod("getDecodedRefreshToken");
       method.setAccessible(true);
       savedToken = (String) method.invoke(deviceAuthenticator);
       assertThat(secondRefreshToken, is(savedToken));
-      FileTime ft2 = Files.getLastModifiedTime(Paths.get(tokenPath));
+      FileTime ft2 = Files.getLastModifiedTime(Paths.get(tokenPath.getRefreshTokenKeyStorePath()));
       verify(authClient, times(0)).
           oauthRefreshToken(argThat(new NotNullObject()), argThat(new NotNullObject()), argThat(new NotNullObject()));
       assertThat(ft1.toMillis(), not(ft2.toMillis()));
@@ -138,17 +138,17 @@ class DeviceAuthenticatorTest {
       assertEquals(infoRefresh.getAccessToken(), new String(response));
 
       // check token exists
-      field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      tokenPath = (String) field.get(deviceAuthenticator);
-      Files.exists(Paths.get(tokenPath));
+      tokenPath = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator));
+      Files.exists(Paths.get(tokenPath.getRefreshTokenKeyStorePath()));
 
       // check saved token
       method = deviceAuthenticator.getClass().getDeclaredMethod("getDecodedRefreshToken");
       method.setAccessible(true);
       savedToken = (String) method.invoke(deviceAuthenticator);
       assertThat(secondRefreshToken, is(savedToken));
-      FileTime ft3 = Files.getLastModifiedTime(Paths.get(tokenPath));
+      FileTime ft3 = Files.getLastModifiedTime(Paths.get(tokenPath.getRefreshTokenKeyStorePath()));
       verify(authClient, times(1)).
           oauthRefreshToken(argThat(new NotNullObject()), argThat(new NotNullObject()), argThat(new NotNullObject()));
       assertThat(ft2.toMillis(), is(ft3.toMillis()));
@@ -179,9 +179,9 @@ class DeviceAuthenticatorTest {
       assertEquals(firstAccessToken, new String(response));
 
       // check token exists
-      Field field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      Field field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      String tokenPath = (String) field.get(deviceAuthenticator);
+      String tokenPath = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator)).getRefreshTokenKeyStorePath();
       Files.exists(Paths.get(tokenPath));
 
       // check saved token
@@ -202,9 +202,9 @@ class DeviceAuthenticatorTest {
       assertEquals(secondAccessToken, new String(response));
 
       // check token exists
-      field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      tokenPath = (String) field.get(deviceAuthenticator);
+      tokenPath = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator)).getRefreshTokenKeyStorePath();
       Files.exists(Paths.get(tokenPath));
 
       // check saved token
@@ -223,9 +223,9 @@ class DeviceAuthenticatorTest {
       assertEquals(infoRefresh.getAccessToken(), new String(response));
 
       // check token exists
-      field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      tokenPath = (String) field.get(deviceAuthenticator);
+      tokenPath = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator)).getRefreshTokenKeyStorePath();
       Files.exists(Paths.get(tokenPath));
 
       // check saved token
@@ -253,9 +253,9 @@ class DeviceAuthenticatorTest {
       deviceAuthenticator.clearRefreshTokenEntry();
       // authenticate the device and assert the token
       assertEquals("access", new String(deviceAuthenticator.authenticate()));
-      Field field = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      Field field = deviceAuthenticator.getClass().getDeclaredField("store");
       field.setAccessible(true);
-      String tokenPath = (String) field.get(deviceAuthenticator);
+      String tokenPath = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator)).getRefreshTokenKeyStorePath();
       Files.exists(Paths.get(tokenPath));
       FileTime ft1 = Files.getLastModifiedTime(Paths.get(tokenPath));
       Thread.sleep(1000L);
@@ -310,11 +310,14 @@ class DeviceAuthenticatorTest {
   }
 
   @Test
-  void testRefreshTokenExpire() {
+  void testRefreshTokenExpire() throws NoSuchFieldException, IllegalAccessException {
     DeviceAuthenticator deviceAuthenticator = new DeviceAuthenticator(connectionProperties, authClient);
     try {
       deviceAuthenticator.refreshToken();
-      assertEquals(1000, deviceAuthenticator.getOauthTokenInfo().getExpiresIn());
+      Field field = deviceAuthenticator.getClass().getDeclaredField("oauthTokenInfo");
+      field.setAccessible(true);
+      OauthTokenInfo tokenInfo = (OauthTokenInfo) field.get(deviceAuthenticator);
+      assertEquals(1000, tokenInfo.getExpiresIn());
     } finally {
       deviceAuthenticator.clearRefreshTokenEntry();
     }
@@ -336,7 +339,7 @@ class DeviceAuthenticatorTest {
     Supplier<Client> clientSupplier = () -> okHttpClientProvider.createFeignClient(connectionProperties);
 
     FeignAuthenticationAPIProvider authApiProvider = new FeignAuthenticationAPIProvider(connectionProperties,
-        clientSupplier);
+        clientSupplier, "", "");
     authClient = authApiProvider.getAuthClient();
     connectionProperties.setClientId("aaaaa");
     connectionProperties.setAuthServiceUri(URI.create("fake"));
@@ -387,10 +390,13 @@ class DeviceAuthenticatorTest {
     DeviceAuthenticator deviceAuthenticator = new DeviceAuthenticator(connectionProperties, authClient);
 
     try {
-      Field path = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
-      path.setAccessible(true);
+      Field field = deviceAuthenticator.getClass().getDeclaredField("store");
+      field.setAccessible(true);
+      DeviceAuthenticator.TokenStore tokenStore = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator));
 
-      path.set(deviceAuthenticator, String.format("%s/%s",System.getProperty("user.home"), UUID.randomUUID()));
+      Field path = tokenStore.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      path.setAccessible(true);
+      path.set(tokenStore, String.format("%s/%s",System.getProperty("user.home"), UUID.randomUUID()));
       byte[] response = deviceAuthenticator.authenticate();
       assertEquals(new String(response), "access");
     } finally {
@@ -407,9 +413,13 @@ class DeviceAuthenticatorTest {
     DeviceAuthenticator deviceAuthenticator = new DeviceAuthenticator(connectionProperties, authClient);
 
     try {
-      Field path = deviceAuthenticator.getClass().getDeclaredField("refreshTokenKeyStorePath");
+      Field field = deviceAuthenticator.getClass().getDeclaredField("store");
+      field.setAccessible(true);
+      DeviceAuthenticator.TokenStore tokenStore = ((DeviceAuthenticator.TokenStore) field.get(deviceAuthenticator));
+
+      Field path = tokenStore.getClass().getDeclaredField("refreshTokenKeyStorePath");
       path.setAccessible(true);
-      path.set(deviceAuthenticator, "/SomePath/NoExisting");
+      path.set(tokenStore, "/SomePath/NoExisting");
       AnaplanAPIException anaplanAPIException = assertThrows(AnaplanAPIException.class, deviceAuthenticator::authenticate);
       assertTrue(anaplanAPIException.getMessage().startsWith("Unable to save refresh token"));
     } finally {

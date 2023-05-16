@@ -28,7 +28,7 @@ public class Constants {
   public static final int MIN_RETRY_TIMEOUT_SECS = 3;
   public static final int MAX_RETRY_TIMEOUT_SECS = 120;
 
-  public static final int MIN_HTTP_CONNECTION_TIMEOUT_SECS = 3;
+  public static final int MIN_HTTP_CONNECTION_TIMEOUT_SECS = 60;
   public static final int MAX_HTTP_CONNECTION_TIMEOUT_SECS = 300;
 
   public static final double DEFAULT_BACKOFF_MULTIPLIER = 1.5;
@@ -43,4 +43,13 @@ public class Constants {
   public static final String ONE = "1";
   public static final String ZERO = "0";
   public static final String TWO = "2";
+
+  public static final String COLON = ":";
+  public static final String CANCELLED = "CANCELLED";
+  public static final String COMPLETE = "COMPLETE";
+  public static final String CSV = "csv";
+  public static final String JSON = "json";
+
+  public static final String RETRY_AFTER = "Retry-After";
+  public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss";
 }

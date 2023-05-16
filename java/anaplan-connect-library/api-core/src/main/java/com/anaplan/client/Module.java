@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public class Module extends NamedObject {
    * Splitting the pagedimension and itemdimension using regex
    */
   private static String[] dimensionSplit(String page) {
-    String regex = "(?<!\\\\)" + Pattern.quote(":");
+    String regex = "(?<!\\\\)" + Pattern.quote(Constants.COLON);
     String[] dimensionSplit = page.split(regex);
     if (dimensionSplit.length != 2) {
       throw new IllegalArgumentException("Invalid pageDimension:itemDimension format");
@@ -77,7 +78,7 @@ public class Module extends NamedObject {
    * Removing escape characters
    */
   private static String escapeBackSlash(String src) {
-    return src.replace("\\", "");
+    return src.replace("\\", StringUtils.EMPTY);
   }
 
   /**
@@ -156,7 +157,7 @@ public class Module extends NamedObject {
     }
     return searchPageSplit.stream().map(
         nextList -> nextList.stream()
-            .collect(Collectors.joining(":")))
+            .collect(Collectors.joining(Constants.COLON)))
         .collect(Collectors.joining(","));
   }
 
