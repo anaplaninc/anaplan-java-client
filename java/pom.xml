@@ -29,7 +29,7 @@
     <github.global.server>github</github.global.server>
 
     <feign-jackson.version>10.0.0</feign-jackson.version>
-    <guava.version>30.0-jre</guava.version>
+    <guava.version>32.0.0-jre</guava.version>
     <opencsv.version>5.5.1</opencsv.version>
     <mysql.connector.version>8.0.28</mysql.connector.version>
     <h2.version>2.0.204</h2.version>
